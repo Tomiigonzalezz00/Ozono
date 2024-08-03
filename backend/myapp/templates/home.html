@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My App</title>
+</head>
+<body>
+    <h1>Items</h1>
+    <ul>
+        {% for item in items %}
+            <li>{{ item.name }}: {{ item.description }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
