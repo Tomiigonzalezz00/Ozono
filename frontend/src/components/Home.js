@@ -51,7 +51,7 @@ const Home = () => {
 
       // Puedes agregar marcadores u otros elementos al mapa aquí
       L.marker([-34.167, -58.959]).addTo(mapInstance.current)
-        .bindPopup('A pretty CSS3 popup.<br> Easily customizable.')
+        .bindPopup('Prueba de ubicación')
         .openPopup();
     }
   }, []);
