@@ -5,4 +5,7 @@ class Item(models.Model):
     description = models.TextField()
 
     def _str_(self):
-        return self.name 
+        return self.name 
+    
+def hola():
+    print ("hola mundo")
