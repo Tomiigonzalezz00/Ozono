@@ -1,2 +1,0 @@
-load-plugins=pylint-django
-disable=C0111,C0411,C0412,W0611,W0612,W0613,W0702,W0703,W0404
