@@ -3,3 +3,4 @@
 /venv/Lib/site-packages/_distutils_hack
 /venv/Lib/site-packages
 /venv/Lib
+/backend/backend/__pycache__
