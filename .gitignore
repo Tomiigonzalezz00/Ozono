@@ -5,3 +5,5 @@
 /venv/Lib
 /backend/backend/__pycache__
 /backend/myapp/__pycache__
+/backend/backend/__pycache__
+/backend/backend
