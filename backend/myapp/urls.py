@@ -12,4 +12,5 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
+    path('api/puntos-verdes/', views.get_puntos_verdes, name='get_puntos_verdes'),
 ]
