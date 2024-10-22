@@ -1,18 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import './Home.css';
-import L from 'leaflet'; // Importa Leaflet
-import 'leaflet/dist/leaflet.css'; // Importa los estilos de Leaflet
-import 'font-awesome/css/font-awesome.min.css'; // Importa Font Awesome
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import 'font-awesome/css/font-awesome.min.css';
 
 const Home = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const menuRef = useRef(null);
   const mapRef = useRef(null);
-  const mapInstance = useRef(null); // Ref para almacenar la instancia del mapa
-  const [puntosVerdes, setPuntosVerdes] = useState([]); // Estado para almacenar los puntos verdes
-  const [searchTerm, setSearchTerm] = useState(''); // Estado para el valor del input del buscador
-  const [filteredPuntos, setFilteredPuntos] = useState([]); // Estado para almacenar los puntos filtrados
-  const [selectedPunto, setSelectedPunto] = useState(null); // Estado para manejar el punto seleccionado
+  const mapInstance = useRef(null);
+  const [puntosVerdes, setPuntosVerdes] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredPuntos, setFilteredPuntos] = useState([]);
+  const [selectedPunto, setSelectedPunto] = useState(null);
 
   const toggleProfileMenu = () => {
     setIsProfileOpen(prevState => !prevState);
@@ -41,25 +42,25 @@ const Home = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    window.location.href = '/login'; // Redirige a la página de login
+    window.location.href = '/login';
   };
 
   useEffect(() => {
     if (!mapInstance.current) {
-      mapInstance.current = L.map(mapRef.current).setView([-34.61, -58.38], 13); // Cambia las coordenadas según tu preferencia
+      mapInstance.current = L.map(mapRef.current).setView([-34.61, -58.38], 13);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(mapInstance.current);
 
       const createIcon = (isOrganic) => {
-        const color = isOrganic ? 'blue' : 'green'; // Cambia el color según el tipo de material
+        const color = isOrganic ? 'blue' : 'green';
         return L.divIcon({
-          className: 'custom-icon', // Clase CSS para el ícono
-          html: `<i class="fa fa-recycle" style="color: ${color}; font-size: 30px;"></i>`, // Ícono de reciclaje de Font Awesome
-          iconSize: [30, 30], // Tamaño del ícono
-          iconAnchor: [15, 30], // Ancla del ícono para que esté alineado
-          popupAnchor: [0, -30] // Ajuste del pop-up
+          className: 'custom-icon',
+          html: `<i class="fa fa-recycle" style="color: ${color}; font-size: 30px;"></i>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 30],
+          popupAnchor: [0, -30]
         });
       };
 
@@ -67,13 +68,13 @@ const Home = () => {
         try {
           const response = await fetch('http://localhost:8000/api/puntos-verdes/');
           const data = await response.json();
-          setPuntosVerdes(data); // Guarda todos los puntos verdes en el estado
+          setPuntosVerdes(data);
 
           data.forEach(punto => {
-            const isOrganic = punto.materiales.toLowerCase().includes('organico'); // Verifica si hay "orgánico"
-            const icon = createIcon(isOrganic); // Crea el ícono basado en si es orgánico
+            const isOrganic = punto.materiales.toLowerCase().includes('organico');
+            const icon = createIcon(isOrganic);
 
-            L.marker([punto.latitud, punto.longitud], { icon }) // Usar el ícono creado
+            L.marker([punto.latitud, punto.longitud], { icon })
               .addTo(mapInstance.current)
               .bindPopup(`
                 <strong>${punto.nombre}</strong><br>
@@ -91,16 +92,14 @@ const Home = () => {
     }
   }, []);
 
-  // Manejar el cambio de input y filtrar los puntos
   useEffect(() => {
     if (searchTerm) {
       const filtered = puntosVerdes.filter(punto =>
-        punto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        punto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
         punto.direccion.toLowerCase().includes(searchTerm.toLowerCase()) ||
         punto.barrio.toLowerCase().includes(searchTerm.toLowerCase())
       );
 
-      // Elimina el punto seleccionado de los puntos filtrados
       if (selectedPunto) {
         setFilteredPuntos(filtered.filter(punto => punto.id !== selectedPunto.id));
       } else {
@@ -111,14 +110,11 @@ const Home = () => {
     }
   }, [searchTerm, puntosVerdes, selectedPunto]);
 
-  // Función para seleccionar un punto del listado
   const handleSelectPunto = (punto) => {
-    setSelectedPunto(punto); // Guarda el punto seleccionado en el estado
-    setSearchTerm(punto.nombre); // Establece el nombre del punto seleccionado en el input
-    setFilteredPuntos([]); // Oculta el listado desplegable
-
-    // Centrar el mapa en el punto seleccionado
-    mapInstance.current.setView([punto.latitud, punto.longitud], 16); // Centra el mapa en el punto
+    setSelectedPunto(punto);
+    setSearchTerm(punto.nombre);
+    setFilteredPuntos([]);
+    mapInstance.current.setView([punto.latitud, punto.longitud], 16);
   };
 
   return (
@@ -138,23 +134,55 @@ const Home = () => {
       <div className="main-content">
         <aside className="sidebar">
           <ul className="sidebar-menu">
-            <li><i className="fa fa-arrow-circle-up"></i></li>
-            <li><i className="fa fa-paperclip"></i></li>
-            <li><i className="fa fa-bell"></i></li>
-            <li><i className="fa fa-calendar-alt"></i></li>
-            <li><i className="fa fa-paper-plane"></i></li>
-            <li><i className="fa fa-book"></i></li>
-            <li><i className="fa fa-calendar-plus"></i></li>
-            <li><i className="fa fa-clock"></i></li>
+            <li>
+              <Link to="/home" style={{ color: 'inherit' }}>
+                <i className="fa fa-arrow-circle-up"></i>
+              </Link>
+            </li>
+            <li>
+              <Link to="/consejos" style={{ color: 'inherit' }}>
+                <i className="fa fa-paperclip"></i>
+              </Link>
+            </li>
+            <li>
+              <Link to="/consejos2" style={{ color: 'inherit' }}>
+                <i className="fa fa-bell"></i>
+              </Link>
+            </li>
+            <li>
+              <Link to="/consejos4" style={{ color: 'inherit' }}>
+                <i className="fa fa-calendar-alt"></i>
+              </Link>
+            </li>
+            <li>
+              <Link to="/consejos5" style={{ color: 'inherit' }}>
+                <i className="fa fa-paper-plane"></i>
+              </Link>
+            </li>
+            <li>
+              <Link to="/consejos6" style={{ color: 'inherit' }}>
+                <i className="fa fa-book"></i>
+              </Link>
+            </li>
+            <li>
+              <Link to="/consejos7" style={{ color: 'inherit' }}>
+                <i className="fa fa-calendar-plus"></i>
+              </Link>
+            </li>
+            <li>
+              <Link to="/consejos8" style={{ color: 'inherit' }}>
+                <i className="fa fa-clock"></i>
+              </Link>
+            </li>
           </ul>
         </aside>
         <section className="map-section">
           <div className="search-bar">
-            <input 
-              type="text" 
-              placeholder="Buscar lugar o dirección" 
-              value={searchTerm} 
-              onChange={(e) => setSearchTerm(e.target.value)} // Actualiza el valor del input
+            <input
+              type="text"
+              placeholder="Buscar lugar o dirección"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
             {filteredPuntos.length > 0 && (
               <ul className="dropdown">
@@ -165,7 +193,10 @@ const Home = () => {
                 ))}
               </ul>
             )}
-            <button onClick={() => { if (selectedPunto) mapInstance.current.setView([selectedPunto.latitud, selectedPunto.longitud], 16); }}>
+            <button onClick={() => {
+              if (selectedPunto)
+                mapInstance.current.setView([selectedPunto.latitud, selectedPunto.longitud], 16);
+            }}>
               <i className="fa fa-search"></i>
             </button>
           </div>
@@ -179,5 +210,3 @@ const Home = () => {
 };
 
 export default Home;
-
-
