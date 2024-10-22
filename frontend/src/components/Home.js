@@ -2,12 +2,17 @@ import React, { useState, useRef, useEffect } from 'react';
 import './Home.css';
 import L from 'leaflet'; // Importa Leaflet
 import 'leaflet/dist/leaflet.css'; // Importa los estilos de Leaflet
+import 'font-awesome/css/font-awesome.min.css'; // Importa Font Awesome
 
 const Home = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const menuRef = useRef(null);
   const mapRef = useRef(null);
   const mapInstance = useRef(null); // Ref para almacenar la instancia del mapa
+  const [puntosVerdes, setPuntosVerdes] = useState([]); // Estado para almacenar los puntos verdes
+  const [searchTerm, setSearchTerm] = useState(''); // Estado para el valor del input del buscador
+  const [filteredPuntos, setFilteredPuntos] = useState([]); // Estado para almacenar los puntos filtrados
+  const [selectedPunto, setSelectedPunto] = useState(null); // Estado para manejar el punto seleccionado
 
   const toggleProfileMenu = () => {
     setIsProfileOpen(prevState => !prevState);
@@ -41,26 +46,34 @@ const Home = () => {
 
   useEffect(() => {
     if (!mapInstance.current) {
-      mapInstance.current = L.map(mapRef.current).setView([-34.167, -58.959], 13); // Centra el mapa
+      mapInstance.current = L.map(mapRef.current).setView([-34.61, -58.38], 13); // Cambia las coordenadas según tu preferencia
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(mapInstance.current);
 
-      const greenIcon = L.icon({
-        iconUrl: '/path/to/your/icon.png', // Cambia la ruta a tu icono
-        iconSize: [38, 95], // Tamaño del icono
-        iconAnchor: [22, 94], // Punto del icono que se alineará con el marcador
-        popupAnchor: [-3, -76], // Punto del pop-up que se alineará con el icono
-      });
+      const createIcon = (isOrganic) => {
+        const color = isOrganic ? 'blue' : 'green'; // Cambia el color según el tipo de material
+        return L.divIcon({
+          className: 'custom-icon', // Clase CSS para el ícono
+          html: `<i class="fa fa-recycle" style="color: ${color}; font-size: 30px;"></i>`, // Ícono de reciclaje de Font Awesome
+          iconSize: [30, 30], // Tamaño del ícono
+          iconAnchor: [15, 30], // Ancla del ícono para que esté alineado
+          popupAnchor: [0, -30] // Ajuste del pop-up
+        });
+      };
 
       const fetchPuntosVerdes = async () => {
         try {
           const response = await fetch('http://localhost:8000/api/puntos-verdes/');
           const data = await response.json();
+          setPuntosVerdes(data); // Guarda todos los puntos verdes en el estado
 
           data.forEach(punto => {
-            L.marker([punto.latitud, punto.longitud], { icon: greenIcon })
+            const isOrganic = punto.materiales.toLowerCase().includes('organico'); // Verifica si hay "orgánico"
+            const icon = createIcon(isOrganic); // Crea el ícono basado en si es orgánico
+
+            L.marker([punto.latitud, punto.longitud], { icon }) // Usar el ícono creado
               .addTo(mapInstance.current)
               .bindPopup(`
                 <strong>${punto.nombre}</strong><br>
@@ -77,6 +90,36 @@ const Home = () => {
       fetchPuntosVerdes();
     }
   }, []);
+
+  // Manejar el cambio de input y filtrar los puntos
+  useEffect(() => {
+    if (searchTerm) {
+      const filtered = puntosVerdes.filter(punto =>
+        punto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        punto.direccion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        punto.barrio.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      // Elimina el punto seleccionado de los puntos filtrados
+      if (selectedPunto) {
+        setFilteredPuntos(filtered.filter(punto => punto.id !== selectedPunto.id));
+      } else {
+        setFilteredPuntos(filtered);
+      }
+    } else {
+      setFilteredPuntos([]);
+    }
+  }, [searchTerm, puntosVerdes, selectedPunto]);
+
+  // Función para seleccionar un punto del listado
+  const handleSelectPunto = (punto) => {
+    setSelectedPunto(punto); // Guarda el punto seleccionado en el estado
+    setSearchTerm(punto.nombre); // Establece el nombre del punto seleccionado en el input
+    setFilteredPuntos([]); // Oculta el listado desplegable
+
+    // Centrar el mapa en el punto seleccionado
+    mapInstance.current.setView([punto.latitud, punto.longitud], 16); // Centra el mapa en el punto
+  };
 
   return (
     <div className="home-container">
@@ -107,8 +150,24 @@ const Home = () => {
         </aside>
         <section className="map-section">
           <div className="search-bar">
-            <input type="text" placeholder="Buscar lugar o dirección" />
-            <button><i className="fa fa-search"></i></button>
+            <input 
+              type="text" 
+              placeholder="Buscar lugar o dirección" 
+              value={searchTerm} 
+              onChange={(e) => setSearchTerm(e.target.value)} // Actualiza el valor del input
+            />
+            {filteredPuntos.length > 0 && (
+              <ul className="dropdown">
+                {filteredPuntos.map((punto) => (
+                  <li key={punto.id} onClick={() => handleSelectPunto(punto)}>
+                    {punto.nombre} - {punto.direccion} - {punto.barrio}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <button onClick={() => { if (selectedPunto) mapInstance.current.setView([selectedPunto.latitud, selectedPunto.longitud], 16); }}>
+              <i className="fa fa-search"></i>
+            </button>
           </div>
           <div className="map" ref={mapRef} style={{ height: '500px', width: '100%' }}>
             {/* El mapa se inicializará aquí */}
@@ -120,3 +179,5 @@ const Home = () => {
 };
 
 export default Home;
+
+
