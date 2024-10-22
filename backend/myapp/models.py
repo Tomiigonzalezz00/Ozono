@@ -29,8 +29,8 @@ class PuntoVerde(models.Model):
     calle2 = models.CharField(max_length=100, blank=True)
     barrio = models.CharField(max_length=50)
     comuna = models.CharField(max_length=20)
-    latitud = models.FloatField()
     longitud = models.FloatField()
+    latitud = models.FloatField()
     objects = models.Manager()
     def __str__(self):
         return str(self.nombre)

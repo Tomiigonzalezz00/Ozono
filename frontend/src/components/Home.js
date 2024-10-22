@@ -35,24 +35,46 @@ const Home = () => {
   }, [isProfileOpen]);
 
   const handleLogout = () => {
-    // Lógica para cerrar sesión (por ejemplo, borrar token, redirigir, etc.)
     localStorage.removeItem('token');
     window.location.href = '/login'; // Redirige a la página de login
   };
 
   useEffect(() => {
-    // Inicializa el mapa solo una vez
     if (!mapInstance.current) {
-      mapInstance.current = L.map(mapRef.current).setView([51.505, -0.09], 13);
+      mapInstance.current = L.map(mapRef.current).setView([-34.167, -58.959], 13); // Centra el mapa
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(mapInstance.current);
 
-      // Puedes agregar marcadores u otros elementos al mapa aquí
-      L.marker([-34.167, -58.959]).addTo(mapInstance.current)
-        .bindPopup('Prueba de ubicación')
-        .openPopup();
+      const greenIcon = L.icon({
+        iconUrl: '/path/to/your/icon.png', // Cambia la ruta a tu icono
+        iconSize: [38, 95], // Tamaño del icono
+        iconAnchor: [22, 94], // Punto del icono que se alineará con el marcador
+        popupAnchor: [-3, -76], // Punto del pop-up que se alineará con el icono
+      });
+
+      const fetchPuntosVerdes = async () => {
+        try {
+          const response = await fetch('http://localhost:8000/api/puntos-verdes/');
+          const data = await response.json();
+
+          data.forEach(punto => {
+            L.marker([punto.latitud, punto.longitud], { icon: greenIcon })
+              .addTo(mapInstance.current)
+              .bindPopup(`
+                <strong>${punto.nombre}</strong><br>
+                Dirección: ${punto.direccion}<br>
+                Materiales: ${punto.materiales}<br>
+                Más info: ${punto.mas_info}
+              `);
+          });
+        } catch (error) {
+          console.error('Error al cargar los puntos verdes:', error);
+        }
+      };
+
+      fetchPuntosVerdes();
     }
   }, []);
 
@@ -61,7 +83,7 @@ const Home = () => {
       <header className="top-bar">
         <img src="/images/logoOzono.png" alt="Ozono" className="brand-image" />
         <div className="user-info" onClick={toggleProfileMenu}>
-          <i className="fa fa-user"></i> {/* Ícono de usuario */}
+          <i className="fa fa-user"></i>
           <span className="user-name">Usuario</span>
           {isProfileOpen && (
             <div className="profile-menu" ref={menuRef}>
@@ -88,7 +110,7 @@ const Home = () => {
             <input type="text" placeholder="Buscar lugar o dirección" />
             <button><i className="fa fa-search"></i></button>
           </div>
-          <div className="map" ref={mapRef} style={{ height: '400px', width: '100%' }}>
+          <div className="map" ref={mapRef} style={{ height: '500px', width: '100%' }}>
             {/* El mapa se inicializará aquí */}
           </div>
         </section>
