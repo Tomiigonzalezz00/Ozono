@@ -60,7 +60,7 @@ const Consejos = () => {
               </Link>
             </li>
             <li>
-              <Link to="/consejos" style={{ color: 'inherit' }}>
+              <Link to="/consejosRRR" style={{ color: 'inherit' }}>
                 <i className="fa fa-lightbulb-o"></i>
               </Link>
             </li>

@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import Login from './components/Login';
 import Register from './components/Register';
 import Home from './components/Home'; // Importa el nuevo componente Home
-import Consejos from './components/Consejos';
+import ConsejosRRR from './components/ConsejosRRR';
 import Consejos2 from './components/Consejos2';
 import Consejos4 from './components/Consejos4';
 import Consejos5 from './components/Consejos5';
@@ -21,7 +21,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/home" element={<Home />} /> {/* Agrega la ruta para Home */}
           <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/consejos" element={<Consejos />} />
+          <Route path="/consejosRRR" element={<ConsejosRRR />} />
           <Route path="/consejos2" element={<Consejos2 />} />
           <Route path="/consejos4" element={<Consejos4 />} />
           <Route path="/consejos5" element={<Consejos5 />} />
