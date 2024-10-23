@@ -113,6 +113,7 @@ h1 {
   font-size: 16px;
 }
 
+
 .tarjetas-container {
   display: grid;
   grid-template-columns: repeat(2, 1fr); /* 2 columnas */
@@ -126,4 +127,39 @@ h1 {
   border-radius: 8px; /* Esquinas redondeadas */
   padding: 20px; /* Espaciado interno de la tarjeta */
   text-align: center; /* Centra el texto */
+  position: relative; /* Para posicionamiento absoluto de elementos */
+  height: 80px; /* Mantén el tamaño fijo de la tarjeta */
+  display: flex;
+  align-items: center; /* Centra verticalmente el contenido */
+  justify-content: center; /* Centra horizontalmente el contenido */
 }
+
+.tarjeta .square {
+  width: 50px;
+  height: 100%; /* Ocupa toda la altura de la tarjeta */
+  background-color: green; /* Cuadrado verde */
+  position: absolute; /* Posicionamiento absoluto */
+  top: 0;
+  left: 0;
+}
+
+.tarjeta-titulo {
+  font-size: 30px; /* Tamaño del título */
+  font-weight: bold;
+  margin: 0;
+  text-align: center;
+  z-index: 1; /* Asegura que el título esté encima del cuadrado */
+}
+
+.tarjeta-categoria {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  font-size: 20px; /* Tamaño de la categoría */
+  font-weight: normal;
+  margin: 0;
+  white-space: nowrap; /* Evita saltos de línea */
+  text-overflow: ellipsis;
+}
+
+

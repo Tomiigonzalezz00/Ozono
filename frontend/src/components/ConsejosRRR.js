@@ -46,13 +46,24 @@ const Consejos = () => {
     }));
   };
 
+  const handleClearFilters = () => {
+    setFilterText(""); // Limpia el texto del filtro
+    setSelectedFilters({
+      reciclaje: false,
+      reutilizacion: false,
+      reduccion: false,
+    }); // Restablece los checkboxes
+  };
+
   const filteredTarjetas = tarjetas.filter((tarjeta) => {
-    return (
+    const matchesText = tarjeta.titulo.toLowerCase().includes(filterText.toLowerCase());
+    const matchesCategory =
       (selectedFilters.reciclaje && tarjeta.categoria === 'reciclaje') ||
       (selectedFilters.reutilizacion && tarjeta.categoria === 'reutilizacion') ||
       (selectedFilters.reduccion && tarjeta.categoria === 'reduccion') ||
-      (!selectedFilters.reciclaje && !selectedFilters.reutilizacion && !selectedFilters.reduccion)
-    );
+      (!selectedFilters.reciclaje && !selectedFilters.reutilizacion && !selectedFilters.reduccion);
+
+    return matchesText && matchesCategory; // Coincidencia de ambos filtros
   });
 
   useEffect(() => {
@@ -146,7 +157,7 @@ const Consejos = () => {
               value={filterText}
               onChange={handleFilterTextChange}
             />
-            <button>Filtrar</button>
+            <button onClick={handleClearFilters}>Limpiar filtros</button> {/* Botón para limpiar */}
           </div>
 
           <div className="checkbox-filters">
@@ -183,7 +194,9 @@ const Consejos = () => {
             {filteredTarjetas.slice(0, 6).length > 0 ? ( // Solo muestra hasta 6 tarjetas
               filteredTarjetas.slice(0, 6).map((tarjeta) => (
                 <div key={tarjeta.id} className="tarjeta">
-                  <h3>{tarjeta.titulo}</h3>
+                  <div className="square"></div> {/* Cuadrado verde */}
+                  <h3 className="tarjeta-titulo">{tarjeta.titulo}</h3>
+                  <p className="tarjeta-categoria">{tarjeta.categoria}</p>
                 </div>
               ))
             ) : (
@@ -197,5 +210,6 @@ const Consejos = () => {
 };
 
 export default Consejos;
+
 
 
