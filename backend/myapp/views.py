@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from .models import Item
+from .models import Item, PuntoVerde, ConsejosRRR
 from rest_framework import viewsets
-from .serializers import ItemSerializer
+from .serializers import ItemSerializer, PuntoVerdeSerializer, ConsejosRRRSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework import status
@@ -10,8 +10,8 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view
-from .models import PuntoVerde
-from .serializers import PuntoVerdeSerializer
+from rest_framework import generics
+from rest_framework import filters
 
 
 def home(request):
@@ -51,4 +51,13 @@ class LoginView(APIView):
 def get_puntos_verdes(request):
     puntos = PuntoVerde.objects.all()
     serializer = PuntoVerdeSerializer(puntos, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def get_consejos_rrr(request):
+    categoria = request.query_params.get('categoria', None)
+    consejos = ConsejosRRR.objects.all()
+    if categoria:
+        consejos = consejos.filter(categoria__icontains=categoria)
+    serializer = ConsejosRRRSerializer(consejos, many=True)
     return Response(serializer.data)
