@@ -66,7 +66,7 @@ const Consejos = () => {
     const matchesText = tarjeta.titulo.toLowerCase().includes(filterText.toLowerCase());
     const matchesCategory =
       (selectedFilters.reciclaje && tarjeta.categoria === 'reciclaje') ||
-      (selectedFilters.reutilizacion && tarjeta.categoria === 'reutilizacion') ||
+      (selectedFilters.reutilizacion && tarjeta.categoria === 'reutilización') ||
       (selectedFilters.reduccion && tarjeta.categoria === 'reducción') ||
       (!selectedFilters.reciclaje && !selectedFilters.reutilizacion && !selectedFilters.reduccion);
 
