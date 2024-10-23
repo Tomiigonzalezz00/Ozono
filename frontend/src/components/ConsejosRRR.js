@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './Consejos.css';
 import 'font-awesome/css/font-awesome.min.css';
@@ -11,19 +11,26 @@ const Consejos = () => {
     reutilizacion: false,
     reduccion: false,
   });
-
-  const [tarjetas] = useState([
-    { id: 1, titulo: 'Reciclaje', categoria: 'reciclaje' },
-    { id: 2, titulo: 'Reutilización', categoria: 'reutilizacion' },
-    { id: 3, titulo: 'Reducción de Consumo', categoria: 'reduccion' },
-    { id: 4, titulo: 'Reciclaje de plástico', categoria: 'reciclaje' },
-    { id: 5, titulo: 'Reciclaje de vidrio', categoria: 'reciclaje' },
-    { id: 6, titulo: 'Reutilización de ropa', categoria: 'reutilizacion' },
-    { id: 7, titulo: 'Reducir el uso de papel', categoria: 'reduccion' },
-    { id: 8, titulo: 'Reutilizar envases', categoria: 'reutilizacion' },
-  ]);
-
+  const [tarjetas, setTarjetas] = useState([]); // Estado para las tarjetas
   const menuRef = useRef(null);
+
+  // Función para obtener consejos desde la base de datos
+  const fetchConsejos = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/consejos-rrr/'); // Cambia esta URL si es necesario
+      if (!response.ok) {
+        throw new Error('Error en la carga de datos');
+      }
+      const data = await response.json();
+      setTarjetas(data);
+    } catch (error) {
+      console.error('Error fetching consejos:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchConsejos(); // Llama a la función al montar el componente
+  }, []);
 
   const toggleProfileMenu = () => {
     setIsProfileOpen(prevState => !prevState);
@@ -60,7 +67,7 @@ const Consejos = () => {
     const matchesCategory =
       (selectedFilters.reciclaje && tarjeta.categoria === 'reciclaje') ||
       (selectedFilters.reutilizacion && tarjeta.categoria === 'reutilizacion') ||
-      (selectedFilters.reduccion && tarjeta.categoria === 'reduccion') ||
+      (selectedFilters.reduccion && tarjeta.categoria === 'reducción') ||
       (!selectedFilters.reciclaje && !selectedFilters.reutilizacion && !selectedFilters.reduccion);
 
     return matchesText && matchesCategory; // Coincidencia de ambos filtros
@@ -191,12 +198,14 @@ const Consejos = () => {
           </div>
 
           <div className="tarjetas-container">
-            {filteredTarjetas.slice(0, 6).length > 0 ? ( // Solo muestra hasta 6 tarjetas
+            {filteredTarjetas.length > 0 ? ( // Muestra tarjetas filtradas
               filteredTarjetas.slice(0, 6).map((tarjeta) => (
                 <div key={tarjeta.id} className="tarjeta">
                   <div className="square"></div> {/* Cuadrado verde */}
-                  <h3 className="tarjeta-titulo">{tarjeta.titulo}</h3>
-                  <p className="tarjeta-categoria">{tarjeta.categoria}</p>
+                  <h3 className="tarjeta-titulo" style={{ textAlign: 'center' }}>{tarjeta.titulo}</h3>
+                  <p className="tarjeta-categoria" style={{ position: 'absolute', bottom: '10px', right: '10px' }}>
+                    {tarjeta.categoria}
+                  </p>
                 </div>
               ))
             ) : (
@@ -210,6 +219,7 @@ const Consejos = () => {
 };
 
 export default Consejos;
+
 
 
 
