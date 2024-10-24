@@ -132,6 +132,14 @@ h1 {
   display: flex;
   align-items: center; /* Centra verticalmente el contenido */
   justify-content: center; /* Centra horizontalmente el contenido */
+  transition: box-shadow 0.3s ease, transform 0.3s ease; /* Transición suave */
+  cursor: pointer; /* Cambia el cursor a puntero al pasar por la tarjeta */
+}
+
+/* Efecto al pasar el mouse sobre la tarjeta */
+.tarjeta:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Sombra al pasar el mouse */
+  transform: translateY(-5px); /* Eleva la tarjeta al pasar el mouse */
 }
 
 .tarjeta .square {
@@ -149,6 +157,7 @@ h1 {
   margin: 0;
   text-align: center;
   z-index: 1; /* Asegura que el título esté encima del cuadrado */
+  cursor: pointer; /* Cambia el cursor a puntero al pasar por la tarjeta */
 }
 
 .tarjeta-categoria {
@@ -160,6 +169,63 @@ h1 {
   margin: 0;
   white-space: nowrap; /* Evita saltos de línea */
   text-overflow: ellipsis;
+  cursor: pointer; /* Cambia el cursor a puntero al pasar por la tarjeta */
 }
 
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro semitransparente */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Asegura que el modal esté adelante de todo */
+}
+
+/* Estilo del contenido del modal */
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 80%;
+  max-width: 600px;
+  position: relative;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Botón de cerrar */
+.modal-close-btn {
+  background-color: #ff5c5c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.modal-close-btn:hover {
+  background-color: #ff3232;
+}
+
+/* Animación de entrada del modal */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
 

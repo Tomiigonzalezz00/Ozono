@@ -5,19 +5,19 @@ import 'font-awesome/css/font-awesome.min.css';
 
 const Consejos = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [filterText, setFilterText] = useState(""); 
+  const [filterText, setFilterText] = useState("");
   const [selectedFilters, setSelectedFilters] = useState({
     reciclaje: false,
     reutilizacion: false,
     reduccion: false,
   });
-  const [tarjetas, setTarjetas] = useState([]); // Estado para las tarjetas
+  const [tarjetas, setTarjetas] = useState([]);
+  const [selectedCard, setSelectedCard] = useState(null); // Estado para la tarjeta seleccionada
   const menuRef = useRef(null);
 
-  // Función para obtener consejos desde la base de datos
   const fetchConsejos = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/consejos-rrr/'); // Cambia esta URL si es necesario
+      const response = await fetch('http://localhost:8000/api/consejos-rrr/');
       if (!response.ok) {
         throw new Error('Error en la carga de datos');
       }
@@ -29,7 +29,7 @@ const Consejos = () => {
   };
 
   useEffect(() => {
-    fetchConsejos(); // Llama a la función al montar el componente
+    fetchConsejos();
   }, []);
 
   const toggleProfileMenu = () => {
@@ -54,12 +54,12 @@ const Consejos = () => {
   };
 
   const handleClearFilters = () => {
-    setFilterText(""); // Limpia el texto del filtro
+    setFilterText("");
     setSelectedFilters({
       reciclaje: false,
       reutilizacion: false,
       reduccion: false,
-    }); // Restablece los checkboxes
+    });
   };
 
   const filteredTarjetas = tarjetas.filter((tarjeta) => {
@@ -70,8 +70,16 @@ const Consejos = () => {
       (selectedFilters.reduccion && tarjeta.categoria === 'reducción') ||
       (!selectedFilters.reciclaje && !selectedFilters.reutilizacion && !selectedFilters.reduccion);
 
-    return matchesText && matchesCategory; // Coincidencia de ambos filtros
+    return matchesText && matchesCategory;
   });
+
+  const handleCardClick = (tarjeta) => {
+    setSelectedCard(tarjeta);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedCard(null);
+  };
 
   useEffect(() => {
     const adjustMenuPosition = () => {
@@ -120,7 +128,7 @@ const Consejos = () => {
             <li>
               <Link to="/consejosRRR" style={{ color: 'inherit' }}>
                 <i className="fa fa-lightbulb-o"></i>
-              </Link>
+                </Link>
             </li>
             <li>
               <Link to="/consejos2" style={{ color: 'inherit' }}>
@@ -164,7 +172,7 @@ const Consejos = () => {
               value={filterText}
               onChange={handleFilterTextChange}
             />
-            <button onClick={handleClearFilters}>Limpiar filtros</button> {/* Botón para limpiar */}
+            <button onClick={handleClearFilters}>Limpiar filtros</button>
           </div>
 
           <div className="checkbox-filters">
@@ -198,27 +206,58 @@ const Consejos = () => {
           </div>
 
           <div className="tarjetas-container">
-            {filteredTarjetas.length > 0 ? ( // Muestra tarjetas filtradas
-              filteredTarjetas.slice(0, 6).map((tarjeta) => (
-                <div key={tarjeta.id} className="tarjeta">
-                  <div className="square"></div> {/* Cuadrado verde */}
-                  <h3 className="tarjeta-titulo" style={{ textAlign: 'center' }}>{tarjeta.titulo}</h3>
-                  <p className="tarjeta-categoria" style={{ position: 'absolute', bottom: '10px', right: '10px' }}>
-                    {tarjeta.categoria}
-                  </p>
-                </div>
-              ))
+            {filteredTarjetas.length > 0 ? (
+              filteredTarjetas.slice(0, 6).map((tarjeta) => {
+                // Define el color del cuadrado basado en la categoría
+                let squareColor;
+                switch (tarjeta.categoria) {
+                  case 'reciclaje':
+                    squareColor = 'green'; // Verde para reciclaje
+                    break;
+                  case 'reutilización':
+                    squareColor = 'yellow'; // Amarillo para reutilización
+                    break;
+                  case 'reducción':
+                    squareColor = 'blue'; // Azul para reducción
+                    break;
+                  default:
+                    squareColor = 'gray'; // Color por defecto si no coincide
+                }
+
+                return (
+                  <div key={tarjeta.id} className="tarjeta" onClick={() => handleCardClick(tarjeta)} style={{ cursor: 'pointer' }}>
+                    <div className="square" style={{ backgroundColor: squareColor }}></div>
+                    <h3 className="tarjeta-titulo" style={{ textAlign: 'center' }}>{tarjeta.titulo}</h3>
+                    <p className="tarjeta-categoria" style={{ position: 'absolute', bottom: '10px', right: '10px' }}>
+                      {tarjeta.categoria}
+                    </p>
+                  </div>
+                );
+              })
             ) : (
               <p>No hay tarjetas que coincidan con los filtros seleccionados.</p>
             )}
           </div>
         </section>
       </div>
+
+      {/* Modal */}
+      {selectedCard && (
+        <div className="modal">
+          <div className="modal-content">
+            <button className="modal-close-btn" onClick={handleCloseModal}>X</button> {/* Botón para cerrar */}
+            <h2>{selectedCard.titulo}</h2>
+            <p>{selectedCard.descripcion}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default Consejos;
+
+
 
 
 
