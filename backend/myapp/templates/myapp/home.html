@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+</head>
+<body>
+    <h1>Para ingresar a la API, ingrese a la siguiente URL: http://127.0.0.1:8000/api/
+        <br>
+        <br>
+        Para ingresar al administrador, ingrese a la siguiente URL: http://127.0.0.1:8000/admin
+        <br>
+        <br>
+        Para ingresar a la API y llamar a los endpoints de los puntos verdes, ingrese a la siguiente URL: http://127.0.0.1:8000/api/puntos-verdes/
+        <br>
+        <br>
+        Para ingresar a la API y llamar a los endpoints de los consejos RRR, ingrese a la siguiente URL: http://127.0.0.1:8000/api/consejos-rrr/
+    </h1>
+    <ul>
+    {% for item in items %}
+        <li>{{ item.name }}</li>
+    {% endfor %}
+    </ul>
+</body>
+</html>

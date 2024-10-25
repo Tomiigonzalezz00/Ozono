@@ -16,7 +16,7 @@ from rest_framework import filters
 
 def home(request):
     items = Item.objects.all()
-    return render(request, 'home.html', {'items': items})
+    return render(request, 'myapp/home.html', {'items': items})
 
 class ItemViewSet(viewsets.ModelViewSet):
     queryset = Item.objects.all()
