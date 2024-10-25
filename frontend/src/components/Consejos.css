@@ -229,3 +229,21 @@ h1 {
   }
 }
 
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px; /* Espaciado entre los meses */
+  padding: 20px;
+}
+
+.calendar-month {
+  background-color: #4caf50; /* Color verde */
+  color: white; /* Texto blanco */
+  text-align: center;
+  padding: 50px; /* Espaciado interno */
+  border-radius: 8px; /* Bordes redondeados */
+  font-weight: bold; /* Negrita para el nombre del mes */
+  height: 100px; /* Altura de cada celda del mes */
+}
+

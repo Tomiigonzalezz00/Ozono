@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import './Home.css';
+import './Home.css'; // Asegúrate de que los estilos CSS estén en este archivo
 import 'font-awesome/css/font-awesome.min.css';
 
-const Consejos = () => {
+const Consejos4 = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -97,15 +97,21 @@ const Consejos = () => {
           </ul>
         </aside>
         <section className="content-section">
-          <h1>Calendario</h1>
-          {/* Aquí puedes agregar el contenido de consejos que desees mostrar */}
+          <h1>Calendario Ambiental</h1>
+          <div className="calendar">
+            {["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"].map((mes, index) => (
+              <div className="calendar-month" key={index}>
+                {mes}
+              </div>
+            ))}
+          </div>
         </section>
       </div>
     </div>
   );
 };
 
-export default Consejos;
+export default Consejos4;
 
 
 
