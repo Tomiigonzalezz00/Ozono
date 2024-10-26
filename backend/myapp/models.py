@@ -9,8 +9,6 @@ class Item(models.Model):
     def __str__(self):
         return str(self.name)
 
-    def _str_(self):
-        return self.name 
 class PuntoVerde(models.Model):
     """
     Modelo que representa un Punto Verde en el sistema.
@@ -45,8 +43,8 @@ class ConsejosRRR(models.Model):
         ('reduccion', 'Reducción de Consumo'),
     ]
 
-    id = models.CharField(max_length=10, primary_key=True)  # Mantén esto como CharField por ahora
-    titulo = models.CharField(max_length=100)  # Quita el unique=True por ahora
+    id = models.CharField(max_length=10, primary_key=True) 
+    titulo = models.CharField(max_length=100)  
     categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES, default='reciclaje')
     descripcion = models.TextField()
     objects = models.Manager()
@@ -57,3 +55,16 @@ class ConsejosRRR(models.Model):
     class Meta:
         verbose_name = "Consejo RRR"
         verbose_name_plural = "Consejos RRR"
+
+class CalendarioAmbiental(models.Model):
+    """
+    Modelo que representa un calendario ambiental en el sistema.
+    """
+    id = models.CharField(max_length=10, primary_key=True)
+    evento = models.CharField(max_length=100)
+    fecha = models.DateField()
+    descripcion = models.TextField()
+    objects = models.Manager()
+
+    def __str__(self):
+        return str(self.evento)

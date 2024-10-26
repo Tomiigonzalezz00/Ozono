@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from .models import Item, PuntoVerde, ConsejosRRR
+from .models import Item, PuntoVerde, ConsejosRRR, CalendarioAmbiental
 from rest_framework import viewsets
-from .serializers import ItemSerializer, PuntoVerdeSerializer, ConsejosRRRSerializer
+from .serializers import ItemSerializer, PuntoVerdeSerializer, ConsejosRRRSerializer, CalendarioAmbientalSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework import status
@@ -60,4 +60,10 @@ def get_consejos_rrr(request):
     if categoria:
         consejos = consejos.filter(categoria__icontains=categoria)
     serializer = ConsejosRRRSerializer(consejos, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def get_calendario_ambiental(request):
+    calendario = CalendarioAmbiental.objects.all()
+    serializer = CalendarioAmbientalSerializer(calendario, many=True)
     return Response(serializer.data)
