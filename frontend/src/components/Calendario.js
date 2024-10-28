@@ -18,6 +18,14 @@ const Consejos4 = () => {
     localStorage.removeItem('token');
     window.location.href = '/login';
   };
+  const formatDate = (fecha) => {
+    const [year, month, day] = fecha.split('-');
+    const months = [
+      "enero", "febrero", "marzo", "abril", "mayo", "junio", 
+      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ];
+    return `${day} de ${months[parseInt(month, 10) - 1]} ${year}`;
+  };
 
   useEffect(() => {
     const adjustMenuPosition = () => {
@@ -203,6 +211,7 @@ const Consejos4 = () => {
             <div className="modalcal-overlay">
               <div className="modalcal-content">
                 <h3>{selectedEvent.evento}</h3>
+                <p>{formatDate(selectedEvent.fecha)}</p>
                 <p>{selectedEvent.descripcion}</p>
                 <button onClick={closeModal}>Cerrar</button>
               </div>
