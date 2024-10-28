@@ -234,4 +234,45 @@
   .modalcal-close:hover {
     background-color: #45a049;
   }
+
+  /* Título Principal */
+.content-section h1 {
+    font-size: 2.5em;
+    color: #4caf50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    gap: 15px; /* Espacio entre el icono y el texto */
+  }
   
+  /* Imagen del mundo */
+  .content-section h1 img {
+    width: 60px; /* Tamaño de la imagen */
+    height: 60px;
+  }
+  
+  /* Fondo y estilo de la sección de contenido */
+  .content-section {
+    padding: 30px;
+    background-color: #f0f8f5; /* Fondo claro con un tono verde */
+    border-radius: 12px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+    max-width: 1200px;
+    margin: 20px auto;
+  }
+  
+  /* Subtítulo */
+  .content-section h2 {
+    font-size: 1.2em;
+    color: #666;
+    margin-top: 10px;
+    text-align: center;
+  }
+
+  .imagen-titulo {
+    margin-left: 10px; /* Espacio a la derecha del título */
+    width: 40px; /* Tamaño de la imagen */
+    height: auto;
+  }
+   

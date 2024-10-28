@@ -7,7 +7,7 @@ const Consejos4 = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [fechasAmbientales, setFechasAmbientales] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar el modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const menuRef = useRef(null);
 
   const toggleProfileMenu = () => {
@@ -91,13 +91,13 @@ const Consejos4 = () => {
     const event = getEventByDate(dia, mesIndex);
     if (event) {
       setSelectedEvent(event);
-      setIsModalOpen(true); // Abre el modal si hay evento
+      setIsModalOpen(true);
     }
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setSelectedEvent(null); // Limpia la selección cuando se cierra el modal
+    setSelectedEvent(null);
   };
 
   return (
@@ -160,7 +160,10 @@ const Consejos4 = () => {
           </ul>
         </aside>
         <section className="content-section">
-          <h1>Calendario Ambiental</h1>
+          <h1>
+            <img src="/images/CalendarioAmbiental.jpeg" alt="Mundo Verde" className="imagen-titulo" />
+            Calendario Ambiental
+          </h1>
           <div className="calendar">
             {meses.map((mes, index) => {
               const startDay = getStartDayOfMonth(index);
@@ -212,6 +215,7 @@ const Consejos4 = () => {
 };
 
 export default Consejos4;
+
 
 
 
