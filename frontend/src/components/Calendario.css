@@ -1,0 +1,189 @@
+/* src/styles/Calendario.css */
+
+/* Fondo gris claro para el contenedor principal */
+.home-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #f0f0f0; /* Gris claro */
+  }
+  
+  .top-bar {
+    width: 100%;
+    height: 50px;
+    background-color: #006400; /* Color verde oscuro para la barra superior */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    box-sizing: border-box;
+  }
+  
+  .brand-image {
+    height: 40px;
+  }
+  
+  .user-info {
+    display: flex;
+    align-items: center;
+    color: white;
+    position: relative; /* Para el menú desplegable de perfil */
+  }
+  
+  .user-name {
+    margin-left: 10px;
+  }
+  
+  .main-content {
+    display: flex;
+    flex: 1;
+  }
+  
+  .sidebar {
+    width: 60px;
+    background-color: #2f2f2f;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+  }
+  
+  .sidebar-menu {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+  }
+  
+  .sidebar-menu li {
+    margin: 0;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+  
+  .content-section {
+    flex: 1;
+    padding: 20px;
+    background-color: #b8b6b6; /* Fondo gris claro */
+    box-sizing: border-box;
+  }
+
+.calendar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px; /* Espaciado entre los meses */
+    padding: 20px;
+  }
+  
+  .calendar-month {
+    background-color: #4caf50; /* Color verde */
+    color: white; /* Texto blanco */
+    text-align: center;
+    padding: 10px 0; /* Espaciado interno superior e inferior */
+    border-radius: 8px; /* Bordes redondeados */
+    font-weight: bold; /* Negrita para el nombre del mes */
+    height: 280px; /* Altura de cada celda del mes */
+    position: relative; /* Para permitir un ajuste de posición de los elementos hijos */
+  }
+  
+  .calendar-month h2 {
+    font-size: 1.5em;
+    margin: 0; /* Elimina márgenes para que el título esté en la parte superior */
+    color: #333;
+  }
+  
+  .days-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    width: 100%;
+    text-align: center;
+    color: #666;
+    font-weight: bold;
+    margin: 10px 0; /* Reduce el margen inferior */
+    font-size: 0.9em; /* Tamaño de fuente consistente */
+  }
+  
+  .day-name {
+    margin: 0; /* Sin margen */
+  }
+  
+  .days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px; /* Espacio entre los días */
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .day {
+    background-color: #ffffff;
+    border: 1px solid #b3e6b3;
+    width: 28px; /* Tamaño reducido */
+    height: 28px; /* Tamaño reducido */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9em; /* Tamaño de fuente ajustado */
+    color: #333;
+    border-radius: 50%;
+    position: relative; /* Para permitir el posicionamiento del círculo */
+    transition: background-color 0.3s;
+  }
+  
+  .day.empty {
+    background-color: transparent;
+    border: none;
+  }
+  
+  .day:hover {
+    background-color: #b3e6b3;
+  }
+  
+  .circle {
+    position: absolute;
+    background-color: green; /* Color del círculo */
+    border-radius: 50%;
+    width: 20px; /* Diámetro del círculo */
+    height: 20px; /* Altura del círculo */
+    top: 50%; /* Centra verticalmente */
+    left: 50%; /* Centra horizontalmente */
+    transform: translate(-50%, -50%); /* Ajusta el centro del círculo */
+  }
+
+  .modalcal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .modalcal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 500px;
+    text-align: center;
+  }
+  
+  .modalcal-close {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  

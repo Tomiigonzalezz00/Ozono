@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import './Consejos.css';
+import './Calendario.css';
 import 'font-awesome/css/font-awesome.min.css';
 
 const Consejos4 = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [fechasAmbientales, setFechasAmbientales] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar el modal
   const menuRef = useRef(null);
 
   const toggleProfileMenu = () => {
@@ -42,9 +43,9 @@ const Consejos4 = () => {
   useEffect(() => {
     const fetchFechasAmbientales = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/calendario-ambiental/'); // Cambia esta URL a la de tu API
+        const response = await fetch('http://localhost:8000/api/calendario-ambiental/');
         const data = await response.json();
-        setFechasAmbientales(data); // Almacena el arreglo de objetos
+        setFechasAmbientales(data);
       } catch (error) {
         console.error('Error fetching fechas ambientales:', error);
       }
@@ -82,7 +83,6 @@ const Consejos4 = () => {
     const month = monthNames[mesIndex];
     const year = new Date().getFullYear();
 
-    // Formato de la fecha esperado: 'YYYY-MM-DD'
     const formattedDate = `${year}-${month}-${String(dia).padStart(2, '0')}`;
     return fechasAmbientales.find(evento => evento.fecha === formattedDate);
   };
@@ -91,9 +91,13 @@ const Consejos4 = () => {
     const event = getEventByDate(dia, mesIndex);
     if (event) {
       setSelectedEvent(event);
-    } else {
-      setSelectedEvent(null); // Si no hay evento, limpia la selección
+      setIsModalOpen(true); // Abre el modal si hay evento
     }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedEvent(null); // Limpia la selección cuando se cierra el modal
   };
 
   return (
@@ -129,7 +133,7 @@ const Consejos4 = () => {
               </Link>
             </li>
             <li>
-              <Link to="/calendario" style={{ color: 'inherit' }}>
+              <Link to="/Calendario" style={{ color: 'inherit' }}>
                 <i className="fa fa-calendar-alt"></i>
               </Link>
             </li>
@@ -176,13 +180,13 @@ const Consejos4 = () => {
                       const event = getEventByDate(dia + 1, index);
                       return (
                         <div
-                          className={`day ${event ? 'has-event' : ''}`} // Añade una clase si hay evento
+                          className={`day ${event ? 'has-event' : ''}`}
                           key={dia + 1}
                           onClick={() => handleDayClick(dia + 1, index)}
                         >
                           {dia + 1}
                           {event && (
-                            <div className="circle"></div> // Solo se muestra si hay evento
+                            <div className="circle"></div>
                           )}
                         </div>
                       );
@@ -192,11 +196,13 @@ const Consejos4 = () => {
               );
             })}
           </div>
-          {selectedEvent && (
-            <div className="event-details">
-              <h3>{selectedEvent.evento}</h3>
-              <p>{selectedEvent.descripcion}</p>
-              <button onClick={() => setSelectedEvent(null)}>Cerrar</button>
+          {isModalOpen && (
+            <div className="modalcal-overlay">
+              <div className="modalcal-content">
+                <h3>{selectedEvent.evento}</h3>
+                <p>{selectedEvent.descripcion}</p>
+                <button onClick={closeModal}>Cerrar</button>
+              </div>
             </div>
           )}
         </section>
@@ -206,6 +212,7 @@ const Consejos4 = () => {
 };
 
 export default Consejos4;
+
 
 
 
