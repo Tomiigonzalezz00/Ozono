@@ -165,33 +165,73 @@
   }
   
   
-  .modalcal-overlay {
+ /* Estilo para la superposición del modal */
+.modalcal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.6); /* Fondo oscuro con más opacidad */
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 1000; /* Asegura que el modal esté al frente */
   }
   
+  /* Estilo para el contenido del modal */
   .modalcal-content {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
     max-width: 500px;
+    width: 90%; /* Ajuste de ancho para pantallas pequeñas */
     text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Sombra sutil */
+    animation: fadeIn 0.3s ease-in-out; /* Animación de entrada */
   }
   
+  /* Animación para que el modal aparezca con suavidad */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  /* Estilo para el título y el texto dentro del modal */
+  .modalcal-content h3 {
+    font-size: 1.8em;
+    color: #4caf50;
+    margin-bottom: 10px;
+  }
+  
+  .modalcal-content p {
+    font-size: 1em;
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  
+  /* Botón de cierre del modal */
   .modalcal-close {
-    margin-top: 15px;
     padding: 10px 20px;
-    background: #333333;
+    background: #4caf50;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+  
+  /* Cambia el color al pasar el ratón por encima del botón */
+  .modalcal-close:hover {
+    background-color: #45a049;
   }
   
