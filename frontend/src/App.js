@@ -5,7 +5,7 @@ import Register from './components/Register';
 import Home from './components/Home'; // Importa el nuevo componente Home
 import ConsejosRRR from './components/ConsejosRRR';
 import Consejos2 from './components/Consejos2';
-import Consejos4 from './components/Consejos4';
+import Calendario from './components/Calendario';
 import Consejos5 from './components/Consejos5';
 import Consejos6 from './components/Consejos6';
 import Consejos7 from './components/Consejos7';
@@ -23,7 +23,7 @@ function App() {
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/consejosRRR" element={<ConsejosRRR />} />
           <Route path="/consejos2" element={<Consejos2 />} />
-          <Route path="/consejos4" element={<Consejos4 />} />
+          <Route path="/Calendario" element={<Calendario/>} />
           <Route path="/consejos5" element={<Consejos5 />} />
           <Route path="/consejos6" element={<Consejos6 />} />
           <Route path="/consejos7" element={<Consejos7 />} />

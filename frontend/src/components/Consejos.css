@@ -229,7 +229,6 @@ h1 {
   }
 }
 
-
 .calendar {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -241,9 +240,74 @@ h1 {
   background-color: #4caf50; /* Color verde */
   color: white; /* Texto blanco */
   text-align: center;
-  padding: 50px; /* Espaciado interno */
+  padding: 10px 0; /* Espaciado interno superior e inferior */
   border-radius: 8px; /* Bordes redondeados */
   font-weight: bold; /* Negrita para el nombre del mes */
-  height: 100px; /* Altura de cada celda del mes */
+  height: 280px; /* Altura de cada celda del mes */
+  position: relative; /* Para permitir un ajuste de posición de los elementos hijos */
+}
+
+.calendar-month h2 {
+  font-size: 1.5em;
+  margin: 0; /* Elimina márgenes para que el título esté en la parte superior */
+  color: #333;
+}
+
+.days-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  width: 100%;
+  text-align: center;
+  color: #666;
+  font-weight: bold;
+  margin: 10px 0; /* Reduce el margen inferior */
+  font-size: 0.9em; /* Tamaño de fuente consistente */
+}
+
+.day-name {
+  margin: 0; /* Sin margen */
+}
+
+.days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px; /* Espacio entre los días */
+  justify-content: center;
+  width: 100%;
+}
+
+.day {
+  background-color: #ffffff;
+  border: 1px solid #b3e6b3;
+  width: 28px; /* Tamaño reducido */
+  height: 28px; /* Tamaño reducido */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9em; /* Tamaño de fuente ajustado */
+  color: #333;
+  border-radius: 50%;
+  position: relative; /* Para permitir el posicionamiento del círculo */
+  transition: background-color 0.3s;
+}
+
+.day.empty {
+  background-color: transparent;
+  border: none;
+}
+
+.day:hover {
+  background-color: #b3e6b3;
+}
+
+.circle {
+  position: absolute;
+  background-color: green; /* Color del círculo */
+  border-radius: 50%;
+  width: 20px; /* Diámetro del círculo */
+  height: 20px; /* Altura del círculo */
+  top: 50%; /* Centra verticalmente */
+  left: 50%; /* Centra horizontalmente */
+  transform: translate(-50%, -50%); /* Ajusta el centro del círculo */
 }
 
