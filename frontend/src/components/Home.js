@@ -89,6 +89,23 @@ const Home = () => {
       };
 
       fetchPuntosVerdes();
+    
+
+      const legend = L.control({ position: 'bottomright' });
+
+      legend.onAdd = function () {
+        const div = L.DomUtil.create('div', 'legend');
+        div.innerHTML = `
+          <div style="padding: 8px; background-color: white; border-radius: 5px;">
+            <h4>Rerefencia de colores</h4>
+            <p><i class="fa fa-recycle" style="color: blue; font-size: 18px;"></i> Materiales Orgánicos</p>
+            <p><i class="fa fa-recycle" style="color: green; font-size: 18px;"></i> Materiales No Orgánicos</p>
+          </div>
+        `;
+        return div;
+      };
+
+      legend.addTo(mapInstance.current);
     }
   }, []);
 

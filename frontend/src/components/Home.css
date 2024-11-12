@@ -176,6 +176,35 @@
   background-color: #f0f0f0;
 }
 
+.legend {
+  font-family: Arial, sans-serif;
+  background-color: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  color: #333;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.legend h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #006400;
+  margin-bottom: 8px;
+}
+
+.legend p {
+  display: flex;
+  align-items: center;
+  margin: 4px 0;
+}
+
+.legend i {
+  margin-right: 8px;
+}
+
 
 
 

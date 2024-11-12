@@ -2,277 +2,237 @@
 
 /* Fondo gris claro para el contenedor principal */
 .home-container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    background-color: #f0f0f0; /* Gris claro */
-  }
-  
-  .top-bar {
-    width: 100%;
-    height: 50px;
-    background-color: #006400; /* Color verde oscuro para la barra superior */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
-    box-sizing: border-box;
-  }
-  
-  .brand-image {
-    height: 40px;
-  }
-  
-  .user-info {
-    display: flex;
-    align-items: center;
-    color: white;
-    position: relative; /* Para el menú desplegable de perfil */
-  }
-  
-  .user-name {
-    margin-left: 10px;
-  }
-  
-  .main-content {
-    display: flex;
-    flex: 1;
-  }
-  
-  .sidebar {
-    width: 60px;
-    background-color: #2f2f2f;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 20px;
-  }
-  
-  .sidebar-menu {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-    width: 100%;
-  }
-  
-  .sidebar-menu li {
-    margin: 0;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 60px;
-    font-size: 1.5rem;
-  }
-  
-  .content-section {
-    flex: 1;
-    padding: 20px;
-    background-color: #b8b6b6; /* Fondo gris claro */
-    box-sizing: border-box;
-  }
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f0f8f5;
+}
 
-  .calendar {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    padding: 20px;
-  }
-  
-  .calendar-month {
-    background-color: #4caf50;
-    color: #ffffff;
-    text-align: center;
-    padding: 10px 0;
-    border-radius: 8px;
-    font-weight: bold;
-    height: 300px;
-    position: relative;
-  }
-  
-  .calendar-month h2 {
-    font-size: 1.5em;
-    margin: 0;
-    color: #ffffff;
-  }
-  
-  .days-header {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    width: 100%;
-    text-align: center;
-    color: #d0ffd0;
-    font-weight: bold;
-    margin: 10px 0;
-    font-size: 0.9em;
-  }
-  
-  .day-name {
-    margin: 0;
-  }
-  
-  .days-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
-    justify-content: center;
-    width: 100%;
-  }
-  
-  .day {
-    background-color: #ffffff;
-    border: 1px solid #4caf50;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9em;
-    color: #333333;
-    border-radius: 50%;
-    position: relative;
-    transition: background-color 0.3s;
-  }
-  
-  .day.empty {
-    background-color: transparent;
-    border: none;
-  }
-  
-  .day:hover {
-    background-color: #a5d6a7;
-  }
-  
-  /* Estilos para días con eventos */
-  .has-event {
-    background-color: #ffffff; /* Fondo blanco para días con eventos */
-    border: 2px solid #4caf50; /* Borde verde para resaltar eventos */
-  }
-  
-  /* Círculo de evento que cubre todo el día */
-.day.has-event {
-    background-color: #887c15; /* Color de fondo verde para el día con evento */
-    color: white; /* Cambia el color del texto a blanco */
-    border: none; /* Elimina el borde */
-    cursor: pointer;
-  }
-  
-  /* Para asegurarte de que el número del día se vea */
-  .day.has-event .day-number {
-    color: white; /* Color del número de día en blanco */
-  }
-  
-  
- /* Estilo para la superposición del modal */
+.top-bar {
+  width: 100%;
+  height: 50px;
+  background-color: #006400;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  box-sizing: border-box;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.brand-image {
+  height: 40px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  color: white;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+}
+
+.sidebar {
+  width: 60px;
+  background-color: #2f2f2f;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 20px;
+}
+
+.sidebar-menu li {
+  margin: 0;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 60px;
+  font-size: 1.5rem;
+  transition: background-color 0.3s;
+}
+
+.sidebar-menu li:hover {
+  background-color: #4caf50;
+}
+
+.content-section {
+  flex: 1;
+  padding: 30px;
+  background-color: #f0f8f5;
+  border-radius: 12px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 1200px;
+  margin: 20px auto;
+  text-align: center;
+}
+
+/* Calendario */
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  padding: 20px;
+}
+
+.calendar-month {
+  background-color: #4caf50;
+  color: #ffffff;
+  text-align: center;
+  padding: 15px 0;
+  border-radius: 12px;
+  font-weight: bold;
+  height: 320px;
+  position: relative;
+  /* Agregar sombra en los bordes */
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2), 0px 6px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.calendar-month:hover {
+  transform: scale(1.05);
+  /* Sombra más pronunciada al pasar el mouse */
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3), 0px 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.calendar-month h2 {
+  font-size: 1.6em;
+  margin: 0;
+  color: #ffffff;
+  letter-spacing: 1px;
+}
+
+.days-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  width: 100%;
+  text-align: center;
+  color: #e8ffe8;
+  font-weight: bold;
+  margin: 10px 0;
+  font-size: 0.9em;
+}
+
+.days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+}
+
+.day {
+  background-color: #ffffff;
+  border: 1px solid #4caf50;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9em;
+  color: #333333;
+  border-radius: 50%;
+  position: relative;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.day:hover {
+  background-color: #a5d6a7;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.has-event {
+  background-color: #887c15;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
 .modalcal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.6); /* Fondo oscuro con más opacidad */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000; /* Asegura que el modal esté al frente */
-  }
-  
-  /* Estilo para el contenido del modal */
-  .modalcal-content {
-    background: #fff;
-    padding: 30px;
-    border-radius: 12px;
-    max-width: 500px;
-    width: 90%; /* Ajuste de ancho para pantallas pequeñas */
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Sombra sutil */
-    animation: fadeIn 0.3s ease-in-out; /* Animación de entrada */
-  }
-  
-  /* Animación para que el modal aparezca con suavidad */
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: scale(0.9);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-  
-  /* Estilo para el título y el texto dentro del modal */
-  .modalcal-content h3 {
-    font-size: 1.8em;
-    color: #4caf50;
-    margin-bottom: 10px;
-  }
-  
-  .modalcal-content p {
-    font-size: 1em;
-    color: #666;
-    line-height: 1.5;
-    margin-bottom: 20px;
-  }
-  
-  /* Botón de cierre del modal */
-  .modalcal-close {
-    padding: 10px 20px;
-    background: #4caf50;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1em;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-  }
-  
-  /* Cambia el color al pasar el ratón por encima del botón */
-  .modalcal-close:hover {
-    background-color: #45a049;
-  }
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7); /* Fondo oscuro con opacidad aumentada */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
 
-  /* Título Principal */
+.modalcal-content {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 16px; /* Borde más redondeado */
+  max-width: 500px;
+  width: 90%; /* Ajuste de ancho para pantallas pequeñas */
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); /* Sombra más pronunciada */
+  animation: slideDown 0.4s ease; /* Nueva animación de entrada */
+}
+
+.modalcal-close {
+  padding: 12px 25px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+/* Cambio de color al pasar el ratón sobre el botón */
+.modalcal-close:hover {
+  background-color: #388e3c;
+}
+
+/* Texto del modal */
+.modalcal-content p {
+  font-size: 1em;
+  color: #555; /* Color gris para el texto */
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
 .content-section h1 {
-    font-size: 2.5em;
-    color: #4caf50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-    gap: 15px; /* Espacio entre el icono y el texto */
-  }
-  
-  /* Imagen del mundo */
-  .content-section h1 img {
-    width: 60px; /* Tamaño de la imagen */
-    height: 60px;
-  }
-  
-  /* Fondo y estilo de la sección de contenido */
-  .content-section {
-    padding: 30px;
-    background-color: #f0f8f5; /* Fondo claro con un tono verde */
-    border-radius: 12px;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1); /* Sombra ligera */
-    max-width: 1200px;
-    margin: 20px auto;
-  }
-  
-  /* Subtítulo */
-  .content-section h2 {
-    font-size: 1.2em;
-    color: #666;
-    margin-top: 10px;
-    text-align: center;
-  }
+  font-size: 2.5em;
+  color: #4caf50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 15px;
+}
 
-  .imagen-titulo {
-    margin-left: 10px; /* Espacio a la derecha del título */
-    width: 40px; /* Tamaño de la imagen */
-    height: auto;
+/* Título del modal */
+.modalcal-content h3 {
+  font-size: 1.8em;
+  color: #4caf50; /* Color verde para el título */
+  margin-bottom: 10px;
+}
+
+.content-section h1 img {
+  width: 60px;
+  height: 60px;
+}
+
+/* Animación de entrada para el modal */
+@keyframes slideDown {
+  from {
+      opacity: 0;
+      transform: translateY(-20px);
   }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
    
