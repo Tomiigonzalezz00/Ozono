@@ -218,7 +218,7 @@ const Consejos = () => {
                     squareColor = 'yellow'; // Amarillo para reutilización
                     break;
                   case 'reducción':
-                    squareColor = 'blue'; // Azul para reducción
+                    squareColor = 'steelblue'; // Azul para reducción
                     break;
                   default:
                     squareColor = 'gray'; // Color por defecto si no coincide
