@@ -77,10 +77,13 @@ const Home = () => {
             L.marker([punto.latitud, punto.longitud], { icon })
               .addTo(mapInstance.current)
               .bindPopup(`
-                <strong>${punto.nombre}</strong><br>
-                Dirección: ${punto.direccion}<br>
-                Materiales: ${punto.materiales}<br>
-                Más info: ${punto.mas_info}
+                <div class="popup-content">
+                  <strong>${punto.nombre}</strong><br>
+                  <strong>Dirección:</strong> ${punto.direccion}<br>
+                  <strong>Materiales:</strong> ${punto.materiales}<br>
+                  <strong>Horarios:</strong> ${punto.dia_hora || 'No especificado'}<br>
+                  <strong>Más info:</strong> ${punto.mas_info}
+                </div>
               `);
           });
         } catch (error) {
@@ -162,33 +165,8 @@ const Home = () => {
               </Link>
             </li>
             <li>
-              <Link to="/consejos2" style={{ color: 'inherit' }}>
-                <i className="fa fa-bell"></i>
-              </Link>
-            </li>
-            <li>
               <Link to="/Calendario" style={{ color: 'inherit' }}>
                 <i className="fa fa-calendar-alt"></i>
-              </Link>
-            </li>
-            <li>
-              <Link to="/consejos5" style={{ color: 'inherit' }}>
-                <i className="fa fa-paper-plane"></i>
-              </Link>
-            </li>
-            <li>
-              <Link to="/consejos6" style={{ color: 'inherit' }}>
-                <i className="fa fa-book"></i>
-              </Link>
-            </li>
-            <li>
-              <Link to="/consejos7" style={{ color: 'inherit' }}>
-                <i className="fa fa-calendar-plus"></i>
-              </Link>
-            </li>
-            <li>
-              <Link to="/consejos8" style={{ color: 'inherit' }}>
-                <i className="fa fa-clock"></i>
               </Link>
             </li>
           </ul>

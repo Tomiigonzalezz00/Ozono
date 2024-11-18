@@ -131,33 +131,8 @@ const Consejos = () => {
                 </Link>
             </li>
             <li>
-              <Link to="/consejos2" style={{ color: 'inherit' }}>
-                <i className="fa fa-bell"></i>
-              </Link>
-            </li>
-            <li>
               <Link to="/Calendario" style={{ color: 'inherit' }}>
                 <i className="fa fa-calendar-alt"></i>
-              </Link>
-            </li>
-            <li>
-              <Link to="/consejos5" style={{ color: 'inherit' }}>
-                <i className="fa fa-paper-plane"></i>
-              </Link>
-            </li>
-            <li>
-              <Link to="/consejos6" style={{ color: 'inherit' }}>
-                <i className="fa fa-book"></i>
-              </Link>
-            </li>
-            <li>
-              <Link to="/consejos7" style={{ color: 'inherit' }}>
-                <i className="fa fa-calendar-plus"></i>
-              </Link>
-            </li>
-            <li>
-              <Link to="/consejos8" style={{ color: 'inherit' }}>
-                <i className="fa fa-clock"></i>
               </Link>
             </li>
           </ul>
