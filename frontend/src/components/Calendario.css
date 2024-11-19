@@ -1,11 +1,23 @@
 /* src/styles/Calendario.css */
 
 /* Fondo gris claro para el contenedor principal */
-.home-container {
+/* Configuración de la imagen de fondo */
+body {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background-color: #f0f8f5;
+  min-height: 100vh; /* Asegura altura mínima */
+}
+
+.home-container {
+  background-image: url('/public/images/fondoCalendario.jpg');
+  background-size: cover; /* La imagen cubre todo el contenedor */
+  background-repeat: no-repeat; /* Evita repeticiones */
+  background-attachment: fixed; /* La imagen permanece fija al hacer scroll */
+  background-position: center center; /* Centra la imagen */
+  display: flex;
+  flex-direction: column;
+  min-height: 200vh; /* Asegura que ocupe al menos la altura de la pantalla */
+  background-color: #f0f8f5; /* Fondo de respaldo */
 }
 
 .top-bar {
@@ -64,7 +76,7 @@
 .content-section {
   flex: 1;
   padding: 30px;
-  background-color: #f0f8f5;
+  background-color: rgba(255, 255, 255, 0.4); /* Blanco translúcido */
   border-radius: 12px;
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
   max-width: 1200px;
@@ -81,7 +93,7 @@
 }
 
 .calendar-month {
-  background-color: #4caf50;
+  background-color: rgba(255, 255, 255, 0.4); /* Blanco translúcido */
   color: #ffffff;
   text-align: center;
   padding: 15px 0;
@@ -128,7 +140,6 @@
 
 .day {
   background-color: #ffffff;
-  border: 1px solid #4caf50;
   width: 34px;
   height: 34px;
   display: flex;
