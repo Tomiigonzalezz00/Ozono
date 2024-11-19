@@ -16,8 +16,7 @@ body {
   background-position: center center; /* Centra la imagen */
   display: flex;
   flex-direction: column;
-  min-height: 200vh; /* Asegura que ocupe al menos la altura de la pantalla */
-  background-color: #f0f8f5; /* Fondo de respaldo */
+  min-height: 300vh; /* Asegura que ocupe al menos la altura de la pantalla */
 }
 
 .top-bar {
@@ -76,9 +75,9 @@ body {
 .content-section {
   flex: 1;
   padding: 30px;
-  background-color: rgba(255, 255, 255, 0.4); /* Blanco translúcido */
+  background-color: rgba(255, 255, 255, 0); /* Blanco translúcido */
   border-radius: 12px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
   max-width: 1200px;
   margin: 20px auto;
   text-align: center;
@@ -93,7 +92,7 @@ body {
 }
 
 .calendar-month {
-  background-color: rgba(255, 255, 255, 0.4); /* Blanco translúcido */
+  background-color: rgba(255, 255, 255, 0.2); /* Blanco translúcido */
   color: #ffffff;
   text-align: center;
   padding: 15px 0;
@@ -104,6 +103,15 @@ body {
   /* Agregar sombra en los bordes */
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2), 0px 6px 20px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.calendar-month h2::after {
+  content: ''; /* Crea un pseudo-elemento vacío */
+  display: block; /* Asegúrate de que sea un bloque */
+  width: 70%; /* Ajusta el ancho de la barra al 70% */
+  height: 4px; /* Altura de la barra */
+  background-color: #000000; /* Color de la barra */
+  margin: 10px auto 0; /* Centra la barra y añade espacio arriba */
 }
 
 .calendar-month:hover {
@@ -124,7 +132,7 @@ body {
   grid-template-columns: repeat(7, 1fr);
   width: 100%;
   text-align: center;
-  color: #e8ffe8;
+  color: #000000;
   font-weight: bold;
   margin: 10px 0;
   font-size: 0.9em;
@@ -139,14 +147,14 @@ body {
 }
 
 .day {
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0);
   width: 34px;
   height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.9em;
-  color: #313131;
+  color: #ffffff;
   border-radius: 50%;
   position: relative;
   transition: background-color 0.3s, box-shadow 0.3s;
@@ -215,7 +223,7 @@ body {
 
 .content-section h1 {
   font-size: 2.5em;
-  color: #4caf50;
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
