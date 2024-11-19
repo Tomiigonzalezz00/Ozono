@@ -147,40 +147,42 @@ const Consejos4 = () => {
             <img src="/images/CalendarioAmbiental.jpeg" alt="Mundo Verde" className="imagen-titulo" />
             Calendario Ambiental
           </h1>
-          <div className="calendar">
-            {meses.map((mes, index) => {
-              const startDay = getStartDayOfMonth(index);
-              return (
-                <div className="calendar-month" key={index}>
-                  <h2>{mes.nombre}</h2>
-                  <div className="days-header">
-                    {diasSemana.map((dia, i) => (
-                      <div className="day-name" key={i}>{dia}</div>
-                    ))}
+          <div className="calendar-container"> 
+            <div className="calendar">
+              {meses.map((mes, index) => {
+                const startDay = getStartDayOfMonth(index);
+                return (
+                  <div className="calendar-month" key={index}>
+                    <h2>{mes.nombre}</h2>
+                    <div className="days-header">
+                      {diasSemana.map((dia, i) => (
+                        <div className="day-name" key={i}>{dia}</div>
+                      ))}
+                    </div>
+                    <div className="days-grid">
+                      {[...Array(startDay)].map((_, emptyIndex) => (
+                        <div className="day empty" key={`empty-${emptyIndex}`}></div>
+                      ))}
+                      {[...Array(mes.dias)].map((_, dia) => {
+                        const event = getEventByDate(dia + 1, index);
+                        return (
+                          <div
+                            className={`day ${event ? 'has-event' : ''}`}
+                            key={dia + 1}
+                            onClick={() => handleDayClick(dia + 1, index)}
+                          >
+                            {dia + 1}
+                            {event && (
+                              <div className="circle"></div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div className="days-grid">
-                    {[...Array(startDay)].map((_, emptyIndex) => (
-                      <div className="day empty" key={`empty-${emptyIndex}`}></div>
-                    ))}
-                    {[...Array(mes.dias)].map((_, dia) => {
-                      const event = getEventByDate(dia + 1, index);
-                      return (
-                        <div
-                          className={`day ${event ? 'has-event' : ''}`}
-                          key={dia + 1}
-                          onClick={() => handleDayClick(dia + 1, index)}
-                        >
-                          {dia + 1}
-                          {event && (
-                            <div className="circle"></div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
           {isModalOpen && (
             <div className="modalcal-overlay">

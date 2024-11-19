@@ -98,7 +98,7 @@
 
 /* Estilos del mapa */
 .map {
-  flex: 1;
+  height: 100px;
   background-color: white;
   border: 1px solid #ccc;
   border-radius: 8px;

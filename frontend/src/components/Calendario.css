@@ -1,12 +1,7 @@
 /* src/styles/Calendario.css */
 
 /* Fondo gris claro para el contenedor principal */
-/* Configuración de la imagen de fondo */
-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh; /* Asegura altura mínima */
-}
+
 
 .home-container {
   background-image: url('/public/images/fondoCalendario.jpg');
