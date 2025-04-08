@@ -15,9 +15,23 @@ const Home = () => {
   const [filteredPuntos, setFilteredPuntos] = useState([]);
   const [selectedPunto, setSelectedPunto] = useState(null);
 
+  const [materialFilter, setMaterialFilter] = useState('');
+  const [barrioFilter, setBarrioFilter] = useState('');
+  const [horarioFilter, setHorarioFilter] = useState('');
+
   const toggleProfileMenu = () => {
     setIsProfileOpen(prevState => !prevState);
   };
+
+  useEffect(() => {
+    // Deshabilitar scroll de la página
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
 
   useEffect(() => {
     const adjustMenuPosition = () => {
@@ -92,7 +106,6 @@ const Home = () => {
       };
 
       fetchPuntosVerdes();
-    
 
       const legend = L.control({ position: 'bottomright' });
 
@@ -100,7 +113,7 @@ const Home = () => {
         const div = L.DomUtil.create('div', 'legend');
         div.innerHTML = `
           <div style="padding: 8px; background-color: white; border-radius: 5px;">
-            <h4>Rerefencia de colores</h4>
+            <h4>Referencia de colores</h4>
             <p><i class="fa fa-recycle" style="color: blue; font-size: 18px;"></i> Materiales Orgánicos</p>
             <p><i class="fa fa-recycle" style="color: green; font-size: 18px;"></i> Materiales No Orgánicos</p>
           </div>
@@ -113,28 +126,50 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
+    let filtered = puntosVerdes;
+
     if (searchTerm) {
-      const filtered = puntosVerdes.filter(punto =>
+      filtered = filtered.filter(punto =>
         punto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
         punto.direccion.toLowerCase().includes(searchTerm.toLowerCase()) ||
         punto.barrio.toLowerCase().includes(searchTerm.toLowerCase())
       );
-
-      if (selectedPunto) {
-        setFilteredPuntos(filtered.filter(punto => punto.id !== selectedPunto.id));
-      } else {
-        setFilteredPuntos(filtered);
-      }
-    } else {
-      setFilteredPuntos([]);
     }
-  }, [searchTerm, puntosVerdes, selectedPunto]);
+
+    if (materialFilter) {
+      filtered = filtered.filter(p => p.materiales.toLowerCase().includes(materialFilter.toLowerCase()));
+    }
+
+    if (barrioFilter) {
+      filtered = filtered.filter(p => p.barrio.toLowerCase().includes(barrioFilter.toLowerCase()));
+    }
+
+    if (horarioFilter) {
+      filtered = filtered.filter(p => (p.dia_hora || '').toLowerCase().includes(horarioFilter.toLowerCase()));
+    }
+
+    if (selectedPunto) {
+      filtered = filtered.filter(p => p.id !== selectedPunto.id);
+    }
+
+    setFilteredPuntos(filtered);
+  }, [searchTerm, puntosVerdes, selectedPunto, materialFilter, barrioFilter, horarioFilter]);
 
   const handleSelectPunto = (punto) => {
     setSelectedPunto(punto);
     setSearchTerm(punto.nombre);
     setFilteredPuntos([]);
     mapInstance.current.setView([punto.latitud, punto.longitud], 16);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setMaterialFilter('');
+    setBarrioFilter('');
+    setHorarioFilter('');
+    setSelectedPunto(null);
+    setFilteredPuntos([]);
+    mapInstance.current.setView([-34.61, -58.38], 13);
   };
 
   return (
@@ -154,50 +189,71 @@ const Home = () => {
       <div className="main-content">
         <aside className="sidebar">
           <ul className="sidebar-menu">
-            <li>
-              <Link to="/home" style={{ color: 'inherit' }}>
-                <i className="fa fa-arrow-circle-up"></i>
-              </Link>
-            </li>
-            <li>
-              <Link to="/consejosRRR" style={{ color: 'inherit' }}>
-                <i className="fa fa-lightbulb-o"></i>
-              </Link>
-            </li>
-            <li>
-              <Link to="/Calendario" style={{ color: 'inherit' }}>
-                <i className="fa fa-calendar-alt"></i>
-              </Link>
-            </li>
+            <li><Link to="/home"><i className="fa fa-arrow-circle-up"></i></Link></li>
+            <li><Link to="/consejosRRR"><i className="fa fa-lightbulb-o"></i></Link></li>
+            <li><Link to="/Calendario"><i className="fa fa-calendar-alt"></i></Link></li>
           </ul>
         </aside>
         <section className="map-section">
-          <div className="search-bar">
+          <div className="search-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', position: 'relative' }}>
             <input
               type="text"
               placeholder="Buscar lugar o dirección"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            {filteredPuntos.length > 0 && (
-              <ul className="dropdown">
+            <input
+              type="text"
+              placeholder="Filtrar por material"
+              value={materialFilter}
+              onChange={(e) => setMaterialFilter(e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="Filtrar por barrio"
+              value={barrioFilter}
+              onChange={(e) => setBarrioFilter(e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="Filtrar por horario"
+              value={horarioFilter}
+              onChange={(e) => setHorarioFilter(e.target.value)}
+            />
+            <button onClick={() => selectedPunto && mapInstance.current.setView([selectedPunto.latitud, selectedPunto.longitud], 16)}>
+              <i className="fa fa-search"></i>
+            </button>
+            <button onClick={clearFilters} style={{ backgroundColor: '#ccc' }}>
+              Limpiar filtros
+            </button>
+
+            {searchTerm && filteredPuntos.length > 0 && (
+              <ul className="dropdown" style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                zIndex: 1000,
+                backgroundColor: 'white',
+                border: '1px solid #ccc',
+                maxHeight: '200px',
+                overflowY: 'auto',
+                width: '100%'
+              }}>
                 {filteredPuntos.map((punto) => (
-                  <li key={punto.id} onClick={() => handleSelectPunto(punto)}>
+                  <li
+                    key={punto.id}
+                    onClick={() => handleSelectPunto(punto)}
+                    style={{ padding: '8px', cursor: 'pointer' }}
+                  >
                     {punto.nombre} - {punto.direccion} - {punto.barrio}
                   </li>
                 ))}
               </ul>
             )}
-            <button onClick={() => {
-              if (selectedPunto)
-                mapInstance.current.setView([selectedPunto.latitud, selectedPunto.longitud], 16);
-            }}>
-              <i className="fa fa-search"></i>
-            </button>
           </div>
-          <div className="map" ref={mapRef} style={{ height: '500px', width: '100%' }}>
-            {/* El mapa se inicializará aquí */}
-          </div>
+
+          <div className="map" ref={mapRef} style={{ height: '500px', width: '100%', zIndex: 1 }}></div>
         </section>
       </div>
     </div>
