@@ -7,6 +7,10 @@ import 'font-awesome/css/font-awesome.min.css';
 
 const Home = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [materialDropdownOpen, setMaterialDropdownOpen] = useState(false);
+  const [selectedMaterials, setSelectedMaterials] = useState([]);
+  const materialOptions = ['Vidrio', 'Cartón', 'Plástico', 'Orgánicos', 'Metal', 'Papel'];
+
   const menuRef = useRef(null);
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -15,22 +19,15 @@ const Home = () => {
   const [filteredPuntos, setFilteredPuntos] = useState([]);
   const [selectedPunto, setSelectedPunto] = useState(null);
 
-  const [materialFilter, setMaterialFilter] = useState('');
   const [barrioFilter, setBarrioFilter] = useState('');
   const [horarioFilter, setHorarioFilter] = useState('');
 
-  const toggleProfileMenu = () => {
-    setIsProfileOpen(prevState => !prevState);
-  };
+  const toggleProfileMenu = () => setIsProfileOpen(prev => !prev);
 
   useEffect(() => {
-    // Deshabilitar scroll de la página
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
+    return () => { document.body.style.overflow = originalOverflow; };
   }, []);
 
   useEffect(() => {
@@ -38,7 +35,6 @@ const Home = () => {
       if (menuRef.current) {
         const menuRect = menuRef.current.getBoundingClientRect();
         const windowWidth = window.innerWidth;
-
         if (menuRect.right > windowWidth) {
           menuRef.current.style.left = 'auto';
           menuRef.current.style.right = '0';
@@ -48,7 +44,6 @@ const Home = () => {
         }
       }
     };
-
     adjustMenuPosition();
     window.addEventListener('resize', adjustMenuPosition);
     return () => window.removeEventListener('resize', adjustMenuPosition);
@@ -62,9 +57,8 @@ const Home = () => {
   useEffect(() => {
     if (!mapInstance.current) {
       mapInstance.current = L.map(mapRef.current).setView([-34.61, -58.38], 13);
-
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution: '&copy; OpenStreetMap contributors'
       }).addTo(mapInstance.current);
 
       const createIcon = (isOrganic) => {
@@ -83,11 +77,9 @@ const Home = () => {
           const response = await fetch('http://localhost:8000/api/puntos-verdes/');
           const data = await response.json();
           setPuntosVerdes(data);
-
           data.forEach(punto => {
             const isOrganic = punto.materiales.toLowerCase().includes('organico');
             const icon = createIcon(isOrganic);
-
             L.marker([punto.latitud, punto.longitud], { icon })
               .addTo(mapInstance.current)
               .bindPopup(`
@@ -104,11 +96,9 @@ const Home = () => {
           console.error('Error al cargar los puntos verdes:', error);
         }
       };
-
       fetchPuntosVerdes();
 
       const legend = L.control({ position: 'bottomright' });
-
       legend.onAdd = function () {
         const div = L.DomUtil.create('div', 'legend');
         div.innerHTML = `
@@ -120,7 +110,6 @@ const Home = () => {
         `;
         return div;
       };
-
       legend.addTo(mapInstance.current);
     }
   }, []);
@@ -136,8 +125,12 @@ const Home = () => {
       );
     }
 
-    if (materialFilter) {
-      filtered = filtered.filter(p => p.materiales.toLowerCase().includes(materialFilter.toLowerCase()));
+    if (selectedMaterials.length > 0) {
+      filtered = filtered.filter(p =>
+        selectedMaterials.some(material =>
+          p.materiales.toLowerCase().includes(material.toLowerCase())
+        )
+      );
     }
 
     if (barrioFilter) {
@@ -153,7 +146,7 @@ const Home = () => {
     }
 
     setFilteredPuntos(filtered);
-  }, [searchTerm, puntosVerdes, selectedPunto, materialFilter, barrioFilter, horarioFilter]);
+  }, [searchTerm, puntosVerdes, selectedPunto, selectedMaterials, barrioFilter, horarioFilter]);
 
   const handleSelectPunto = (punto) => {
     setSelectedPunto(punto);
@@ -164,12 +157,20 @@ const Home = () => {
 
   const clearFilters = () => {
     setSearchTerm('');
-    setMaterialFilter('');
+    setSelectedMaterials([]);
     setBarrioFilter('');
     setHorarioFilter('');
     setSelectedPunto(null);
     setFilteredPuntos([]);
     mapInstance.current.setView([-34.61, -58.38], 13);
+  };
+
+  const toggleMaterialDropdown = () => setMaterialDropdownOpen(!materialDropdownOpen);
+
+  const handleMaterialChange = (material) => {
+    setSelectedMaterials(prev =>
+      prev.includes(material) ? prev.filter(m => m !== material) : [...prev, material]
+    );
   };
 
   return (
@@ -202,12 +203,36 @@ const Home = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <input
-              type="text"
-              placeholder="Filtrar por material"
-              value={materialFilter}
-              onChange={(e) => setMaterialFilter(e.target.value)}
-            />
+
+            <div style={{ position: 'relative' }}>
+              <button onClick={toggleMaterialDropdown}>
+                Filtrar por material <i className="fa fa-caret-down"></i>
+              </button>
+              {materialDropdownOpen && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  zIndex: 1000,
+                  backgroundColor: 'white',
+                  border: '1px solid #ccc',
+                  borderRadius: '5px',
+                  padding: '10px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                }}>
+                  {materialOptions.map((material) => (
+                    <label key={material} style={{ display: 'block', marginBottom: '5px' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedMaterials.includes(material)}
+                        onChange={() => handleMaterialChange(material)}
+                      /> {material}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <input
               type="text"
               placeholder="Filtrar por barrio"
@@ -261,3 +286,4 @@ const Home = () => {
 };
 
 export default Home;
+
