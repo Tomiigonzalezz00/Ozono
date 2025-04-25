@@ -78,9 +78,9 @@ const Home = () => {
           const data = await response.json();
           setPuntosVerdes(data);
           data.forEach(punto => {
-            const isOrganic = punto.materiales.toLowerCase().includes('organico');
+            const isOrganic = punto.materiales.toLowerCase().includes('orgánicos');
             const icon = createIcon(isOrganic);
-            L.marker([punto.latitud, punto.longitud], { icon })
+            const marker = L.marker([punto.latitud, punto.longitud], { icon })
               .addTo(mapInstance.current)
               .bindPopup(`
                 <div class="popup-content">
@@ -91,6 +91,7 @@ const Home = () => {
                   <strong>Más info:</strong> ${punto.mas_info}
                 </div>
               `);
+            punto.marker = marker; // Guardamos el marcador en el punto
           });
         } catch (error) {
           console.error('Error al cargar los puntos verdes:', error);
@@ -146,6 +147,17 @@ const Home = () => {
     }
 
     setFilteredPuntos(filtered);
+    // Actualizamos la visibilidad de los marcadores en el mapa en función del filtrado
+    puntosVerdes.forEach(punto => {
+      if (selectedMaterials.length === 0 || selectedMaterials.some(material =>
+        punto.materiales.toLowerCase().includes(material.toLowerCase())
+      )) {
+        punto.marker?.addTo(mapInstance.current);
+      } else {
+        punto.marker?.remove();
+      }
+    });
+
   }, [searchTerm, puntosVerdes, selectedPunto, selectedMaterials, barrioFilter, horarioFilter]);
 
   const handleSelectPunto = (punto) => {
@@ -203,7 +215,6 @@ const Home = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-
             <div style={{ position: 'relative' }}>
               <button onClick={toggleMaterialDropdown}>
                 Filtrar por material <i className="fa fa-caret-down"></i>
@@ -269,16 +280,16 @@ const Home = () => {
                   <li
                     key={punto.id}
                     onClick={() => handleSelectPunto(punto)}
-                    style={{ padding: '8px', cursor: 'pointer' }}
+                    style={{ cursor: 'pointer', padding: '10px', borderBottom: '1px solid #eee' }}
                   >
-                    {punto.nombre} - {punto.direccion} - {punto.barrio}
+                    <strong>{punto.nombre}</strong><br />
+                    {punto.direccion}
                   </li>
                 ))}
               </ul>
             )}
           </div>
-
-          <div className="map" ref={mapRef} style={{ height: '500px', width: '100%', zIndex: 1 }}></div>
+          <div ref={mapRef} style={{ width: '100%', height: '500px' }}></div>
         </section>
       </div>
     </div>
@@ -286,4 +297,6 @@ const Home = () => {
 };
 
 export default Home;
+
+
 
