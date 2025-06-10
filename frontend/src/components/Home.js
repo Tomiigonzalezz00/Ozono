@@ -289,7 +289,7 @@ const Home = () => {
               </ul>
             )}
           </div>
-          <div ref={mapRef} style={{ width: '100%', height: '500px' }}></div>
+          <div ref={mapRef} style={{ width: '100%', height: '100%' }}></div>
         </section>
       </div>
     </div>

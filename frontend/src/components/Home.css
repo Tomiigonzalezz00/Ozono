@@ -26,7 +26,8 @@
   display: flex;
   align-items: center;
   color: white;
-  position: relative; /* Para el menú desplegable de perfil */
+  position: relative;
+  /* Para el menú desplegable de perfil */
 }
 
 .user-name {
@@ -70,8 +71,13 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: 10px 20px 0 20px;
+  /* Menos padding arriba y ninguno abajo */
   box-sizing: border-box;
+  height: 100vh;
+  /* Ajusta la altura para que el mapa no ocupe todo el espacio */
+  max-height: 500px;
+  /* Opcional: limita el alto máximo */
 }
 
 .search-bar {
@@ -220,7 +226,7 @@
   padding: 0 !important;
   border-radius: 8px !important;
   margin: 0 !important;
-  box-shadow: 0 3px 14px rgba(0,0,0,0.2) !important;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2) !important;
 }
 
 .leaflet-popup-content {
@@ -245,7 +251,7 @@
   padding: 0 !important;
   margin: 0 !important;
   border: none !important;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
   z-index: 1000 !important;
   transition: all 0.3s ease !important;
   display: flex !important;
@@ -256,7 +262,7 @@
 .leaflet-popup-close-button:hover {
   background: #004d00 !important;
   transform: scale(1.1) !important;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3) !important;
 }
 
 .leaflet-popup-close-button span {
@@ -299,15 +305,10 @@
 /* Ajuste para la flecha del popup */
 .leaflet-popup-tip {
   background: white !important;
-  box-shadow: 0 3px 14px rgba(0,0,0,0.2) !important;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2) !important;
 }
 
 .sidebar-menu i {
   color: white;
   font-size: 24px;
 }
-
-
-
-
-
