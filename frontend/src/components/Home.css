@@ -36,7 +36,8 @@
 
 .main-content {
   display: flex;
-  flex: 1;
+  flex: 1; 
+  overflow: hidden;
 }
 
 .sidebar {
@@ -46,6 +47,7 @@
   flex-direction: column;
   align-items: center;
   padding-top: 20px;
+  align-self: stretch;
 }
 
 .sidebar-menu {
@@ -72,12 +74,8 @@
   display: flex;
   flex-direction: column;
   padding: 10px 20px 0 20px;
-  /* Menos padding arriba y ninguno abajo */
   box-sizing: border-box;
-  height: 100vh;
-  /* Ajusta la altura para que el mapa no ocupe todo el espacio */
-  max-height: 500px;
-  /* Opcional: limita el alto máximo */
+  overflow: hidden;
 }
 
 .search-bar {
@@ -102,10 +100,9 @@
   border-radius: 0 4px 4px 0;
 }
 
-/* Estilos del mapa */
 .map {
-  height: 100px;
-  background-color: white;
+  flex: 1;
+  height: 100%;       
   border: 1px solid #ccc;
   border-radius: 8px;
   overflow: hidden;
@@ -219,7 +216,77 @@
 }
 
 .popup-content strong {
-  color: #2c3e50;
+  font-weight: bold;
+}
+
+.popup-organico strong {
+  color: #0047AB !important;
+}
+
+.popup-noorganico strong {
+  color: #006400 !important;
+}
+
+/* Estilos para el borde inferior del título según tipo */
+.popup-organico .popup-content strong:first-child {
+  display: block !important;
+  font-size: 16px !important;
+  font-weight: bold;
+  margin-bottom: 10px !important;
+  padding-bottom: 8px !important;
+  border-bottom: 3px solid #0047AB !important; /* barra azul */
+  padding-right: 35px !important; /* espacio para el botón cerrar */
+  color: #0047AB !important; /* título azul */
+}
+
+.popup-noorganico .popup-content strong:first-child {
+  border-bottom: 1px solid #006400 !important; /* verde */
+  padding-right: 35px !important;
+  display: block !important;
+  font-size: 16px !important;
+  margin-bottom: 10px !important;
+  padding-bottom: 8px !important;
+}
+
+/* Ajuste para el contenido después del título */
+.popup-content br {
+  display: block !important;
+  margin: 5px 0 !important;
+}
+
+/* Ajuste para la flecha del popup */
+.leaflet-popup-tip {
+  background: white !important;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2) !important;
+}
+
+.sidebar-menu i {
+  color: white;
+  font-size: 24px;
+}
+
+.popup-title {
+  font-size: 16px;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.popup-label {
+  font-weight: bold;
+  display: inline-block;
+}
+
+/* Azul para orgánicos */
+.popup-organico .popup-title,
+.popup-organico .popup-label {
+  color: #0047AB;
+}
+
+/* Verde para no orgánicos */
+.popup-noorganico .popup-title,
+.popup-noorganico .popup-label {
+  color: #006400;
 }
 
 .leaflet-popup-content-wrapper {
@@ -275,40 +342,4 @@
   justify-content: center !important;
 }
 
-.popup-content {
-  padding: 0 !important;
-  font-size: 14px;
-  line-height: 1.6;
-}
 
-.popup-content strong {
-  color: #006400;
-  font-weight: bold;
-}
-
-/* Estilo para el título */
-.popup-content strong:first-child {
-  display: block !important;
-  font-size: 16px !important;
-  margin-bottom: 10px !important;
-  padding-bottom: 8px !important;
-  border-bottom: 1px solid #006400 !important;
-  padding-right: 35px !important;
-}
-
-/* Ajuste para el contenido después del título */
-.popup-content br {
-  display: block !important;
-  margin: 5px 0 !important;
-}
-
-/* Ajuste para la flecha del popup */
-.leaflet-popup-tip {
-  background: white !important;
-  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2) !important;
-}
-
-.sidebar-menu i {
-  color: white;
-  font-size: 24px;
-}

@@ -1,125 +1,203 @@
 /* src/styles/Calendario.css */
 
-/* Fondo gris claro para el contenedor principal */
-
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow-x: hidden;
+  background-image: url('/public/images/fondoCalendario.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center center;
+}
 
 .home-container {
   background-image: url('/public/images/fondoCalendario.jpg');
-  background-size: cover; /* La imagen cubre todo el contenedor */
-  background-repeat: no-repeat; /* Evita repeticiones */
-  background-attachment: fixed; /* La imagen permanece fija al hacer scroll */
-  background-position: center center; /* Centra la imagen */
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center center;
   display: flex;
   flex-direction: column;
-  min-height: 300vh; /* Asegura que ocupe al menos la altura de la pantalla */
+  min-height: 100vh;
+  height: auto;  /* ← ESTE CAMBIO */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+  overflow-x: hidden;
 }
+
+
+/* Removed the overlay that was blocking the background */
+
+.main-content {
+  display: flex;
+  padding: 20px;
+  align-items: stretch; /* ← ESTO GARANTIZA QUE .sidebar LLENE LA ALTURA */
+}
+
 
 .top-bar {
   width: 100%;
-  height: 50px;
-  background-color: #006400;
+  height: 60px;
+  background: linear-gradient(90deg, #2e7d32 0%, #388e3c 100%);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 20px;
+  padding: 0 30px;
   box-sizing: border-box;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.top-bar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #4caf50, #66bb6a, #4caf50);
 }
 
 .brand-image {
-  height: 40px;
+  height: 45px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .user-info {
   display: flex;
   align-items: center;
   color: white;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.user-info:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
 }
 
 .main-content {
   display: flex;
   flex: 1;
+  padding: 20px;
 }
 
 .sidebar {
-  width: 60px;
-  background-color: #2f2f2f;
+  width: 70px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 20px;
+  padding: 20px 0;
+  margin-right: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
 }
 
 .sidebar-menu li {
-  margin: 0;
-  color: white;
+  margin: 10px 0;
+  color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 60px;
-  font-size: 1.5rem;
-  transition: background-color 0.3s;
+  width: 50px;
+  height: 50px;
+  font-size: 1.3rem;
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  margin: 8px auto;
 }
 
 .sidebar-menu li:hover {
-  background-color: #4caf50;
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  transform: scale(1.1);
 }
 
 .content-section {
   flex: 1;
-  padding: 30px;
-  background-color: rgba(255, 255, 255, 0); /* Blanco translúcido */
-  border-radius: 12px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
-  max-width: 1200px;
-  margin: 20px auto;
+  padding: 5px;
   text-align: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: transparent;
+}
+
+.content-section h1 {
+  font-size: 2.8em;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 20px;
+  font-weight: 600;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.content-section h1 img {
+  width: 70px;
+  height: 70px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
 }
 
 /* Calendario */
 .calendar {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 20px;
-  padding: 20px;
+  padding: 15px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .calendar-month {
-  background-color: rgba(255, 255, 255, 0.2); /* Blanco translúcido */
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
   color: #ffffff;
   text-align: center;
-  padding: 15px 0;
-  border-radius: 12px;
-  font-weight: bold;
-  height: 320px;
+  padding: 25px 20px;
+  border-radius: 20px;
+  font-weight: 500;
   position: relative;
-  /* Agregar sombra en los bordes */
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2), 0px 6px 20px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  min-height: 320px;
 }
 
-.calendar-month h2::after {
-  content: ''; /* Crea un pseudo-elemento vacío */
-  display: block; /* Asegúrate de que sea un bloque */
-  width: 70%; /* Ajusta el ancho de la barra al 70% */
-  height: 4px; /* Altura de la barra */
-  background-color: #000000; /* Color de la barra */
-  margin: 10px auto 0; /* Centra la barra y añade espacio arriba */
-}
 
 .calendar-month:hover {
-  transform: scale(1.05);
-  /* Sombra más pronunciada al pasar el mouse */
-  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3), 0px 8px 24px rgba(0, 0, 0, 0.2);
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .calendar-month h2 {
-  font-size: 1.6em;
-  margin: 0;
+  font-size: 1.8em;
+  margin: 0 0 15px 0;
   color: #ffffff;
+  font-weight: 400;
   letter-spacing: 1px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .days-header {
@@ -127,10 +205,11 @@
   grid-template-columns: repeat(7, 1fr);
   width: 100%;
   text-align: center;
-  color: #000000;
-  font-weight: bold;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
   margin: 10px 0;
   font-size: 0.9em;
+  letter-spacing: 1px;
 }
 
 .days-grid {
@@ -142,29 +221,52 @@
 }
 
 .day {
-  background-color: rgba(255, 255, 255, 0);
-  width: 34px;
-  height: 34px;
+  background: rgba(255, 255, 255, 0.08);
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9em;
-  color: #ffffff;
+  font-size: 0.95em;
+  color: rgba(255, 255, 255, 0.95);
   border-radius: 50%;
   position: relative;
-  transition: background-color 0.3s, box-shadow 0.3s;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-weight: 500;
 }
 
 .day:hover {
-  background-color: #a5d6a7;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+  background: rgba(76, 175, 80, 0.2);
+  color: #ffffff;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.day.empty {
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
+.day.empty:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .has-event {
-  background-color: #887c15;
-  color: white;
-  border: none;
-  cursor: pointer;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(76, 175, 80, 0.5)) !important;
+  color: #ffffff !important;
+  border: 2px solid rgba(76, 175, 80, 0.6) !important;
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.4) !important;
+  font-weight: 600;
+}
+
+.has-event:hover {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.5), rgba(76, 175, 80, 0.7)) !important;
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.6) !important;
+  transform: scale(1.15) !important;
 }
 
 .modalcal-overlay {
@@ -173,80 +275,140 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.7); /* Fondo oscuro con opacidad aumentada */
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .modalcal-content {
-  background: #ffffff;
-  padding: 30px;
-  border-radius: 16px; /* Borde más redondeado */
-  max-width: 500px;
-  width: 90%; /* Ajuste de ancho para pantallas pequeñas */
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  padding: 20px;
+  border-radius: 25px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
   text-align: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); /* Sombra más pronunciada */
-  animation: slideDown 0.4s ease; /* Nueva animación de entrada */
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.4s ease;
+  border: 2px solid rgba(76, 175, 80, 0.3);
+  position: relative;
+  backdrop-filter: blur(10px);
 }
 
-.modalcal-close {
-  padding: 12px 25px;
-  background: #4caf50;
+.modalcal-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #4caf50, #66bb6a, #4caf50);
+  border-radius: 25px 25px 0 0;
+}
+
+/* Removed the green line detail */
+
+.modalcal-content h3 {
+  font-size: 2.2em;
+  color: #2e7d32;
+  margin-bottom: 12px;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: 1px;
+  position: relative;
+}
+
+.modalcal-content h3::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #4caf50, #66bb6a);
+  border-radius: 2px;
+}
+
+.modalcal-content p {
+  font-size: 1.1em;
+  color: #555;
+  line-height: 1.7;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.modalcal-content p:first-of-type {
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.modalcal-content button {
+  padding: 18px 35px;
+  background: linear-gradient(135deg, #4caf50, #66bb6a);
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 30px;
   cursor: pointer;
-  font-size: 1em;
-  font-weight: bold;
-  transition: background-color 0.3s ease;
+  font-size: 1.2em;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+  position: relative;
+  overflow: hidden;
 }
 
-/* Cambio de color al pasar el ratón sobre el botón */
-.modalcal-close:hover {
-  background-color: #388e3c;
+.modalcal-content button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
 }
 
-/* Texto del modal */
-.modalcal-content p {
-  font-size: 1em;
-  color: #555; /* Color gris para el texto */
-  line-height: 1.6;
-  margin-bottom: 20px;
+.modalcal-content button:hover::before {
+  left: 100%;
 }
 
-.content-section h1 {
-  font-size: 2.5em;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 20px;
-  gap: 15px;
+.modalcal-content button:hover {
+  background: linear-gradient(135deg, #388e3c, #4caf50);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.5);
 }
 
-/* Título del modal */
-.modalcal-content h3 {
-  font-size: 1.8em;
-  color: #4caf50; /* Color verde para el título */
-  margin-bottom: 10px;
-}
-
-.content-section h1 img {
-  width: 60px;
-  height: 60px;
-}
-
-/* Animación de entrada para el modal */
-@keyframes slideDown {
+@keyframes fadeIn {
   from {
-      opacity: 0;
-      transform: translateY(-20px);
+    opacity: 0;
   }
   to {
-      opacity: 1;
-      transform: translateY(0);
+    opacity: 1;
   }
 }
-   
+
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(50px) scale(0.8) rotateX(10deg);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(10px) scale(0.95) rotateX(5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotateX(0deg);
+  }
+}
