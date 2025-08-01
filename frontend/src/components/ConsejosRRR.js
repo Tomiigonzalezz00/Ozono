@@ -1,106 +1,79 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import './Consejos.css';
 import 'font-awesome/css/font-awesome.min.css';
+import './Consejos.css';
 
-const Consejos = () => {
+const ConsejosRRR = () => {
+  // Menú, logout, etc
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [filterText, setFilterText] = useState("");
-  const [selectedFilters, setSelectedFilters] = useState({
-    reciclaje: false,
-    reutilizacion: false,
-    reduccion: false,
-  });
-  const [tarjetas, setTarjetas] = useState([]);
-  const [selectedCard, setSelectedCard] = useState(null); // Estado para la tarjeta seleccionada
   const menuRef = useRef(null);
-
-  const fetchConsejos = async () => {
-    try {
-      const response = await fetch('http://localhost:8000/api/consejos-rrr/');
-      if (!response.ok) {
-        throw new Error('Error en la carga de datos');
-      }
-      const data = await response.json();
-      setTarjetas(data);
-    } catch (error) {
-      console.error('Error fetching consejos:', error);
-    }
-  };
-
-  useEffect(() => {
-    fetchConsejos();
-  }, []);
-
-  const toggleProfileMenu = () => {
-    setIsProfileOpen(prevState => !prevState);
-  };
-
+  const toggleProfileMenu = () => setIsProfileOpen(prev => !prev);
   const handleLogout = () => {
     localStorage.removeItem('token');
     window.location.href = '/login';
   };
 
-  const handleFilterTextChange = (e) => {
-    setFilterText(e.target.value);
-  };
+  // Chatbot states
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState([
+    { sender: 'bot', text: 'Hola, soy el Chatbot de Ozono. ¿En qué puedo ayudarte?' }
+  ]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleFilterChange = (e) => {
-    const { name, checked } = e.target;
-    setSelectedFilters(prevFilters => ({
-      ...prevFilters,
-      [name]: checked,
-    }));
-  };
-
-  const handleClearFilters = () => {
-    setFilterText("");
-    setSelectedFilters({
-      reciclaje: false,
-      reutilizacion: false,
-      reduccion: false,
-    });
-  };
-
-  const filteredTarjetas = tarjetas.filter((tarjeta) => {
-    const matchesText = tarjeta.titulo.toLowerCase().includes(filterText.toLowerCase());
-    const matchesCategory =
-      (selectedFilters.reciclaje && tarjeta.categoria === 'reciclaje') ||
-      (selectedFilters.reutilizacion && tarjeta.categoria === 'reutilización') ||
-      (selectedFilters.reduccion && tarjeta.categoria === 'reducción') ||
-      (!selectedFilters.reciclaje && !selectedFilters.reutilizacion && !selectedFilters.reduccion);
-
-    return matchesText && matchesCategory;
-  });
-
-  const handleCardClick = (tarjeta) => {
-    setSelectedCard(tarjeta);
-  };
-
-  const handleCloseModal = () => {
-    setSelectedCard(null);
-  };
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    const adjustMenuPosition = () => {
-      if (menuRef.current) {
-        const menuRect = menuRef.current.getBoundingClientRect();
-        const windowWidth = window.innerWidth;
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isLoading]);
 
-        if (menuRect.right > windowWidth) {
-          menuRef.current.style.left = 'auto';
-          menuRef.current.style.right = '0';
-        } else {
-          menuRef.current.style.left = '0';
-          menuRef.current.style.right = 'auto';
-        }
+  const handleSend = async () => {
+    if (!input.trim()) return;
+
+    const userMessage = { sender: 'user', text: input };
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:5678/webhook/chat-ozono', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mensaje: input }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error del servidor: ${response.status}`);
       }
-    };
 
-    adjustMenuPosition();
-    window.addEventListener('resize', adjustMenuPosition);
-    return () => window.removeEventListener('resize', adjustMenuPosition);
-  }, [isProfileOpen]);
+      const data = await response.json();
+
+      if (!data.respuesta) {
+        throw new Error('Respuesta inválida del servidor');
+      }
+
+      const botMessage = { sender: 'bot', text: data.respuesta };
+
+      setMessages(prev => [...prev, botMessage]);
+    } catch (error) {
+      console.error('Error al conectar con el chatbot:', error);
+      setMessages(prev => [
+        ...prev,
+        {
+          sender: 'bot',
+          text: '⚠️ Hubo un problema al conectar con el chatbot. Intentá nuevamente más tarde.'
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
 
   return (
     <div className="home-container">
@@ -120,120 +93,64 @@ const Consejos = () => {
       <div className="main-content">
         <aside className="sidebar">
           <ul className="sidebar-menu">
-            <li>
-              <Link to="/home" style={{ color: 'inherit' }}>
-                <i className="fa fa-arrow-circle-up"></i>
-              </Link>
-            </li>
-            <li>
-              <Link to="/consejosRRR" style={{ color: 'inherit' }}>
-                <i className="fa fa-lightbulb-o"></i>
-                </Link>
-            </li>
-            <li>
-              <Link to="/Calendario" style={{ color: 'inherit' }}>
-                <i className="fa fa-calendar-alt"></i>
-              </Link>
-            </li>
+            <li><Link to="/home" style={{ color: 'inherit' }}><i className="fa fa-arrow-circle-up"></i></Link></li>
+            <li><Link to="/consejosRRR" style={{ color: 'inherit' }}><i className="fa fa-lightbulb-o"></i></Link></li>
+            <li><Link to="/calendario" style={{ color: 'inherit' }}><i className="fa fa-calendar-alt"></i></Link></li>
           </ul>
         </aside>
 
         <section className="content-section">
-          <h1>Consejos RRR</h1>
-          <div className="filter-bar">
-            <input
-              type="text"
-              placeholder="Filtrar consejos..."
-              value={filterText}
-              onChange={handleFilterTextChange}
-            />
-            <button onClick={handleClearFilters}>Limpiar filtros</button>
-          </div>
+          <h1>
+            <img src="/images/bot-icon.png" alt="Chatbot Ozono" className="chatbot-icon" />
+            Chatbot Ozono
+          </h1>
 
-          <div className="checkbox-filters">
-            <label>
-              <input
-                type="checkbox"
-                name="reciclaje"
-                checked={selectedFilters.reciclaje}
-                onChange={handleFilterChange}
-              />
-              Reciclaje
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                name="reutilizacion"
-                checked={selectedFilters.reutilizacion}
-                onChange={handleFilterChange}
-              />
-              Reutilización
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                name="reduccion"
-                checked={selectedFilters.reduccion}
-                onChange={handleFilterChange}
-              />
-              Reducción de Consumo
-            </label>
-          </div>
+          <div className="chat-container" role="region" aria-live="polite" aria-label="Chatbot de Ozono">
+            <div className="chat-messages">
+              {messages.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`message ${msg.sender}`}
+                  aria-live={msg.sender === 'bot' ? 'polite' : 'off'}
+                >
+                  {msg.text}
+                </div>
+              ))}
 
-          <div className="tarjetas-container">
-            {filteredTarjetas.length > 0 ? (
-              filteredTarjetas.slice(0, 6).map((tarjeta) => {
-                // Define el color del cuadrado basado en la categoría
-                let squareColor;
-                switch (tarjeta.categoria) {
-                  case 'reciclaje':
-                    squareColor = 'green'; // Verde para reciclaje
-                    break;
-                  case 'reutilización':
-                    squareColor = 'yellow'; // Amarillo para reutilización
-                    break;
-                  case 'reducción':
-                    squareColor = 'steelblue'; // Azul para reducción
-                    break;
-                  default:
-                    squareColor = 'gray'; // Color por defecto si no coincide
-                }
+              {/* Indicador de "procesando" */}
+              {isLoading && (
+                <div className="message bot typing-indicator" aria-live="polite" aria-atomic="true">
+                  Procesando tu pregunta
+                  <span className="dot">.</span>
+                  <span className="dot">.</span>
+                  <span className="dot">.</span>
+                </div>
+              )}
 
-                return (
-                  <div key={tarjeta.id} className="tarjeta" onClick={() => handleCardClick(tarjeta)} style={{ cursor: 'pointer' }}>
-                    <div className="square" style={{ backgroundColor: squareColor }}></div>
-                    <h3 className="tarjeta-titulo" style={{ textAlign: 'center' }}>{tarjeta.titulo}</h3>
-                    <p className="tarjeta-categoria" style={{ position: 'absolute', bottom: '10px', right: '10px' }}>
-                      {tarjeta.categoria}
-                    </p>
-                  </div>
-                );
-              })
-            ) : (
-              <p>No hay tarjetas que coincidan con los filtros seleccionados.</p>
-            )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            <div className="chat-input-container">
+              <input
+                type="text"
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Escribí tu pregunta..."
+                aria-label="Campo para escribir pregunta al chatbot"
+              />
+              <button
+                onClick={handleSend}
+                aria-label="Enviar mensaje al chatbot"
+              >
+                Enviar
+              </button>
+            </div>
           </div>
         </section>
       </div>
-
-      {/* Modal */}
-      {selectedCard && (
-        <div className="modal">
-          <div className="modal-content">
-            <button className="modal-close-btn" onClick={handleCloseModal}>X</button> {/* Botón para cerrar */}
-            <h2>{selectedCard.titulo}</h2>
-            <p>{selectedCard.descripcion}</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
 
-export default Consejos;
-
-
-
-
-
-
+export default ConsejosRRR;

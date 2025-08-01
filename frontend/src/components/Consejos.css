@@ -1,234 +1,186 @@
-/* src/styles/Consejos.css */
+/* Agregar a src/styles/Consejos.css */
 
-/* Fondo gris claro para el contenedor principal */
-.home-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background-color: #f0f0f0; /* Gris claro */
-}
-
-.top-bar {
-  width: 100%;
-  height: 50px;
-  background-color: #006400; /* Color verde oscuro para la barra superior */
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
-  box-sizing: border-box;
-}
-
-.brand-image {
-  height: 40px;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  color: white;
-  position: relative; /* Para el menú desplegable de perfil */
-}
-
-.user-name {
-  margin-left: 10px;
-}
-
-.main-content {
-  display: flex;
-  flex: 1;
-}
-
-.sidebar {
-  width: 60px;
-  background-color: #2f2f2f;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 20px;
-}
-
-.sidebar-menu {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-  width: 100%;
-}
-
-.sidebar-menu li {
-  margin: 0;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 60px;
-  font-size: 1.5rem;
-}
+/* Reutilizamos estilos base */
 
 .content-section {
   flex: 1;
-  padding: 20px;
-  background-color: #b8b6b6; /* Fondo gris claro */
-  box-sizing: border-box;
-}
-
-h1 {
-  text-align: center;
-  font-size: 2.5rem;
-  margin-bottom: 20px;
-}
-
-.filter-bar {
+  padding: 5px 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: transparent;
   display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.filter-bar input {
-  padding: 10px;
-  width: 300px; /* Hacer el filtro más largo */
-  border: 1px solid #ccc;
-  border-radius: 50px 0 0 50px; /* Bordes redondeados */
-}
-
-.filter-bar button {
-  padding: 10px 20px; /* Ajustar tamaño del botón */
-  background-color: #006400; /* Color verde oscuro */
-  border: none;
-  color: white;
-  cursor: pointer;
-  border-radius: 0 50px 50px 0; /* Bordes redondeados */
-}
-
-.checkbox-filters {
-  display: flex;
-  justify-content: center;
-  margin: 20px 0;
-  color: white;
-}
-
-.checkbox-filters label {
-  margin-right: 20px;
-  font-size: 16px;
-}
-
-
-.tarjetas-container {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 2 columnas */
-  gap: 20px; /* Espacio entre tarjetas */
-  margin-top: 20px; /* Espacio arriba del contenedor de tarjetas */
-}
-
-.tarjeta {
-  background-color: #f0f0f0; /* Color de fondo de la tarjeta */
-  border: 1px solid #ccc; /* Borde de la tarjeta */
-  border-radius: 8px; /* Esquinas redondeadas */
-  padding: 20px; /* Espaciado interno de la tarjeta */
-  text-align: center; /* Centra el texto */
-  position: relative; /* Para posicionamiento absoluto de elementos */
-  height: 80px; /* Mantén el tamaño fijo de la tarjeta */
-  display: flex;
-  align-items: center; /* Centra verticalmente el contenido */
-  justify-content: center; /* Centra horizontalmente el contenido */
-  transition: box-shadow 0.3s ease, transform 0.3s ease; /* Transición suave */
-  cursor: pointer; /* Cambia el cursor a puntero al pasar por la tarjeta */
-}
-
-/* Efecto al pasar el mouse sobre la tarjeta */
-.tarjeta:hover {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Sombra al pasar el mouse */
-  transform: translateY(-5px); /* Eleva la tarjeta al pasar el mouse */
-}
-
-.tarjeta .square {
-  width: 50px;
-  height: 100%; /* Ocupa toda la altura de la tarjeta */
-  background-color: green; /* Cuadrado verde */
-  position: absolute; /* Posicionamiento absoluto */
-  top: 0;
-  left: 0;
-}
-
-.tarjeta-titulo {
-  font-size: 30px; /* Tamaño del título */
-  font-weight: bold;
-  margin: 0;
-  text-align: center;
-  z-index: 1; /* Asegura que el título esté encima del cuadrado */
-  cursor: pointer; /* Cambia el cursor a puntero al pasar por la tarjeta */
-}
-
-.tarjeta-categoria {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  font-size: 20px; /* Tamaño de la categoría */
-  font-weight: normal;
-  margin: 0;
-  white-space: nowrap; /* Evita saltos de línea */
-  text-overflow: ellipsis;
-  cursor: pointer; /* Cambia el cursor a puntero al pasar por la tarjeta */
-}
-
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro semitransparente */
-  display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  z-index: 1000; /* Asegura que el modal esté adelante de todo */
+  justify-content: flex-start;
 }
 
-/* Estilo del contenido del modal */
-.modal-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 80%;
+.content-section h1 {
+  font-size: 2.8em;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 20px;
+  font-weight: 600;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.content-section h1 img {
+  width: 70px;
+  height: 70px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Chatbot container */
+.chat-container {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  padding: 30px;
+  width: 100%;
   max-width: 600px;
-  position: relative;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  text-align: center;
-  animation: fadeIn 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  height: 500px;
+  color: #fff;
 }
 
-/* Botón de cerrar */
-.modal-close-btn {
-  background-color: #ff5c5c;
+/* Mensajes */
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  padding-right: 10px;
+  user-select: text;
+  text-align: left;
+}
+
+/* Burbujas y alineación */
+.message {
+  margin-bottom: 12px;
+  max-width: 80%;
+  padding: 10px 15px;
+  border-radius: 20px;
+  word-wrap: break-word;
+  font-size: 1rem;
+  line-height: 1.3;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+  display: inline-block;
+  clear: both;
+}
+
+.message.user {
+  background-color: #4caf50;
+  color: white;
+  float: right;
+  border-bottom-right-radius: 0;
+}
+
+.message.bot {
+  background-color: #e0e0e0;
+  color: black;
+  float: left;
+  border-bottom-left-radius: 0;
+  text-align: left;
+  display: block;
+  max-width: 90%;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.chat-input:focus {
+  border-color: #4caf50;
+  outline: none;
+  box-shadow: 0 0 8px #4caf50;
+}
+
+/* Input + botón */
+.chat-input-container {
+  display: flex;
+  gap: 10px;
+}
+
+.chat-input-container input {
+  flex: 1;
+  padding: 12px 15px;
+  border-radius: 12px;
+  border: none;
+  font-size: 1rem;
+  outline: none;
+}
+
+.chat-input-container button {
+  padding: 10px 18px;
+  background-color: #4caf50;
   color: white;
   border: none;
-  padding: 10px 20px;
+  border-radius: 6px;
   cursor: pointer;
-  border-radius: 5px;
-  font-size: 16px;
-  position: absolute;
-  top: 10px;
-  right: 10px;
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+  font-weight: 600;
+  font-size: 1rem;
 }
 
-.modal-close-btn:hover {
-  background-color: #ff3232;
+.chat-input-container button:hover {
+  background-color: #388e3c;
+  box-shadow: 0 6px 12px rgba(56, 142, 60, 0.6);
+  transform: translateY(-2px);
 }
 
-/* Animación de entrada del modal */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+/* Ícono chatbot arriba del título */
+.chatbot-icon {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 15px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  user-select: none;
+  pointer-events: none;
 }
 
+/* Clear floats after container */
+.chat-messages::after {
+  content: "";
+  display: table;
+  clear: both;
+}
 
+/* Indicador "procesando" animado */
+.typing-indicator {
+  font-style: italic;
+  color: #555;
+  display: inline-block;
+  user-select: none;
+}
 
+.dot {
+  animation: blink 1.4s infinite both;
+  font-weight: bold;
+  color: #4caf50;
+  margin-left: 2px;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0; }
+  40% { opacity: 1; }
+}
