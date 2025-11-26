@@ -7,12 +7,25 @@
 - Gonzalez, Tomás Nahuel
 - Rossi, Iván
 
-## Materia: Ingeniería de Software
+#Instrucciones 
+Nos movemos a la carpeta backend con el comando:
 
-## UTN - FRD - Año lectivo: 2024 ##
+cd backend (1)
 
-## Prueba Ivan
-## Prueba Tomi
-## Prueba Tomi (el mejor)
+Corremos el back con:
+python manage.py runserver (2)
 
-## prueba cambio juan
+Ingresamos a la app en el link : http://127.0.0.1:8000/
+
+Para ingresar al frontend de la app:
+
+Nos movemos a la carpeta src con los comando:
+
+cd frontend (1)
+
+cd src (2)
+
+Corremos la aplicación con:
+npm start runserver (3)
+
+Ingresamos a la app en el link : http://localhost:3000/login
