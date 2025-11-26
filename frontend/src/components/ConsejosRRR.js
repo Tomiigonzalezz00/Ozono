@@ -16,7 +16,7 @@ const ConsejosRRR = () => {
   // Chatbot states
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([
-    { sender: 'bot', text: 'Hola, soy el Chatbot de Ozono. ¿En qué puedo ayudarte?' }
+    { sender: 'bot', text: 'Hola, soy Ozzy. ¿En qué puedo ayudarte?' }
   ]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -60,7 +60,7 @@ const ConsejosRRR = () => {
         ...prev,
         {
           sender: 'bot',
-          text: '⚠️ Hubo un problema al conectar con el chatbot. Intentá nuevamente más tarde.'
+          text: 'Ozzy no puede responder en este momento. Intentá nuevamente más tarde.'
         }
       ]);
     } finally {
