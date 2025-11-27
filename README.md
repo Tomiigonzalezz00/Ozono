@@ -7,7 +7,8 @@
 - Gonzalez, Tomás Nahuel
 - Rossi, Iván
 
-------IMPORTANTE-------
+------IMPORTANTE-------------------------------------
+
 Antes de comenzar a trabajar, correr los actualizadores:
 actualizador_windows, en caso de SO Windows
 actualizador_linux-mac, en caso de SO linux/mac
