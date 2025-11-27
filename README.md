@@ -7,7 +7,12 @@
 - Gonzalez, Tomás Nahuel
 - Rossi, Iván
 
-#Instrucciones 
+Instrucciones con docker: 
+Clonar el repositorio y con docker corriendo, poner en terminal 
+
+docker-compose up --build
+
+Instrucciones, sin docker:
 Nos movemos a la carpeta backend con el comando:
 
 cd backend (1)
@@ -29,3 +34,4 @@ Corremos la aplicación con:
 npm start runserver (3)
 
 Ingresamos a la app en el link : http://localhost:3000/login
+
