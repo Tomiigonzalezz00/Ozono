@@ -1,0 +1,41 @@
+services:
+  # --- SERVICIO 1: BACKEND (Django) ---
+  backend:
+    build: ./backend
+    container_name: mi_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    # Comando para Django
+    command: python manage.py runserver 0.0.0.0:8000
+    restart: unless-stopped
+
+  # --- SERVICIO 2: FRONTEND (React/Node) ---
+  frontend:
+    build: ./frontend
+    container_name: mi_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    restart: unless-stopped
+
+  # --- SERVICIO 3: N8N ---
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: mi_n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_SECURE_COOKIE=false
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - backend
+
+volumes:
+  n8n_data:

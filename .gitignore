@@ -1,3 +1,24 @@
+# --- Basura de Sistema ---
+.DS_Store
+Thumbs.db
+
+# --- Docker ---
+# Ignoramos los volúmenes de datos para no subir tu BD a internet
+n8n_data/
+.env
+
+# --- Backend (Python) ---
+backend/venv/
+backend/__pycache__/
+backend/*.sqlite3
+backend/*.pyc
+
+# --- Frontend (Node) ---
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/.npm/
+
 
 /venv
 /venv/Lib/site-packages/_distutils_hack
@@ -37,6 +58,21 @@ backend/myapp/__pycache__/models.cpython-311.pyc
 backend/myapp/__pycache__/serializers.cpython-311.pyc
 backend/myapp/__pycache__/urls.cpython-311.pyc
 backend/myapp/__pycache__/views.cpython-311.pyc
+backend/myapp/migrations/__pycache__/__init__.cpython-311.pyc
+backend/myapp/migrations/__pycache__/0001_initial.cpython-311.pyc
+backend/myapp/migrations/__pycache__/0002_consejosrrr.cpython-311.pyc
+backend/myapp/migrations/__pycache__/0003_calendarioambiental.cpython-311.pyc
+backend/backend/__pycache__/urls.cpython-311.pyc
+backend/backend/__pycache__/__init__.cpython-311.pyc
+backend/backend/__pycache__/settings.cpython-311.pyc
+backend/backend/__pycache__/urls.cpython-311.pyc
+backend/backend/__pycache__/wsgi.cpython-311.pyc
+backend/myapp/__pycache__/__init__.cpython-311.pyc
+backend/myapp/__pycache__/admin.cpython-311.pyc
+backend/myapp/__pycache__/apps.cpython-311.pyc
+backend/myapp/__pycache__/models.cpython-311.pyc
+backend/myapp/__pycache__/serializers.cpython-311.pyc
+backend/myapp/__pycache__/urls.cpython-311.pyc
 backend/myapp/migrations/__pycache__/__init__.cpython-311.pyc
 backend/myapp/migrations/__pycache__/0001_initial.cpython-311.pyc
 backend/myapp/migrations/__pycache__/0002_consejosrrr.cpython-311.pyc
