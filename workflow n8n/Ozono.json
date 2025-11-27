@@ -14,7 +14,7 @@
         0,
         0
       ],
-      "id": "bac4af7e-c305-4e08-af90-4d295dfc3513",
+      "id": "08d118fd-e7c2-4445-81f4-8c707ff63c61",
       "name": "Chat Entrada",
       "webhookId": "2cb633f3-9147-4cb7-b27e-e6ab764346d0"
     },
@@ -30,7 +30,7 @@
         1392,
         0
       ],
-      "id": "2c4032a2-9f5f-4f82-af1d-b9c0e2596526",
+      "id": "de50d1c8-31af-41d6-962e-65a801aabff6",
       "name": "Respond to Webhook",
       "alwaysOutputData": false
     },
@@ -46,7 +46,7 @@
         784,
         0
       ],
-      "id": "3875e174-6aa6-4d86-8a52-f335ec8fb89e",
+      "id": "6d39e72a-9218-444e-89a8-6e1891b2a795",
       "name": "AI Agent"
     },
     {
@@ -59,12 +59,12 @@
         1184,
         0
       ],
-      "id": "9b43cf56-4ce7-498c-aaaa-bd44658940ef",
+      "id": "50fe287d-5794-483f-baf4-8bf7a553bf2b",
       "name": "Function"
     },
     {
       "parameters": {
-        "url": "http://127.0.0.1:8000/api/puntos-verdes/",
+        "url": "http://backend:8000/api/puntos-verdes/",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -73,7 +73,7 @@
         320,
         0
       ],
-      "id": "2dc11d1f-0689-4ea1-811b-0f7416c2d263",
+      "id": "257e8ae3-4129-45c0-8950-b8bda11cd354",
       "name": "Cargar puntos verdes"
     },
     {
@@ -92,11 +92,11 @@
         784,
         208
       ],
-      "id": "fb2c492e-88dd-47e2-b445-c2ef90bdeb8c",
+      "id": "15343a66-260b-481d-bbfa-49bb4239aeed",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
-          "id": "sEB92PiZS3gcQVQP",
+          "id": "QhS2OyD2ByMRaxaD",
           "name": "OpenAi account"
         }
       }
@@ -111,7 +111,7 @@
         544,
         0
       ],
-      "id": "f6724d55-b652-49c7-9d9b-7e1fcde2bd75",
+      "id": "61ef431e-95c3-49ff-9288-bea8bc83bdfe",
       "name": "Filtrar candidatos"
     }
   ],
@@ -188,11 +188,11 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "2d2fd654-58ef-4ecc-ba04-546147172ac7",
+  "versionId": "d962acff-9b45-4d4c-9f7e-88779ab5fd5b",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "5128b2d1c958d13012107722af535a3c9d7510d54f1c0885dbb7821ebdfac3cd"
+    "instanceId": "1730ab3ec15ab720707590fd29cef490fc48e358de0ca4ee5c4f48373df47fd3"
   },
-  "id": "revIYh6GyRPpNnn5",
+  "id": "z6uCQoZ1vf7i27HO",
   "tags": []
 }
