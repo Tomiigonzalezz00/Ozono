@@ -7,23 +7,26 @@
 - Gonzalez, Tomás Nahuel
 - Rossi, Iván
 
-------IMPORTANTE-------------------------------------
+---------------------------------------------------IMPORTANTE-------------------------------------
 
-Antes de comenzar a trabajar, correr los actualizadores:
+Para correr la aplicación: 
+*Ejecutar los actualizadores, para tener siempre la ultima version*
+
 actualizador_windows, en caso de SO Windows
+
 actualizador_linux-mac, en caso de SO linux/mac
 
 Esto es una automatizacion que hace un pull y un build para el docker, 
 para que no haya conflicto de versiones
 
----------------------------------------------------------------------
-Instrucciones para correr con docker: 
-Clonar el repositorio y con docker corriendo, poner en terminal 
+Una vez que la aplicacion esté corriendo, ingresar al puerto 5678 para entrar a n8n, y ahí:
+-Crear un nuevo workflow
+-Importar el archivo .json que se encuentra en la carpeta workflow n8n
+-Ingresar al bloque de agente IA y poner la API Key
 
-docker-compose up --build
 ------------------------------------------------------------------
 
-Instrucciones para correr sin docker(no recomendado):
+Instrucciones para correr local, sin docker(no recomendado):
 Nos movemos a la carpeta backend con el comando:
 
 cd backend (1)
