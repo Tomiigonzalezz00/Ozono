@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import './Calendario.css';
 import 'font-awesome/css/font-awesome.min.css';
 
-const Consejos4 = () => {
+const Calendario = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [fechasAmbientales, setFechasAmbientales] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -21,7 +21,7 @@ const Consejos4 = () => {
   const formatDate = (fecha) => {
     const [year, month, day] = fecha.split('-');
     const months = [
-      "enero", "febrero", "marzo", "abril", "mayo", "junio", 
+      "enero", "febrero", "marzo", "abril", "mayo", "junio",
       "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
     ];
     return `${day} de ${months[parseInt(month, 10) - 1]} ${year}`;
@@ -147,7 +147,7 @@ const Consejos4 = () => {
             <img src="/images/CalendarioAmbiental.jpeg" alt="Mundo Verde" className="imagen-titulo" />
             Calendario Ambiental
           </h1>
-          <div className="calendar-container"> 
+          <div className="calendar-container">
             <div className="calendar">
               {meses.map((mes, index) => {
                 const startDay = getStartDayOfMonth(index);
@@ -197,7 +197,7 @@ const Consejos4 = () => {
   );
 };
 
-export default Consejos4;
+export default Calendario;
 
 
 
