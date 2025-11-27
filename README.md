@@ -7,12 +7,22 @@
 - Gonzalez, Tomás Nahuel
 - Rossi, Iván
 
-Instrucciones con docker: 
+------IMPORTANTE-------
+Antes de comenzar a trabajar, correr los actualizadores:
+actualizador_windows, en caso de SO Windows
+actualizador_linux-mac, en caso de SO linux/mac
+
+Esto es una automatizacion que hace un pull y un build para el docker, 
+para que no haya conflicto de versiones
+
+---------------------------------------------------------------------
+Instrucciones para correr con docker: 
 Clonar el repositorio y con docker corriendo, poner en terminal 
 
 docker-compose up --build
+------------------------------------------------------------------
 
-Instrucciones, sin docker:
+Instrucciones para correr sin docker(no recomendado):
 Nos movemos a la carpeta backend con el comando:
 
 cd backend (1)
@@ -35,3 +45,8 @@ npm start runserver (3)
 
 Ingresamos a la app en el link : http://localhost:3000/login
 
+Corremos n8n (debe estar instalado) en cmd con:
+n8n
+
+nos aseguramos de tener el api key configurado y que la url del bloque de consultas
+de puntos verde sea el local host.
