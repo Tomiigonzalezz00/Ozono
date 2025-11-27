@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "🚀 Actualizando Ozono..."
+echo "Actualizando Ozono..."
 git pull origin main
 docker-compose up -d --build
-echo "✅ ¡Listo!"
+echo "¡Listo!"
