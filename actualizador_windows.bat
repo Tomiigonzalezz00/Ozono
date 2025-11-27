@@ -13,7 +13,7 @@ docker-compose up -d --build
 
 echo.
 echo ==========================================
-echo ¡LISTO! Todo esta actualizado.
+echo Se actualizo OZONO correctamente.
 echo Puedes cerrar esta ventana.
 echo ==========================================
 pause
