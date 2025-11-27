@@ -1,0 +1,198 @@
+{
+  "name": "Ozono",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat-ozono",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "bac4af7e-c305-4e08-af90-4d295dfc3513",
+      "name": "Chat Entrada",
+      "webhookId": "2cb633f3-9147-4cb7-b27e-e6ab764346d0"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1392,
+        0
+      ],
+      "id": "2c4032a2-9f5f-4f82-af1d-b9c0e2596526",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Sos Ozono, el asistente inteligente de reciclaje de CABA.\nTenes acceso a la BASE DE DATOS COMPLETA de Puntos Verdes abajo.\n\nDATOS:\n- Mensaje del usuario: \"{{ $json.usuario_dice }}\"\n- Base de datos (JSON): {{ JSON.stringify($json.base_datos_puntos) }}\n\nINSTRUCCIONES DE PROCESAMIENTO:\n1. Analizá el mensaje para detectar MATERIAL y BARRIO/ZONA.\n2. Buscá en la base de datos la mejor opción.\n3. Escribí la respuesta siguiendo estas reglas DE ESTILO:\n   - **CERO ROBOT:**\n   - **NATURALIDAD:** Integrá el material y el barrio en la frase de forma fluida.\n     * Bien: \"¡Dale! Para dejar esas pilas en Retiro te conviene...\"\n     * Bien: \"Buenísimo que recicles plástico. En Nuñez tenés...\"\n     * Bien: \"Si estás por esa zona con aceite, andá a...\"\n   - **VARIEDAD:** Cambiá la forma de saludar y confirmar en cada turno.\n\nRESPUESTA (Formato JSON):\n{\n  \"respuesta\": \"Tu respuesta fluida aquí. Nombre del punto, dirección y horario. Si NO hay punto en su zona (como Baradero), aclaralo amablemente y sugerí el más cercano de la lista o recomendá consultar a su municipio. Cerrá con el tip de reciclaje.\",\n  \"punto_sugerido_id\": \"ID del punto (o vacío)\",\n  \"material\": \"Material detectado\",\n  \"barrio\": \"Barrio detectado\"\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        784,
+        0
+      ],
+      "id": "3875e174-6aa6-4d86-8a52-f335ec8fb89e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst contenido = item.json.message?.content || item.json.output || item.json.text || \"\";\n\n// Buscamos algo que parezca un JSON (entre llaves)\nconst jsonMatch = contenido.match(/\\{[\\s\\S]*\\}/);\n\nlet resultado = { respuesta: \"\" };\n\nif (jsonMatch) {\n  try {\n    resultado = JSON.parse(jsonMatch[0]);\n  } catch (e) {\n    // Si falla el parseo, devolvemos el texto original como respuesta\n    resultado = { respuesta: contenido };\n  }\n} else {\n  // Si no se encontró ningún JSON, devolvemos el texto original\n  resultado = { respuesta: contenido };\n}\n\nreturn { json: resultado };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        0
+      ],
+      "id": "9b43cf56-4ce7-498c-aaaa-bd44658940ef",
+      "name": "Function"
+    },
+    {
+      "parameters": {
+        "url": "http://127.0.0.1:8000/api/puntos-verdes/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        320,
+        0
+      ],
+      "id": "2dc11d1f-0689-4ea1-811b-0f7416c2d263",
+      "name": "Cargar puntos verdes"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5",
+          "mode": "list",
+          "cachedResultName": "gpt-5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        784,
+        208
+      ],
+      "id": "fb2c492e-88dd-47e2-b445-c2ef90bdeb8c",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "sEB92PiZS3gcQVQP",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. INPUTS\nconst puntosRaw = $('Cargar puntos verdes').all().map(item => item.json);\nconst body = $('Chat Entrada').first().json;\n// Nos aseguramos de leer el mensaje, venga de donde venga\nconst consulta = body.mensaje || body.consulta || body.body?.mensaje || \"\"; \n\n// 2. LIMPIEZA DE DATOS (Miniatura)\n// Creamos una lista ligera con TODOS los puntos.\n// Quitamos coordenadas y datos irrelevantes para que entre todo en el prompt.\nconst todosLosPuntos = puntosRaw.map(p => ({\n    id: p.id,\n    n: p.nombre,          // Nombre\n    d: p.direccion,       // Dirección\n    b: p.barrio,          // Barrio\n    h: p.dia_hora,        // Horario\n    m: p.materiales       // Materiales\n}));\n\n// 3. SALIDA DIRECTA\nreturn {\n    json: {\n        usuario_dice: consulta,\n        base_datos_puntos: todosLosPuntos // ¡Le mandamos todo!\n    }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        0
+      ],
+      "id": "f6724d55-b652-49c7-9d9b-7e1fcde2bd75",
+      "name": "Filtrar candidatos"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chat Entrada": {
+      "main": [
+        [
+          {
+            "node": "Cargar puntos verdes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cargar puntos verdes": {
+      "main": [
+        [
+          {
+            "node": "Filtrar candidatos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar candidatos": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2d2fd654-58ef-4ecc-ba04-546147172ac7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5128b2d1c958d13012107722af535a3c9d7510d54f1c0885dbb7821ebdfac3cd"
+  },
+  "id": "revIYh6GyRPpNnn5",
+  "tags": []
+}
