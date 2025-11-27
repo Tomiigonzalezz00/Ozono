@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from .models import Item, PuntoVerde, ConsejosRRR, CalendarioAmbiental
+from .models import Item, PuntoVerde, Consejo, CalendarioAmbiental
 from rest_framework import viewsets
-from .serializers import ItemSerializer, PuntoVerdeSerializer, ConsejosRRRSerializer, CalendarioAmbientalSerializer
+from .serializers import ItemSerializer, PuntoVerdeSerializer, ConsejoSerializer, CalendarioAmbientalSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework import status
@@ -40,7 +40,6 @@ class LoginView(APIView):
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
-        user = authenticate(username=username, password=password)
         if user is None:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
         token,  = Token.objects.get_or_create(user=user)
@@ -54,12 +53,12 @@ def get_puntos_verdes(request):
     return Response(serializer.data)
 
 @api_view(['GET'])
-def get_consejos_rrr(request):
+def get_consejos(request):
     categoria = request.query_params.get('categoria', None)
-    consejos = ConsejosRRR.objects.all()
+    consejos = Consejo.objects.all()
     if categoria:
         consejos = consejos.filter(categoria__icontains=categoria)
-    serializer = ConsejosRRRSerializer(consejos, many=True)
+    serializer = ConsejoSerializer(consejos, many=True)
     return Response(serializer.data)
 
 @api_view(['GET'])

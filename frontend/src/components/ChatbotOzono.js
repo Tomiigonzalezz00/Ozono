@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import 'font-awesome/css/font-awesome.min.css';
-import './Consejos.css';
+import './ChatbotOzono.css';
 
-const ConsejosRRR = () => {
+const ChatbotOzono = () => {
   // Menú, logout, etc
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const menuRef = useRef(null);
@@ -94,7 +94,7 @@ const ConsejosRRR = () => {
         <aside className="sidebar">
           <ul className="sidebar-menu">
             <li><Link to="/home" style={{ color: 'inherit' }}><i className="fa fa-arrow-circle-up"></i></Link></li>
-            <li><Link to="/consejosRRR" style={{ color: 'inherit' }}><i className="fa fa-lightbulb-o"></i></Link></li>
+            <li><Link to="/chatbot_ozono" style={{ color: 'inherit' }}><i className="fa fa-lightbulb-o"></i></Link></li>
             <li><Link to="/calendario" style={{ color: 'inherit' }}><i className="fa fa-calendar-alt"></i></Link></li>
           </ul>
         </aside>
@@ -148,9 +148,9 @@ const ConsejosRRR = () => {
             </div>
           </div>
         </section>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 
-export default ConsejosRRR;
+export default ChatbotOzono;

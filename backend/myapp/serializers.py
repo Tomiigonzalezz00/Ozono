@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Item, PuntoVerde, ConsejosRRR, CalendarioAmbiental
+from .models import Item, PuntoVerde, Consejo, CalendarioAmbiental
 
 class ItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -13,9 +13,9 @@ class PuntoVerdeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ConsejosRRRSerializer(serializers.ModelSerializer):
+class ConsejoSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ConsejosRRR
+        model = Consejo
         fields = ['id', 'titulo', 'categoria', 'descripcion']
 
 

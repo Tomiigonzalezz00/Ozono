@@ -12,6 +12,6 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
     path('api/puntos-verdes/', views.get_puntos_verdes, name='get_puntos_verdes'),
-    path('api/consejos-rrr/', views.get_consejos_rrr, name='get_consejos_rrr'),
+    path('api/consejos/', views.get_consejos, name='get_consejos'),
     path('api/calendario-ambiental/', views.get_calendario_ambiental, name='get_calendario_ambiental'),
 ]

@@ -33,9 +33,9 @@ class PuntoVerde(models.Model):
     def __str__(self):
         return str(self.nombre)
     
-class ConsejosRRR(models.Model):
+class Consejo(models.Model):
     """
-    Modelo que representa un consejo RRR en el sistema.
+    Modelo que representa un consejo en el sistema.
     """
     CATEGORIA_CHOICES = [
         ('reciclaje', 'Reciclaje'),
@@ -53,8 +53,8 @@ class ConsejosRRR(models.Model):
         return str(self.titulo)
 
     class Meta:
-        verbose_name = "Consejo RRR"
-        verbose_name_plural = "Consejos RRR"
+        verbose_name = "Consejo"
+        verbose_name_plural = "Consejos"
 
 class CalendarioAmbiental(models.Model):
     """

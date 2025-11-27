@@ -1,16 +1,14 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import './App.css';
+
+// Importación de componentes
+// (Ajusta las rutas './components/...' si tus archivos están en otra carpeta)
 import Login from './components/Login';
 import Register from './components/Register';
-import Home from './components/Home'; // Importa el nuevo componente Home
-import ConsejosRRR from './components/ConsejosRRR';
-import Consejos2 from './components/Consejos2';
+import Home from './components/Home';
+import ChatbotOzono from './components/ChatbotOzono';
 import Calendario from './components/Calendario';
-import Consejos5 from './components/Consejos5';
-import Consejos6 from './components/Consejos6';
-import Consejos7 from './components/Consejos7';
-import Consejos8 from './components/Consejos8';
-
 
 function App() {
   return (
@@ -19,15 +17,10 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/home" element={<Home />} /> {/* Agrega la ruta para Home */}
+          <Route path="/home" element={<Home />} />
           <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/consejosRRR" element={<ConsejosRRR />} />
-          <Route path="/consejos2" element={<Consejos2 />} />
-          <Route path="/Calendario" element={<Calendario/>} />
-          <Route path="/consejos5" element={<Consejos5 />} />
-          <Route path="/consejos6" element={<Consejos6 />} />
-          <Route path="/consejos7" element={<Consejos7 />} />
-          <Route path="/consejos8" element={<Consejos8 />} />
+          <Route path="/chatbot_ozono" element={<ChatbotOzono />} />
+          <Route path="/Calendario" element={<Calendario />} />
         </Routes>
       </div>
     </Router>
