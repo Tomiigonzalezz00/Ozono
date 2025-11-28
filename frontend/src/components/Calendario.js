@@ -79,7 +79,7 @@ const Calendario = () => {
   ];
 
   const getStartDayOfMonth = (monthIndex) => {
-    const year = 2024; // Año fijo para los datos de la API
+    const year = 2025; // Año fijo para los datos de la API
     const date = new Date(year, monthIndex, 1);
     return date.getDay();
   };
@@ -89,7 +89,7 @@ const Calendario = () => {
       '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'
     ];
     const month = monthNames[mesIndex];
-    const year = 2024; // Año fijo para los datos de la API
+    const year = 2025; // Año fijo para los datos de la API
 
     const formattedDate = `${year}-${month}-${String(dia).padStart(2, '0')}`;
     return fechasAmbientales.find(evento => evento.fecha === formattedDate);
