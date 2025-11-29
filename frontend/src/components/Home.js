@@ -5,6 +5,11 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'font-awesome/css/font-awesome.min.css';
 
+// Helper para normalizar texto (quitar acentos, minúsculas, espacios)
+const normalizeText = (text) => {
+  return (text || '').toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+};
+
 const Home = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [materialDropdownOpen, setMaterialDropdownOpen] = useState(false);
@@ -20,6 +25,7 @@ const Home = () => {
   const [selectedPunto, setSelectedPunto] = useState(null);
 
   const [barrioFilter, setBarrioFilter] = useState('');
+  const [showBarrioDropdown, setShowBarrioDropdown] = useState(false);
   const [horarioFilter, setHorarioFilter] = useState('');
   const [barriosDisponibles, setBarriosDisponibles] = useState([]);
 
@@ -78,14 +84,15 @@ const Home = () => {
         try {
           const response = await fetch('http://localhost:8000/api/puntos-verdes/');
           const data = await response.json();
-          setPuntosVerdes(data);
 
           // Obtener lista única de barrios
           const barrios = [...new Set(data.map(p => p.barrio).filter(Boolean))];
           setBarriosDisponibles(barrios);
 
+          // Crear marcadores antes de establecer el estado
           data.forEach(punto => {
-            const isOrganic = punto.materiales.toLowerCase().includes('orgánicos');
+            const materiales = punto.materiales || '';
+            const isOrganic = materiales.toLowerCase().includes('orgánicos');
             const popupClass = isOrganic ? 'popup-content popup-organico' : 'popup-content popup-noorganico';
             const icon = createIcon(isOrganic);
             const marker = L.marker([punto.latitud, punto.longitud], { icon })
@@ -94,13 +101,16 @@ const Home = () => {
                   <div class="${popupClass}">
                     <strong class="popup-title">${punto.nombre}</strong><br>
                     <strong class="popup-label">Dirección:</strong> ${punto.direccion}<br>
-                    <strong class="popup-label">Materiales:</strong> ${punto.materiales}<br>
+                    <strong class="popup-label">Materiales:</strong> ${materiales}<br>
                     <strong class="popup-label">Horarios:</strong> ${punto.dia_hora || 'No especificado'}<br>
                     <strong class="popup-label">Más info:</strong> ${punto.mas_info}
                   </div>
-                `)
+                `);
             punto.marker = marker; // Guardamos el marcador en el punto
           });
+
+          setPuntosVerdes(data);
+
         } catch (error) {
           console.error('Error al cargar los puntos verdes:', error);
         }
@@ -118,6 +128,7 @@ const Home = () => {
             </div>
           `;
         return div;
+      
       };
       legend.addTo(mapInstance.current);
     }
@@ -139,22 +150,22 @@ const Home = () => {
 
     // Filtro por término de búsqueda
     if (searchTerm) {
+      const term = normalizeText(searchTerm);
       filtered = filtered.filter(punto =>
-        punto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        punto.direccion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        punto.barrio.toLowerCase().includes(searchTerm.toLowerCase())
+        normalizeText(punto.nombre).includes(term) ||
+        normalizeText(punto.direccion).includes(term) ||
+        normalizeText(punto.barrio).includes(term)
       );
     }
 
     // Filtro por materiales
     if (selectedMaterials.length > 0) {
       filtered = filtered.filter(punto => {
-        const materialesTexto = punto.materiales.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
+        const materialesTexto = normalizeText(punto.materiales);
         const incluyeOrganico = materialesTexto.includes("organico");
 
         return selectedMaterials.some(material => {
-          const normalizado = material.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          const normalizado = normalizeText(material);
 
           if (normalizado === "organicos") {
             return incluyeOrganico;
@@ -168,12 +179,14 @@ const Home = () => {
 
     // Filtro por barrio
     if (barrioFilter) {
-      filtered = filtered.filter(p => p.barrio.toLowerCase().includes(barrioFilter.toLowerCase()));
+      const barrioTerm = normalizeText(barrioFilter);
+      filtered = filtered.filter(p => normalizeText(p.barrio).includes(barrioTerm));
     }
 
     // Filtro por horario
     if (horarioFilter) {
-      filtered = filtered.filter(p => (p.dia_hora || '').toLowerCase().includes(horarioFilter.toLowerCase()));
+      const horarioTerm = normalizeText(horarioFilter);
+      filtered = filtered.filter(p => normalizeText(p.dia_hora).includes(horarioTerm));
     }
 
     // Excluir punto seleccionado de la lista de sugerencias
@@ -192,12 +205,11 @@ const Home = () => {
 
       // Lógica de filtrado para marcadores (repite la lógica de arriba para sincronizar)
       if (selectedMaterials.length > 0) {
-        const materialesTexto = punto.materiales.toLowerCase();
-        const materialesNormalizado = punto.materiales.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        const incluyeOrganico = materialesNormalizado.includes("organico");
+        const materialesTexto = normalizeText(punto.materiales);
+        const incluyeOrganico = materialesTexto.includes("organico");
 
         const cumpleMaterial = selectedMaterials.some(material => {
-          const normalizado = material.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          const normalizado = normalizeText(material);
           if (normalizado === "organicos") return incluyeOrganico;
           if (normalizado === "inorganicos") return !incluyeOrganico;
           return false;
@@ -206,17 +218,18 @@ const Home = () => {
       }
 
       if (deberiasMostrar && barrioFilter) {
-        deberiasMostrar = punto.barrio.toLowerCase().includes(barrioFilter.toLowerCase());
+        deberiasMostrar = normalizeText(punto.barrio).includes(normalizeText(barrioFilter));
       }
 
       if (deberiasMostrar && horarioFilter) {
-        deberiasMostrar = (punto.dia_hora || '').toLowerCase().includes(horarioFilter.toLowerCase());
+        deberiasMostrar = normalizeText(punto.dia_hora).includes(normalizeText(horarioFilter));
       }
 
       if (deberiasMostrar && searchTerm && !selectedPunto) {
-        deberiasMostrar = punto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          punto.direccion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          punto.barrio.toLowerCase().includes(searchTerm.toLowerCase());
+        const term = normalizeText(searchTerm);
+        deberiasMostrar = normalizeText(punto.nombre).includes(term) ||
+          normalizeText(punto.direccion).includes(term) ||
+          normalizeText(punto.barrio).includes(term);
       }
 
       // Mostrar u ocultar el marcador según los filtros
@@ -334,17 +347,24 @@ const Home = () => {
                 type="text"
                 placeholder="Filtrar por barrio"
                 value={barrioFilter}
-                onChange={(e) => setBarrioFilter(e.target.value)}
+                onFocus={() => setShowBarrioDropdown(true)}
+                onChange={(e) => {
+                  setBarrioFilter(e.target.value);
+                  setShowBarrioDropdown(true);
+                }}
               />
 
-              {barrioFilter && (
+              {showBarrioDropdown && barrioFilter && (
                 <ul className="dropdown">
                   {barriosDisponibles
-                    .filter(b => b.toLowerCase().includes(barrioFilter.toLowerCase()))
+                    .filter(b => normalizeText(b).includes(normalizeText(barrioFilter)))
                     .map((barrio, idx) => (
                       <li
                         key={idx}
-                        onClick={() => setBarrioFilter(barrio)}
+                        onClick={() => {
+                          setBarrioFilter(barrio);
+                          setShowBarrioDropdown(false);
+                        }}
                       >
                         {barrio}
                       </li>
