@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
-import FacebookLogin from 'react-facebook-login';
+
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -24,17 +24,6 @@ const Login = () => {
     }
   };
 
-  const responseFacebook = (response) => {
-    console.log(response);
-    // Maneja la respuesta de Facebook aquí
-    if (response.accessToken) {
-      // Autenticación exitosa
-      localStorage.setItem('fb_token', response.accessToken);
-      navigate('/Home'); // Redirige al dashboard o a otra página
-    } else {
-      console.error('Facebook login failed:', response);
-    }
-  };
 
   return (
     <div className="login-container">
@@ -76,17 +65,6 @@ const Login = () => {
           </div>
           <button type="submit">Ingresar</button>
         </form>
-        <div className="facebook-login">
-          <FacebookLogin
-            appId="8360898643928334"
-            autoLoad={false} // Cambia a true si quieres que el login se cargue automáticamente
-            fields="name,email,picture"
-            callback={responseFacebook}
-            textButton="Inicia sesión con Facebook"
-            icon="fa-facebook"
-            cssClass="facebook-button" // Cambia esto a la clase personalizada
-          />
-        </div>  
       </div>
     </div>
   );

@@ -1,188 +1,420 @@
 /* src/components/Login.css */
 
 .login-container {
-    background-image: url('/public/images/fondoLogin.jpeg'); /* Ruta de la imagen en la carpeta public */
-    background-size: cover; /* Ajusta la imagen para cubrir todo el contenedor */
-    background-position: center; /* Centra la imagen en el contenedor */
-    height: 100vh; /* Ocupa toda la altura de la ventana */
-    display: flex;
-    flex-direction: column; /* Organiza el contenido en una columna */
-  }
-  
-  .top-bar {
-    width: 100%;
-    height: 40px; /* Altura reducida de la barra */
-    background-color: #006400; /* Verde más oscuro */
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    box-sizing: border-box; /* Asegura que el padding no afecte el tamaño total */
-  }
-  
-  .top-bar .brand-image {
-    height: 250px; /* Ajusta la altura según sea necesario */
-    display: block;
-    margin-left: -70px; /* Ajusta este valor para mover la imagen más a la izquierda */
-  }
-  
-  .login-form {
-    background: rgba(37, 36, 36, 0.8); /* Fondo negro claro (gris oscuro) para el formulario */
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    margin: auto; /* Centra el formulario verticalmente */
-    max-width: 400px; /* Ancho máximo del formulario */
-    width: 100%; /* Asegura que el formulario no se exceda del contenedor */
-  }
-  
-  .login-form h1.ozono-title {
-    text-align: center; /* Centra el título */
-    font-size: 35px; /* Tamaño del título OZONO */
-    margin-bottom: 10px;
-    color: black; /* Cambia el color del título a negro */
-  }
-  
-  .login-form h2 {
-    text-align: center; /* Centra el título */
-    color: white; /* Cambia el color del título a blanco */
-  }
-  
-  .login-form label {
-    color: white; /* Cambia el color de las etiquetas a blanco */
-    display: block;
-    margin-bottom: 5px;
-  }
-  
-  .login-form input {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 20px; /* Bordes redondeados en los extremos */
-    background-color: white; /* Color blanco para los cuadros de entrada */
-    color: black; /* Color negro para el texto dentro de los cuadros de entrada */
-    box-sizing: border-box; /* Asegura que el padding y el border se incluyan en el tamaño total */
-  }
-  
-  .login-form button {
-    width: 160px; /* Ancho ajustado del botón */
-    padding: 12px 24px; /* Espacio alrededor del texto, más amplio */
-    background-color: #006400; /* Verde más oscuro */
-    color: white;
-    border: none;
-    border-radius: 20px; /* Bordes redondeados en los extremos */
-    cursor: pointer;
-    font-size: 16px; /* Tamaño de la fuente del botón */
-    box-sizing: border-box; /* Asegura que el padding y el border se incluyan en el tamaño total */
-    display: block; /* Asegura que el botón sea un bloque para centrarlo */
-    margin: 20px auto; /* Centra el botón horizontalmente */
-  }
-  
-  .login-form button:hover {
-    background-color: #004d00; /* Verde aún más oscuro para el hover */
-  }
-  
-  .remember-me {
-    display: flex;
-    align-items: center;
-    margin-top: 10px;
-  }
-  
-  .remember-me .switch {
-    position: relative;
-    display: inline-block;
-    width: 40px; /* Ancho del interruptor */
-    height: 20px; /* Altura del interruptor */
-    margin-right: 10px; /* Espacio entre el interruptor y el texto */
-  }
-  
-  .remember-me .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  
-  .remember-me .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-    border-radius: 34px;
-  }
-  
-  .remember-me .slider:before {
-    position: absolute;
-    content: "";
-    height: 16px; /* Tamaño del círculo dentro del interruptor */
-    width: 16px; /* Tamaño del círculo dentro del interruptor */
-    border-radius: 50%;
-    left: 2px;
-    bottom: 2px;
-    background-color: white;
-    transition: .4s;
-  }
-  
-  .remember-me input:checked + .slider {
-    background-color: #006400;
-  }
-  
-  .remember-me input:checked + .slider:before {
-    transform: translateX(20px); /* Ajusta el movimiento del círculo */
-  }
-  
-  /* Estilo adicional para el texto "Recordarme" y "Olvidé mi contraseña" */
-  .remember-me label {
-    font-size: 14px; /* Tamaño de la fuente para el texto "Recordarme" */
-    color: white; /* Color blanco para el texto */
-    margin: 0; /* Elimina el margen */
-  }
-  
-  .remember-me .forgot-password {
-    margin-left: auto; /* Alinea a la derecha */
-    font-size: 14px; /* Tamaño de la fuente para el texto "Olvidé mi contraseña" */
-    color: white; /* Color blanco para el texto */
-    text-decoration: none; /* Sin subrayado */
-    cursor: pointer; /* Cursora de mano */
-    display: flex;
-    align-items: center; /* Alinea verticalmente con el interruptor */
-  }
-  
-  .remember-me .forgot-password:hover {
-    text-decoration: underline; /* Subrayado al pasar el mouse */
-  }
-  
-  .ozono-title-image {
-    height: 50px; /* Ajusta según sea necesario */
-    filter: contrast(1.5) brightness(1.2); /* Ajusta el contraste y el brillo si es necesario */
-  }
-  
-  /* Estilos para el botón de Facebook */
-  .facebook-login .facebook-button {
-    background-color: #4267B2 !important; /* Color azul de Facebook */
-    border-radius: 4px; /* Bordes redondeados */
-    color: white; /* Color del texto */
-    font-size: 16px; /* Tamaño de la fuente */
-    padding: 10px 20px; /* Espacio alrededor del texto */
-    border: none; /* Sin borde */
-    cursor: pointer; /* Cursora de mano */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%; /* O ajusta a un valor fijo como 'width: 300px;' */
-    box-sizing: border-box; /* Incluye padding y border en el ancho total */
-    white-space: nowrap; /* Evita que el texto se divida en varias líneas */
-    text-align: center; /* Centra el texto dentro del botón */
-  }
-  
-  .facebook-login .facebook-button:hover {
-    background-color: #365899 !important; /* Color azul más oscuro al pasar el mouse */
-  }
-  
-  .facebook-login .facebook-button .fa-facebook {
-    margin-right: 10px; /* Espacio entre el ícono y el texto */
-  }
+  background-image: url('/public/images/fondoLogin.jpeg');
+  /* Ruta de la imagen en la carpeta public */
+  background-size: cover;
+  /* Ajusta la imagen para cubrir todo el contenedor */
+  background-position: center;
+  /* Centra la imagen en el contenedor */
+  height: 100vh;
+  /* Ocupa toda la altura de la ventana */
+  display: flex;
+  flex-direction: column;
+  /* Organiza el contenido en una columna */
+}
+
+.top-bar {
+  width: 100%;
+  height: 40px;
+  /* Altura reducida de la barra */
+  background-color: #006400;
+  /* Verde más oscuro */
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  box-sizing: border-box;
+  /* Asegura que el padding no afecte el tamaño total */
+}
+
+.top-bar .brand-image {
+  height: 250px;
+  /* Ajusta la altura según sea necesario */
+  display: block;
+  margin-left: -70px;
+  /* Ajusta este valor para mover la imagen más a la izquierda */
+}
+
+.login-form {
+  background: rgba(37, 36, 36, 0.8);
+  /* Fondo negro claro (gris oscuro) para el formulario */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin: auto;
+  /* Centra el formulario verticalmente */
+  max-width: 400px;
+  /* Ancho máximo del formulario */
+  width: 100%;
+  /* Asegura que el formulario no se exceda del contenedor */
+}
+
+.login-form h1.ozono-title {
+  text-align: center;
+  /* Centra el título */
+  font-size: 35px;
+  /* Tamaño del título OZONO */
+  margin-bottom: 10px;
+  color: black;
+  /* Cambia el color del título a negro */
+}
+
+.login-form h2 {
+  text-align: center;
+  /* Centra el título */
+  color: white;
+  /* Cambia el color del título a blanco */
+}
+
+.login-form label {
+  color: white;
+  /* Cambia el color de las etiquetas a blanco */
+  display: block;
+  margin-bottom: 5px;
+}
+
+.login-form input {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  /* Bordes redondeados en los extremos */
+  background-color: white;
+  /* Color blanco para los cuadros de entrada */
+  color: black;
+  /* Color negro para el texto dentro de los cuadros de entrada */
+  box-sizing: border-box;
+  /* Asegura que el padding y el border se incluyan en el tamaño total */
+}
+
+.login-form button {
+  width: 160px;
+  /* Ancho ajustado del botón */
+  padding: 12px 24px;
+  /* Espacio alrededor del texto, más amplio */
+  background-color: #006400;
+  /* Verde más oscuro */
+  color: white;
+  border: none;
+  border-radius: 20px;
+  /* Bordes redondeados en los extremos */
+  cursor: pointer;
+  font-size: 16px;
+  /* Tamaño de la fuente del botón */
+  box-sizing: border-box;
+  /* Asegura que el padding y el border se incluyan en el tamaño total */
+  display: block;
+  /* Asegura que el botón sea un bloque para centrarlo */
+  margin: 20px auto;
+  /* Centra el botón horizontalmente */
+}
+
+.login-form button:hover {
+  background-color: #004d00;
+  /* Verde aún más oscuro para el hover */
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.remember-me .switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  /* Ancho del interruptor */
+  height: 20px;
+  /* Altura del interruptor */
+  margin-right: 10px;
+  /* Espacio entre el interruptor y el texto */
+}
+
+.remember-me .switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.remember-me .slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.remember-me .slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  /* Tamaño del círculo dentro del interruptor */
+  width: 16px;
+  /* Tamaño del círculo dentro del interruptor */
+  border-radius: 50%;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .4s;
+}
+
+.remember-me input:checked+.slider {
+  background-color: #006400;
+}
+
+.remember-me input:checked+.slider:before {
+  transform: translateX(20px);
+  /* Ajusta el movimiento del círculo */
+}
+
+/* Estilo adicional para el texto "Recordarme" y "Olvidé mi contraseña" */
+.remember-me label {
+  font-size: 14px;
+  /* Tamaño de la fuente para el texto "Recordarme" */
+  color: white;
+  /* Color blanco para el texto */
+  margin: 0;
+  /* Elimina el margen */
+}
+
+.remember-me .forgot-password {
+  margin-left: auto;
+  /* Alinea a la derecha */
+  font-size: 14px;
+  /* Tamaño de la fuente para el texto "Olvidé mi contraseña" */
+  color: white;
+  /* Color blanco para el texto */
+  text-decoration: none;
+  /* Sin subrayado */
+  cursor: pointer;
+  /* Cursora de mano */
+  display: flex;
+  align-items: center;
+  /* Alinea verticalmente con el interruptor */
+}
+
+.remember-me .forgot-password:hover {
+  text-decoration: underline;
+  /* Subrayado al pasar el mouse */
+}
+
+/* src/components/Login.css */
+
+.login-container {
+  background-image: url('/public/images/fondoLogin.jpeg');
+  /* Ruta de la imagen en la carpeta public */
+  background-size: cover;
+  /* Ajusta la imagen para cubrir todo el contenedor */
+  background-position: center;
+  /* Centra la imagen en el contenedor */
+  height: 100vh;
+  /* Ocupa toda la altura de la ventana */
+  display: flex;
+  flex-direction: column;
+  /* Organiza el contenido en una columna */
+}
+
+.top-bar {
+  width: 100%;
+  height: 40px;
+  /* Altura reducida de la barra */
+  background-color: #006400;
+  /* Verde más oscuro */
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  box-sizing: border-box;
+  /* Asegura que el padding no afecte el tamaño total */
+}
+
+.top-bar .brand-image {
+  height: 250px;
+  /* Ajusta la altura según sea necesario */
+  display: block;
+  margin-left: -70px;
+  /* Ajusta este valor para mover la imagen más a la izquierda */
+}
+
+.login-form {
+  background: rgba(37, 36, 36, 0.8);
+  /* Fondo negro claro (gris oscuro) para el formulario */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin: auto;
+  /* Centra el formulario verticalmente */
+  max-width: 400px;
+  /* Ancho máximo del formulario */
+  width: 100%;
+  /* Asegura que el formulario no se exceda del contenedor */
+}
+
+.login-form h1.ozono-title {
+  text-align: center;
+  /* Centra el título */
+  font-size: 35px;
+  /* Tamaño del título OZONO */
+  margin-bottom: 10px;
+  color: black;
+  /* Cambia el color del título a negro */
+}
+
+.login-form h2 {
+  text-align: center;
+  /* Centra el título */
+  color: white;
+  /* Cambia el color del título a blanco */
+}
+
+.login-form label {
+  color: white;
+  /* Cambia el color de las etiquetas a blanco */
+  display: block;
+  margin-bottom: 5px;
+}
+
+.login-form input {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  /* Bordes redondeados en los extremos */
+  background-color: white;
+  /* Color blanco para los cuadros de entrada */
+  color: black;
+  /* Color negro para el texto dentro de los cuadros de entrada */
+  box-sizing: border-box;
+  /* Asegura que el padding y el border se incluyan en el tamaño total */
+}
+
+.login-form button {
+  width: 160px;
+  /* Ancho ajustado del botón */
+  padding: 12px 24px;
+  /* Espacio alrededor del texto, más amplio */
+  background-color: #006400;
+  /* Verde más oscuro */
+  color: white;
+  border: none;
+  border-radius: 20px;
+  /* Bordes redondeados en los extremos */
+  cursor: pointer;
+  font-size: 16px;
+  /* Tamaño de la fuente del botón */
+  box-sizing: border-box;
+  /* Asegura que el padding y el border se incluyan en el tamaño total */
+  display: block;
+  /* Asegura que el botón sea un bloque para centrarlo */
+  margin: 20px auto;
+  /* Centra el botón horizontalmente */
+}
+
+.login-form button:hover {
+  background-color: #004d00;
+  /* Verde aún más oscuro para el hover */
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.remember-me .switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  /* Ancho del interruptor */
+  height: 20px;
+  /* Altura del interruptor */
+  margin-right: 10px;
+  /* Espacio entre el interruptor y el texto */
+}
+
+.remember-me .switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.remember-me .slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.remember-me .slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  /* Tamaño del círculo dentro del interruptor */
+  width: 16px;
+  /* Tamaño del círculo dentro del interruptor */
+  border-radius: 50%;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .4s;
+}
+
+.remember-me input:checked+.slider {
+  background-color: #006400;
+}
+
+.remember-me input:checked+.slider:before {
+  transform: translateX(20px);
+  /* Ajusta el movimiento del círculo */
+}
+
+/* Estilo adicional para el texto "Recordarme" y "Olvidé mi contraseña" */
+.remember-me label {
+  font-size: 14px;
+  /* Tamaño de la fuente para el texto "Recordarme" */
+  color: white;
+  /* Color blanco para el texto */
+  margin: 0;
+  /* Elimina el margen */
+}
+
+.remember-me .forgot-password {
+  margin-left: auto;
+  /* Alinea a la derecha */
+  font-size: 14px;
+  /* Tamaño de la fuente para el texto "Olvidé mi contraseña" */
+  color: white;
+  /* Color blanco para el texto */
+  text-decoration: none;
+  /* Sin subrayado */
+  cursor: pointer;
+  /* Cursora de mano */
+  display: flex;
+  align-items: center;
+  /* Alinea verticalmente con el interruptor */
+}
+
+.remember-me .forgot-password:hover {
+  text-decoration: underline;
+  /* Subrayado al pasar el mouse */
+}
+
+.ozono-title-image {
+  height: 50px;
+  /* Ajusta según sea necesario */
+  filter: contrast(1.5) brightness(1.2);
+  /* Ajusta el contraste y el brillo si es necesario */
+}

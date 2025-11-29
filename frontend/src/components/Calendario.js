@@ -131,7 +131,7 @@ const Calendario = () => {
               </Link>
             </li>
             <li>
-              <Link to="/consejosRRR" style={{ color: 'inherit' }}>
+              <Link to="/chatbot_ozono" style={{ color: 'inherit' }}>
                 <i className="fa fa-lightbulb-o"></i>
               </Link>
             </li>

@@ -56,7 +56,8 @@ const Home = () => {
   };
 
   useEffect(() => {
-    if (!mapInstance.current) {
+    // CORRECCIÓN: Verificamos si el mapa ya existe para no crearlo doble
+    if (!mapInstance.current && mapRef.current) {
       mapInstance.current = L.map(mapRef.current).setView([-34.61, -58.38], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
@@ -120,9 +121,20 @@ const Home = () => {
       };
       legend.addTo(mapInstance.current);
     }
+
+    // --- CORRECCIÓN IMPORTANTE: LIMPIEZA DEL MAPA AL SALIR ---
+    return () => {
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+    };
+
   }, []);
 
   useEffect(() => {
+    if (!mapInstance.current) return; // Protección extra
+
     let filtered = puntosVerdes;
 
     // Filtro por término de búsqueda
@@ -178,34 +190,29 @@ const Home = () => {
 
       let deberiasMostrar = true;
 
-      // Aplicar filtro de materiales a los marcadores
+      // Lógica de filtrado para marcadores (repite la lógica de arriba para sincronizar)
       if (selectedMaterials.length > 0) {
         const materialesTexto = punto.materiales.toLowerCase();
         const materialesNormalizado = punto.materiales.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         const incluyeOrganico = materialesNormalizado.includes("organico");
 
-        deberiasMostrar = selectedMaterials.some(material => {
+        const cumpleMaterial = selectedMaterials.some(material => {
           const normalizado = material.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-          if (normalizado === "organicos") {
-            return incluyeOrganico;
-          } else if (normalizado === "inorganicos") {
-            return !incluyeOrganico;
-          }
+          if (normalizado === "organicos") return incluyeOrganico;
+          if (normalizado === "inorganicos") return !incluyeOrganico;
           return false;
         });
+        if (!cumpleMaterial) deberiasMostrar = false;
       }
 
-      // Aplicar filtro de barrio a los marcadores
       if (deberiasMostrar && barrioFilter) {
         deberiasMostrar = punto.barrio.toLowerCase().includes(barrioFilter.toLowerCase());
       }
 
-      // Aplicar filtro de horario a los marcadores
       if (deberiasMostrar && horarioFilter) {
         deberiasMostrar = (punto.dia_hora || '').toLowerCase().includes(horarioFilter.toLowerCase());
       }
 
-      // Aplicar filtro de búsqueda a los marcadores
       if (deberiasMostrar && searchTerm && !selectedPunto) {
         deberiasMostrar = punto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
           punto.direccion.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -230,7 +237,9 @@ const Home = () => {
     setSelectedPunto(punto);
     setSearchTerm(punto.nombre);
     setFilteredPuntos([]);
-    mapInstance.current.setView([punto.latitud, punto.longitud], 16);
+    if (mapInstance.current) {
+      mapInstance.current.setView([punto.latitud, punto.longitud], 16);
+    }
   };
 
   const clearFilters = () => {
@@ -242,14 +251,15 @@ const Home = () => {
     setFilteredPuntos([]);
 
     // Mostrar todos los marcadores en el mapa
-    puntosVerdes.forEach(punto => {
-      if (punto.marker && !mapInstance.current.hasLayer(punto.marker)) {
-        punto.marker.addTo(mapInstance.current);
-      }
-    });
-
-    // Resetear la vista del mapa
-    mapInstance.current.setView([-34.61, -58.38], 13);
+    if (mapInstance.current) {
+      puntosVerdes.forEach(punto => {
+        if (punto.marker && !mapInstance.current.hasLayer(punto.marker)) {
+          punto.marker.addTo(mapInstance.current);
+        }
+      });
+      // Resetear la vista del mapa
+      mapInstance.current.setView([-34.61, -58.38], 13);
+    }
   };
 
   const toggleMaterialDropdown = () => setMaterialDropdownOpen(!materialDropdownOpen);
@@ -389,6 +399,3 @@ const Home = () => {
 };
 
 export default Home;
-
-
-
