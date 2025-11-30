@@ -4,20 +4,46 @@ import './Calendario.css';
 import 'font-awesome/css/font-awesome.min.css';
 
 const Calendario = () => {
+  // --- ESTADOS DE UI Y SESIÓN (NUEVO) ---
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [username, setUsername] = useState('Usuario');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  // Estados del Calendario
   const [fechasAmbientales, setFechasAmbientales] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
   const menuRef = useRef(null);
 
-  const toggleProfileMenu = () => {
-    setIsProfileOpen(prevState => !prevState);
-  };
+  const toggleProfileMenu = () => setIsProfileOpen(prevState => !prevState);
 
+  // 1. VERIFICAR SESIÓN AL CARGAR (NUEVO)
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const storedName = localStorage.getItem('username');
+    
+    if (token) {
+        setIsLoggedIn(true);
+        if (storedName) setUsername(storedName);
+    } else {
+        setIsLoggedIn(false);
+        setUsername('Invitado');
+    }
+  }, []);
+
+  // 2. HANDLERS DE SESIÓN (ACTUALIZADO)
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('username');
     window.location.href = '/login';
   };
+
+  const handleLogin = () => {
+    window.location.href = '/login';
+  };
+
+  // Helpers de fecha
   const formatDate = (fecha) => {
     const [year, month, day] = fecha.split('-');
     const months = [
@@ -27,6 +53,7 @@ const Calendario = () => {
     return `${day} de ${months[parseInt(month, 10) - 1]} ${year}`;
   };
 
+  // Ajuste de menú
   useEffect(() => {
     const adjustMenuPosition = () => {
       if (menuRef.current) {
@@ -43,11 +70,14 @@ const Calendario = () => {
       }
     };
 
-    adjustMenuPosition();
-    window.addEventListener('resize', adjustMenuPosition);
+    if (isProfileOpen) {
+        adjustMenuPosition();
+        window.addEventListener('resize', adjustMenuPosition);
+    }
     return () => window.removeEventListener('resize', adjustMenuPosition);
   }, [isProfileOpen]);
 
+  // Carga de datos
   useEffect(() => {
     const fetchFechasAmbientales = async () => {
       try {
@@ -89,7 +119,7 @@ const Calendario = () => {
       '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'
     ];
     const month = monthNames[mesIndex];
-    const year = 2025; // Año fijo para los datos de la API
+    const year = 2025; 
 
     const formattedDate = `${year}-${month}-${String(dia).padStart(2, '0')}`;
     return fechasAmbientales.find(evento => evento.fecha === formattedDate);
@@ -110,18 +140,25 @@ const Calendario = () => {
 
   return (
     <div className="home-container">
+      {/* HEADER ACTUALIZADO CON LÓGICA DE SESIÓN */}
       <header className="top-bar">
         <img src="/images/logoOzono.png" alt="Ozono" className="brand-image" />
         <div className="user-info" onClick={toggleProfileMenu}>
           <i className="fa fa-user"></i>
-          <span className="user-name">Usuario</span>
+          <span className="user-name">{username}</span>
+          
           {isProfileOpen && (
             <div className="profile-menu" ref={menuRef}>
-              <button onClick={handleLogout}>Cerrar sesión</button>
+              {isLoggedIn ? (
+                  <button onClick={handleLogout} style={{color: '#d32f2f'}}>Cerrar sesión</button>
+              ) : (
+                  <button onClick={handleLogin} style={{color: '#006400'}}>Iniciar sesión</button>
+              )}
             </div>
           )}
         </div>
       </header>
+
       <div className="main-content">
         <aside className="sidebar">
           <ul className="sidebar-menu">
@@ -142,11 +179,13 @@ const Calendario = () => {
             </li>
           </ul>
         </aside>
+
         <section className="content-section">
           <h1>
             <img src="/images/CalendarioAmbiental.jpeg" alt="Mundo Verde" className="imagen-titulo" />
             Calendario Ambiental
           </h1>
+          
           <div className="calendar-container">
             <div className="calendar">
               {meses.map((mes, index) => {
@@ -181,6 +220,7 @@ const Calendario = () => {
               })}
             </div>
           </div>
+
           {isModalOpen && (
             <div className="modalcal-overlay">
               <div className="modalcal-content">
@@ -198,15 +238,3 @@ const Calendario = () => {
 };
 
 export default Calendario;
-
-
-
-
-
-
-
-
-
-
-
-

@@ -4,16 +4,40 @@ import 'font-awesome/css/font-awesome.min.css';
 import './ChatbotOzono.css';
 
 const ChatbotOzono = () => {
-  // Menú, logout, etc
+  // --- ESTADOS DE UI Y SESIÓN (NUEVO) ---
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [username, setUsername] = useState('Usuario');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
   const menuRef = useRef(null);
   const toggleProfileMenu = () => setIsProfileOpen(prev => !prev);
+
+  // 1. VERIFICAR SESIÓN AL CARGAR (NUEVO)
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const storedName = localStorage.getItem('username');
+    
+    if (token) {
+        setIsLoggedIn(true);
+        if (storedName) setUsername(storedName);
+    } else {
+        setIsLoggedIn(false);
+        setUsername('Invitado');
+    }
+  }, []);
+
+  // 2. HANDLERS DE SESIÓN (ACTUALIZADO)
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('username');
     window.location.href = '/login';
   };
 
-  // Chatbot states
+  const handleLogin = () => {
+    window.location.href = '/login';
+  };
+
+  // --- LÓGICA DEL CHATBOT (INTACTA) ---
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([
     { sender: 'bot', text: 'Hola, soy Ozzy. ¿En qué puedo ayudarte?' }
@@ -77,14 +101,20 @@ const ChatbotOzono = () => {
 
   return (
     <div className="home-container">
+      {/* HEADER ACTUALIZADO CON SESIÓN */}
       <header className="top-bar">
         <img src="/images/logoOzono.png" alt="Ozono" className="brand-image" />
         <div className="user-info" onClick={toggleProfileMenu}>
           <i className="fa fa-user"></i>
-          <span className="user-name">Usuario</span>
+          <span className="user-name">{username}</span>
+          
           {isProfileOpen && (
             <div className="profile-menu" ref={menuRef}>
-              <button onClick={handleLogout}>Cerrar sesión</button>
+              {isLoggedIn ? (
+                  <button onClick={handleLogout} style={{color: '#d32f2f'}}>Cerrar sesión</button>
+              ) : (
+                  <button onClick={handleLogin} style={{color: '#006400'}}>Iniciar sesión</button>
+              )}
             </div>
           )}
         </div>
