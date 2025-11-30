@@ -17,8 +17,9 @@ const Home = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [materialDropdownOpen, setMaterialDropdownOpen] = useState(false);
 
-  // Estado de Usuario
+  // Estado de Usuario y Sesión
   const [username, setUsername] = useState('Usuario');
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Nuevo estado para controlar la sesión
 
   // Estados de Datos
   const [puntosVerdes, setPuntosVerdes] = useState([]);
@@ -42,10 +43,19 @@ const Home = () => {
   const toggleProfileMenu = () => setIsProfileOpen(prev => !prev);
   const toggleMaterialDropdown = () => setMaterialDropdownOpen(!materialDropdownOpen);
 
-  // 1. LEER USUARIO
+  // 1. LEER USUARIO Y ESTADO DE SESIÓN
   useEffect(() => {
+    const token = localStorage.getItem('token');
     const storedName = localStorage.getItem('username');
-    if (storedName) setUsername(storedName);
+
+    // Lógica para determinar si está logueado
+    if (token) {
+      setIsLoggedIn(true);
+      if (storedName) setUsername(storedName);
+    } else {
+      setIsLoggedIn(false);
+      setUsername('Invitado'); // Cambiamos el nombre si no hay sesión
+    }
 
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -222,6 +232,11 @@ const Home = () => {
     window.location.href = '/login';
   };
 
+  // Nueva función para ir al login si es invitado
+  const handleLogin = () => {
+    window.location.href = '/login';
+  };
+
   return (
     <div className="home-container">
       <header className="top-bar">
@@ -231,7 +246,11 @@ const Home = () => {
           <span className="user-name">{username}</span>
           {isProfileOpen && (
             <div className="profile-menu" ref={menuRef}>
-              <button onClick={handleLogout}>Cerrar sesión</button>
+              {isLoggedIn ? (
+                <button onClick={handleLogout} style={{ color: '#d32f2f' }}>Cerrar sesión</button>
+              ) : (
+                <button onClick={handleLogin} style={{ color: '#006400' }}>Iniciar sesión</button>
+              )}
             </div>
           )}
         </div>

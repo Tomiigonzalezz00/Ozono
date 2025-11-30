@@ -42,10 +42,9 @@ const Login = () => {
       console.error('Login error:', err);
       // Mostrar mensaje amigable si falla
       if (err.response && err.response.status === 400) {
-        setError('Por favor, completa todos los campos.');
-      } else if (err.response && err.response.status === 401) {
-        setError('Usuario o contraseña incorrectos.');
-      } else {
+        setError('Usuario o contraseña incorrecto.');
+      }
+       else {
         setError('Error de conexión con el servidor. Intenta más tarde.');
       }
     }
