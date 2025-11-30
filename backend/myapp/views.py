@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from .models import Item, PuntoVerde, Consejo, CalendarioAmbiental
 from rest_framework import viewsets
-from .serializers import ItemSerializer, PuntoVerdeSerializer, ConsejoSerializer, CalendarioAmbientalSerializer
+from .serializers import ItemSerializer, PuntoVerdeSerializer, ConsejoSerializer, CalendarioAmbientalSerializer,PasswordResetRequestSerializer,PasswordResetConfirmSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework import status
@@ -22,6 +22,10 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.models import User
 
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+
 def home(request):
     items = Item.objects.all()
     return render(request, 'myapp/home.html', {'items': items})
@@ -33,6 +37,7 @@ class ItemViewSet(viewsets.ModelViewSet):
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserRegistrationSerializer
+    permission_classes = [AllowAny] # Permite que cualquiera se registre
 
     def perform_create(self, serializer):
         # Guardamos el usuario
@@ -44,24 +49,32 @@ class RegisterView(generics.CreateAPIView):
                 send_mail(
                     subject='¡Bienvenido a Ozono!',
                     message=f'Hola {user.username}, gracias por registrarte en Ozono. Juntos cuidamos el planeta.',
-                    from_email=settings.EMAIL_HOST_USER,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[user.email],
                     fail_silently=False,
                 )
             except Exception as e:
-                # Loguear el error si es necesario, pero no detener el registro
                 print(f"Error enviando email: {e}")
 
     def create(self, request, *args, **kwargs):
-        # Sobrescribimos create para devolver el token directamente al registrarse (opcional, pero recomendado)
-        response = super().create(request, *args, **kwargs)
+        # 1. Creamos el usuario normalmente
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
         
-        # Si quieres devolver el token también al registrarse, descomenta esto:
-        # user = User.objects.get(username=response.data['username'])
-        # token, created = Token.objects.get_or_create(user=user)
-        # return Response({'token': token.key, 'user': response.data}, status=status.HTTP_201_CREATED)
+        # 2. Recuperamos el usuario creado
+        user = User.objects.get(username=serializer.data['username'])
         
-        return response
+        # 3. Creamos o recuperamos su token
+        token, created = Token.objects.get_or_create(user=user)
+        
+        # 4. Devolvemos el Token y los datos (¡Auto-Login!)
+        return Response({
+            'token': token.key,
+            'user_id': user.pk,
+            'username': user.username,
+            'email': user.email
+        }, status=status.HTTP_201_CREATED)
 
 
 # --- VISTA DE LOGIN ---
@@ -78,6 +91,50 @@ class CustomLoginView(ObtainAuthToken):
             'email': user.email
         })
     
+  #---REINICIO DE CONTRASEÑA---
+class PasswordResetRequestView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            try:
+                user = User.objects.get(email=email)
+                
+                # Generamos token y uid
+                token = default_token_generator.make_token(user)
+                uid = urlsafe_base64_encode(force_bytes(user.pk))
+                
+                # Construimos el link al FRONTEND (React)
+                # Ajusta localhost:3000 si tu frontend está en otro lado
+                reset_link = f"http://localhost:3000/reset-password/{uid}/{token}"
+                
+                # Enviamos el email
+                send_mail(
+                    subject='Restablecer contraseña - Ozono',
+                    message=f'Hola {user.username},\n\nUsa el siguiente enlace para cambiar tu contraseña:\n\n{reset_link}\n\nSi no lo solicitaste, ignora este mensaje.',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+            except User.DoesNotExist:
+                # Por seguridad, no decimos si el usuario no existe
+                pass
+            
+            return Response({"message": "Si el email existe, se ha enviado un enlace."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class PasswordResetConfirmView(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = PasswordResetConfirmSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Contraseña restablecida con éxito."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 def get_puntos_verdes(request):

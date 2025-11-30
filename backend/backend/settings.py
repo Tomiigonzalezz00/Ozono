@@ -150,6 +150,16 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Cambia esto si tu frontend corre en otro puerto
 ]
 
-# Configuración de Email para Desarrollo (Imprime en la terminal de Docker)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST_USER = 'no-reply@ozono.com' # Remitente por defecto
+# --- CONFIGURACIÓN DE EMAIL REAL (GMAIL) ---
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+# CREDENCIALES DE MAIL
+EMAIL_HOST_USER = 'appozono@gmail.com'    
+EMAIL_HOST_PASSWORD = 'buyl wozl injd pvgd'    
+
+# NOMBRE PERSONALIZADO DEL REMITENTE
+# Esto hace que en la bandeja de entrada diga "Equipo Ozono" en vez del mail
+DEFAULT_FROM_EMAIL = 'Equipo Ozono <appozono@gmail.com>'

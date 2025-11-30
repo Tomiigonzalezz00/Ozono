@@ -9,6 +9,8 @@ import Register from './components/Register';
 import Home from './components/Home';
 import ChatbotOzono from './components/ChatbotOzono';
 import Calendario from './components/Calendario';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 
 function App() {
   return (
@@ -21,6 +23,8 @@ function App() {
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/chatbot_ozono" element={<ChatbotOzono />} />
           <Route path="/Calendario" element={<Calendario />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
         </Routes>
       </div>
     </Router>
