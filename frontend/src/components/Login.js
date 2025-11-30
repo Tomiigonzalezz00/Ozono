@@ -80,17 +80,18 @@ const Login = () => {
           {/* Mensaje de error si falla el login */}
           {error && <p style={{ color: 'red', fontSize: '14px', margin: '5px 0' }}>{error}</p>}
 
-          <div className="remember-me">
+          {/* descomentar para activar boton recordarme */}
+          {/*<div className="remember-me">
             <div className="switch" onClick={() => setRememberMe(prevState => !prevState)}>
               <input
                 id="rememberMe"
                 type="checkbox"
                 checked={rememberMe}
-                readOnly // React controla el estado via onClick del div padre
+                readOnly 
               />
               <span className="slider"></span>
             </div>
-            <label htmlFor="rememberMe">Recordarme</label>
+            <label htmlFor="rememberMe">Recordarme</label> */} 
             <a href="/forgot-password" className="forgot-password">Olvidé mi contraseña</a>
           </div>
 
