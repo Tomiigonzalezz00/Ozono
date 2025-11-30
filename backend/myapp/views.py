@@ -13,6 +13,14 @@ from rest_framework.decorators import api_view
 from rest_framework import generics
 from rest_framework import filters
 
+from .serializers import UserRegistrationSerializer
+from rest_framework import generics, status
+from rest_framework.response import Response
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib.auth.models import User
 
 def home(request):
     items = Item.objects.all()
@@ -22,28 +30,53 @@ class ItemViewSet(viewsets.ModelViewSet):
     queryset = Item.objects.all()
     serializer_class = ItemSerializer
 
-class RegisterView(APIView):
-    permission_classes = [AllowAny]
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserRegistrationSerializer
 
-    def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-        if username is None or password is None:
-            return Response({'error': 'Please provide both username and password'}, status=status.HTTP_400_BAD_REQUEST)
-        user = User.objects.create_user(username=username, password=password)
-        token,  = Token.objects.getor_create(user=user)
-        return Response({'token': token.key}, status=status.HTTP_201_CREATED)
+    def perform_create(self, serializer):
+        # Guardamos el usuario
+        user = serializer.save()
+        
+        # Lógica de envío de email de bienvenida
+        if user.email:
+            try:
+                send_mail(
+                    subject='¡Bienvenido a Ozono!',
+                    message=f'Hola {user.username}, gracias por registrarte en Ozono. Juntos cuidamos el planeta.',
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                # Loguear el error si es necesario, pero no detener el registro
+                print(f"Error enviando email: {e}")
 
-class LoginView(APIView):
-    permission_classes = [AllowAny]
+    def create(self, request, *args, **kwargs):
+        # Sobrescribimos create para devolver el token directamente al registrarse (opcional, pero recomendado)
+        response = super().create(request, *args, **kwargs)
+        
+        # Si quieres devolver el token también al registrarse, descomenta esto:
+        # user = User.objects.get(username=response.data['username'])
+        # token, created = Token.objects.get_or_create(user=user)
+        # return Response({'token': token.key, 'user': response.data}, status=status.HTTP_201_CREATED)
+        
+        return response
 
-    def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-        if user is None:
-            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-        token,  = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key}, status=status.HTTP_200_OK)
+
+# --- VISTA DE LOGIN ---
+class CustomLoginView(ObtainAuthToken):
+    # Esta vista nativa de DRF recibe username/password y devuelve el token
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({
+            'token': token.key,
+            'user_id': user.pk,
+            'email': user.email
+        })
     
 
 @api_view(['GET'])

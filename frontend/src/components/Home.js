@@ -5,282 +5,221 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'font-awesome/css/font-awesome.min.css';
 
-// Helper para normalizar texto (quitar acentos, minúsculas, espacios)
+// --- HELPER: Normalización de texto ---
 const normalizeText = (text) => {
-  return (text || '').toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  return text
+    ? text.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim()
+    : "";
 };
 
 const Home = () => {
+  // Estados de UI
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [materialDropdownOpen, setMaterialDropdownOpen] = useState(false);
-  const [selectedMaterials, setSelectedMaterials] = useState([]);
-  const materialOptions = ['Orgánicos', 'Inorgánicos'];
 
-  const menuRef = useRef(null);
-  const mapRef = useRef(null);
-  const mapInstance = useRef(null);
+  // Estado de Usuario
+  const [username, setUsername] = useState('Usuario');
+
+  // Estados de Datos
   const [puntosVerdes, setPuntosVerdes] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [filteredPuntos, setFilteredPuntos] = useState([]);
   const [selectedPunto, setSelectedPunto] = useState(null);
 
+  // Estados de Filtros
+  const [searchTerm, setSearchTerm] = useState('');
   const [barrioFilter, setBarrioFilter] = useState('');
-  const [showBarrioDropdown, setShowBarrioDropdown] = useState(false);
   const [horarioFilter, setHorarioFilter] = useState('');
-  const [barriosDisponibles, setBarriosDisponibles] = useState([]);
+  const [selectedMaterials, setSelectedMaterials] = useState([]);
+
+  const materialOptions = ['Orgánicos', 'Inorgánicos'];
+
+  // Referencias
+  const menuRef = useRef(null);
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
+  const markersLayer = useRef(null);
 
   const toggleProfileMenu = () => setIsProfileOpen(prev => !prev);
+  const toggleMaterialDropdown = () => setMaterialDropdownOpen(!materialDropdownOpen);
 
+  // 1. LEER USUARIO
   useEffect(() => {
+    const storedName = localStorage.getItem('username');
+    if (storedName) setUsername(storedName);
+
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = originalOverflow; };
   }, []);
 
+  // 2. LOGICA DEL MAPA
   useEffect(() => {
-    const adjustMenuPosition = () => {
-      if (menuRef.current) {
-        const menuRect = menuRef.current.getBoundingClientRect();
-        const windowWidth = window.innerWidth;
-        if (menuRect.right > windowWidth) {
-          menuRef.current.style.left = 'auto';
-          menuRef.current.style.right = '0';
-        } else {
-          menuRef.current.style.left = '0';
-          menuRef.current.style.right = 'auto';
-        }
-      }
-    };
-    adjustMenuPosition();
-    window.addEventListener('resize', adjustMenuPosition);
-    return () => window.removeEventListener('resize', adjustMenuPosition);
-  }, [isProfileOpen]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    window.location.href = '/login';
-  };
-
-  useEffect(() => {
-    // CORRECCIÓN: Verificamos si el mapa ya existe para no crearlo doble
     if (!mapInstance.current && mapRef.current) {
       mapInstance.current = L.map(mapRef.current).setView([-34.61, -58.38], 13);
+
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
       }).addTo(mapInstance.current);
 
-      const createIcon = (isOrganic) => {
-        const color = isOrganic ? 'blue' : 'green';
-        return L.divIcon({
-          className: 'custom-icon',
-          html: `<i class="fa fa-recycle" style="color: ${color}; font-size: 30px;"></i>`,
-          iconSize: [30, 30],
-          iconAnchor: [15, 30],
-          popupAnchor: [0, -30]
-        });
-      };
-
-      const fetchPuntosVerdes = async () => {
-        try {
-          const response = await fetch('http://localhost:8000/api/puntos-verdes/');
-          const data = await response.json();
-
-          // Obtener lista única de barrios
-          const barrios = [...new Set(data.map(p => p.barrio).filter(Boolean))];
-          setBarriosDisponibles(barrios);
-
-          // Crear marcadores antes de establecer el estado
-          data.forEach(punto => {
-            const materiales = punto.materiales || '';
-            const isOrganic = materiales.toLowerCase().includes('orgánicos');
-            const popupClass = isOrganic ? 'popup-content popup-organico' : 'popup-content popup-noorganico';
-            const icon = createIcon(isOrganic);
-            const marker = L.marker([punto.latitud, punto.longitud], { icon })
-              .addTo(mapInstance.current)
-              .bindPopup(`
-                  <div class="${popupClass}">
-                    <strong class="popup-title">${punto.nombre}</strong><br>
-                    <strong class="popup-label">Dirección:</strong> ${punto.direccion}<br>
-                    <strong class="popup-label">Materiales:</strong> ${materiales}<br>
-                    <strong class="popup-label">Horarios:</strong> ${punto.dia_hora || 'No especificado'}<br>
-                    <strong class="popup-label">Más info:</strong> ${punto.mas_info}
-                  </div>
-                `);
-            punto.marker = marker; // Guardamos el marcador en el punto
-          });
-
-          setPuntosVerdes(data);
-
-        } catch (error) {
-          console.error('Error al cargar los puntos verdes:', error);
-        }
-      };
-      fetchPuntosVerdes();
+      markersLayer.current = L.layerGroup().addTo(mapInstance.current);
 
       const legend = L.control({ position: 'bottomright' });
       legend.onAdd = function () {
         const div = L.DomUtil.create('div', 'legend');
         div.innerHTML = `
-            <div style="padding: 8px; background-color: white; border-radius: 5px;">
-              <h4>Referencia de colores</h4>
-              <p><i class="fa fa-recycle" style="color: blue; font-size: 18px;"></i> Materiales Orgánicos</p>
-              <p><i class="fa fa-recycle" style="color: green; font-size: 18px;"></i> Materiales No Orgánicos</p>
+            <div style="background: white; padding: 10px; border-radius: 5px; box-shadow: 0 0 15px rgba(0,0,0,0.2);">
+              <h4 style="margin: 0 0 5px; font-size: 14px;">Referencia</h4>
+              <div style="margin-bottom: 3px;"><i class="fa fa-recycle" style="color: blue; font-size: 16px;"></i> Orgánicos</div>
+              <div><i class="fa fa-recycle" style="color: green; font-size: 16px;"></i> Inorgánicos</div>
             </div>
           `;
         return div;
-      
       };
       legend.addTo(mapInstance.current);
     }
 
-    // --- CORRECCIÓN IMPORTANTE: LIMPIEZA DEL MAPA AL SALIR ---
-    return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
+    const createIcon = (isOrganic) => {
+      const color = isOrganic ? 'blue' : 'green';
+      return L.divIcon({
+        className: 'custom-icon',
+        html: `<i class="fa fa-recycle" style="color: ${color}; font-size: 30px; text-shadow: 2px 2px 2px white;"></i>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 30],
+        popupAnchor: [0, -30]
+      });
+    };
+
+    const fetchPuntosVerdes = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/puntos-verdes/');
+        if (!response.ok) throw new Error('Error en la red');
+        const data = await response.json();
+
+        const puntosProcesados = data.map(punto => {
+          const mat = normalizeText(punto.materiales);
+          const isOrganic = mat.includes('organico');
+          const icon = createIcon(isOrganic);
+          const marker = L.marker([punto.latitud, punto.longitud], { icon });
+
+          const popupClass = isOrganic ? 'popup-content popup-organico' : 'popup-content popup-noorganico';
+          const popupContent = `
+                <div class="${popupClass}">
+                    <strong class="popup-title">${punto.nombre}</strong><br>
+                    <div style="margin-top: 5px; font-size: 12px;">
+                        <b>Dirección:</b> ${punto.direccion}<br>
+                        <b>Barrio:</b> ${punto.barrio}<br>
+                        <b>Materiales:</b> ${punto.materiales}<br>
+                        <b>Horario:</b> ${punto.dia_hora || 'No especificado'}
+                    </div>
+                </div>
+            `;
+          marker.bindPopup(popupContent);
+
+          return { ...punto, marker, isOrganic };
+        });
+
+        setPuntosVerdes(puntosProcesados);
+      } catch (error) {
+        console.error('Error cargando puntos:', error);
       }
     };
 
+    if (puntosVerdes.length === 0) {
+      fetchPuntosVerdes();
+    }
+
+    return () => {
+      // Limpieza opcional
+    };
   }, []);
 
+  // 3. LOGICA DE FILTRADO
   useEffect(() => {
-    if (!mapInstance.current) return; // Protección extra
+    if (!markersLayer.current) return;
+
+    markersLayer.current.clearLayers();
 
     let filtered = puntosVerdes;
 
-    // Filtro por término de búsqueda
+    // A. Búsqueda General
     if (searchTerm) {
       const term = normalizeText(searchTerm);
-      filtered = filtered.filter(punto =>
-        normalizeText(punto.nombre).includes(term) ||
-        normalizeText(punto.direccion).includes(term) ||
-        normalizeText(punto.barrio).includes(term)
+      filtered = filtered.filter(p =>
+        normalizeText(p.nombre).includes(term) ||
+        normalizeText(p.direccion).includes(term)
       );
     }
 
-    // Filtro por materiales
+    // B. Filtro por Barrio (TEXTO - Coincidencia parcial)
+    if (barrioFilter) {
+      const barrioF = normalizeText(barrioFilter);
+      filtered = filtered.filter(p => normalizeText(p.barrio).includes(barrioF));
+    }
+
+    // C. Filtro por Horario
+    if (horarioFilter) {
+      const horarioF = normalizeText(horarioFilter);
+      filtered = filtered.filter(p => normalizeText(p.dia_hora).includes(horarioF));
+    }
+
+    // D. Materiales
     if (selectedMaterials.length > 0) {
+      const buscaOrganico = selectedMaterials.includes('Orgánicos');
+      const buscaInorganico = selectedMaterials.includes('Inorgánicos');
+
       filtered = filtered.filter(punto => {
-        const materialesTexto = normalizeText(punto.materiales);
-        const incluyeOrganico = materialesTexto.includes("organico");
-
-        return selectedMaterials.some(material => {
-          const normalizado = normalizeText(material);
-
-          if (normalizado === "organicos") {
-            return incluyeOrganico;
-          } else if (normalizado === "inorganicos") {
-            return !incluyeOrganico;
-          }
-          return false;
-        });
+        if (buscaOrganico && buscaInorganico) return true;
+        if (buscaOrganico) return punto.isOrganic;
+        if (buscaInorganico) return !punto.isOrganic;
+        return true;
       });
     }
 
-    // Filtro por barrio
-    if (barrioFilter) {
-      const barrioTerm = normalizeText(barrioFilter);
-      filtered = filtered.filter(p => normalizeText(p.barrio).includes(barrioTerm));
-    }
+    setFilteredPuntos(selectedPunto ? [] : filtered);
 
-    // Filtro por horario
-    if (horarioFilter) {
-      const horarioTerm = normalizeText(horarioFilter);
-      filtered = filtered.filter(p => normalizeText(p.dia_hora).includes(horarioTerm));
-    }
-
-    // Excluir punto seleccionado de la lista de sugerencias
-    if (selectedPunto) {
-      filtered = filtered.filter(p => p.id !== selectedPunto.id);
-    }
-
-    // Actualizar la lista filtrada
-    setFilteredPuntos(filtered);
-
-    // ACTUALIZAR MARCADORES EN EL MAPA
-    puntosVerdes.forEach(punto => {
-      if (!punto.marker) return; // Si no tiene marcador, continuar
-
-      let deberiasMostrar = true;
-
-      // Lógica de filtrado para marcadores (repite la lógica de arriba para sincronizar)
-      if (selectedMaterials.length > 0) {
-        const materialesTexto = normalizeText(punto.materiales);
-        const incluyeOrganico = materialesTexto.includes("organico");
-
-        const cumpleMaterial = selectedMaterials.some(material => {
-          const normalizado = normalizeText(material);
-          if (normalizado === "organicos") return incluyeOrganico;
-          if (normalizado === "inorganicos") return !incluyeOrganico;
-          return false;
-        });
-        if (!cumpleMaterial) deberiasMostrar = false;
-      }
-
-      if (deberiasMostrar && barrioFilter) {
-        deberiasMostrar = normalizeText(punto.barrio).includes(normalizeText(barrioFilter));
-      }
-
-      if (deberiasMostrar && horarioFilter) {
-        deberiasMostrar = normalizeText(punto.dia_hora).includes(normalizeText(horarioFilter));
-      }
-
-      if (deberiasMostrar && searchTerm && !selectedPunto) {
-        const term = normalizeText(searchTerm);
-        deberiasMostrar = normalizeText(punto.nombre).includes(term) ||
-          normalizeText(punto.direccion).includes(term) ||
-          normalizeText(punto.barrio).includes(term);
-      }
-
-      // Mostrar u ocultar el marcador según los filtros
-      if (deberiasMostrar) {
-        if (!mapInstance.current.hasLayer(punto.marker)) {
-          punto.marker.addTo(mapInstance.current);
-        }
-      } else {
-        if (mapInstance.current.hasLayer(punto.marker)) {
-          mapInstance.current.removeLayer(punto.marker);
-        }
+    filtered.forEach(punto => {
+      if (punto.marker) {
+        markersLayer.current.addLayer(punto.marker);
       }
     });
 
-  }, [searchTerm, puntosVerdes, selectedPunto, selectedMaterials, barrioFilter, horarioFilter]);
+  }, [searchTerm, barrioFilter, horarioFilter, selectedMaterials, puntosVerdes, selectedPunto]);
 
+
+  // --- HANDLERS ---
   const handleSelectPunto = (punto) => {
     setSelectedPunto(punto);
     setSearchTerm(punto.nombre);
     setFilteredPuntos([]);
     if (mapInstance.current) {
       mapInstance.current.setView([punto.latitud, punto.longitud], 16);
+      punto.marker.openPopup();
     }
   };
 
   const clearFilters = () => {
     setSearchTerm('');
-    setSelectedMaterials([]);
     setBarrioFilter('');
     setHorarioFilter('');
+    setSelectedMaterials([]);
     setSelectedPunto(null);
-    setFilteredPuntos([]);
 
-    // Mostrar todos los marcadores en el mapa
     if (mapInstance.current) {
-      puntosVerdes.forEach(punto => {
-        if (punto.marker && !mapInstance.current.hasLayer(punto.marker)) {
-          punto.marker.addTo(mapInstance.current);
-        }
-      });
-      // Resetear la vista del mapa
       mapInstance.current.setView([-34.61, -58.38], 13);
+      mapInstance.current.closePopup();
     }
   };
-
-  const toggleMaterialDropdown = () => setMaterialDropdownOpen(!materialDropdownOpen);
 
   const handleMaterialChange = (material) => {
     setSelectedMaterials(prev =>
       prev.includes(material) ? prev.filter(m => m !== material) : [...prev, material]
     );
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    window.location.href = '/login';
   };
 
   return (
@@ -289,7 +228,7 @@ const Home = () => {
         <img src="/images/logoOzono.png" alt="Ozono" className="brand-image" />
         <div className="user-info" onClick={toggleProfileMenu}>
           <i className="fa fa-user"></i>
-          <span className="user-name">Usuario</span>
+          <span className="user-name">{username}</span>
           {isProfileOpen && (
             <div className="profile-menu" ref={menuRef}>
               <button onClick={handleLogout}>Cerrar sesión</button>
@@ -297,44 +236,105 @@ const Home = () => {
           )}
         </div>
       </header>
+
       <div className="main-content">
         <aside className="sidebar">
           <ul className="sidebar-menu">
-            <li><Link to="/home"><i className="fa fa-arrow-circle-up"></i></Link></li>
-            <li><Link to="/chatbot_ozono"><i className="fa fa-lightbulb-o"></i></Link></li>
-            <li><Link to="/Calendario"><i className="fa fa-calendar-alt"></i></Link></li>
+            <li><Link to="/home" title="Mapa"><i className="fa fa-arrow-circle-up"></i></Link></li>
+            <li><Link to="/chatbot_ozono" title="Asistente"><i className="fa fa-lightbulb-o"></i></Link></li>
+            <li><Link to="/Calendario" title="Calendario"><i className="fa fa-calendar-alt"></i></Link></li>
           </ul>
         </aside>
+
         <section className="map-section">
-          <div className="search-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', position: 'relative' }}>
-            <input
-              type="text"
-              placeholder="Buscar lugar o dirección"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          {/* BARRA DE HERRAMIENTAS */}
+          <div className="search-bar" style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '20px',
+            alignItems: 'center',
+            padding: '10px',
+            backgroundColor: 'none',
+            borderRadius: '8px',
+            marginBottom: '10px'
+          }}>
+
+            {/* 1. BUSCADOR PRINCIPAL */}
+            <div style={{ flex: '2', minWidth: '250px', position: 'relative' }}>
+              <input
+                type="text"
+                placeholder="Buscar punto verde..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setSelectedPunto(null);
+                }}
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+              />
+
+              {/* Dropdown de autocompletado */}
+              {searchTerm && filteredPuntos.length > 0 && !selectedPunto && (
+                <ul className="dropdown" style={{ width: '100%', position: 'absolute', top: '100%', left: 0, zIndex: 1000 }}>
+                  {filteredPuntos.slice(0, 5).map(punto => (
+                    <li key={punto.id} onClick={() => handleSelectPunto(punto)} style={{ backgroundColor: 'white', padding: '5px', borderBottom: '1px solid #eee', cursor: 'pointer' }}>
+                      <strong>{punto.nombre}</strong><br />
+                      <small>{punto.barrio}</small>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* 2. FILTRO BARRIO */}
+            <div style={{ flex: '1', minWidth: '150px' }}>
+              <input
+                type="text"
+                placeholder="Escribe un barrio..."
+                value={barrioFilter}
+                onChange={(e) => setBarrioFilter(e.target.value)}
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+              />
+            </div>
+
+            {/* 3. BOTÓN MATERIALES */}
             <div style={{ position: 'relative' }}>
-              <button onClick={toggleMaterialDropdown}>
-                Filtrar por material <i className="fa fa-caret-down"></i>
+              <button
+                onClick={toggleMaterialDropdown}
+                style={{
+                  padding: '8px 15px',
+                  borderRadius: '4px',
+                  backgroundColor: '#07753c4a',
+                  border: '1px solid #ccc',
+                  cursor: 'pointer',
+                  minWidth: '120px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                Materiales <i className="fa fa-caret-down"></i>
               </button>
+
               {materialDropdownOpen && (
                 <div style={{
                   position: 'absolute',
                   top: '100%',
                   left: 0,
-                  zIndex: 1000,
-                  backgroundColor: 'white',
-                  border: '1px solid #ccc',
-                  borderRadius: '5px',
+                  zIndex: 1001,
+                  backgroundColor: 'green',
+                  border: '1px solid #07753c4a',
+                  borderRadius: '4px',
                   padding: '10px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                  width: '150px',
+                  marginTop: '5px',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
                 }}>
                   {materialOptions.map((material) => (
-                    <label key={material} style={{ display: 'block', marginBottom: '5px' }}>
+                    <label key={material} style={{ display: 'block', marginBottom: '8px', cursor: 'pointer' }}>
                       <input
                         type="checkbox"
                         checked={selectedMaterials.includes(material)}
                         onChange={() => handleMaterialChange(material)}
+                        style={{ marginRight: '8px' }}
                       /> {material}
                     </label>
                   ))}
@@ -342,76 +342,40 @@ const Home = () => {
               )}
             </div>
 
-            <div className="barrio-autocomplete">
+            {/* 4. FILTRO HORARIO */}
+            <div style={{ flex: '1', minWidth: '150px' }}>
               <input
                 type="text"
-                placeholder="Filtrar por barrio"
-                value={barrioFilter}
-                onFocus={() => setShowBarrioDropdown(true)}
-                onChange={(e) => {
-                  setBarrioFilter(e.target.value);
-                  setShowBarrioDropdown(true);
-                }}
+                placeholder="Filtrar por horario"
+                value={horarioFilter}
+                onChange={(e) => setHorarioFilter(e.target.value)}
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
               />
-
-              {showBarrioDropdown && barrioFilter && (
-                <ul className="dropdown">
-                  {barriosDisponibles
-                    .filter(b => normalizeText(b).includes(normalizeText(barrioFilter)))
-                    .map((barrio, idx) => (
-                      <li
-                        key={idx}
-                        onClick={() => {
-                          setBarrioFilter(barrio);
-                          setShowBarrioDropdown(false);
-                        }}
-                      >
-                        {barrio}
-                      </li>
-                    ))}
-                </ul>
-              )}
             </div>
-            <input
-              type="text"
-              placeholder="Filtrar por horario"
-              value={horarioFilter}
-              onChange={(e) => setHorarioFilter(e.target.value)}
-            />
-            <button onClick={() => selectedPunto && mapInstance.current.setView([selectedPunto.latitud, selectedPunto.longitud], 16)}>
-              <i className="fa fa-search"></i>
-            </button>
-            <button onClick={clearFilters} style={{ backgroundColor: '#006400', border: '10px' }}>
-              Limpiar filtros
+
+            {/* 5. BOTÓN LIMPIAR */}
+            <button
+              onClick={clearFilters}
+              title="Limpiar filtros"
+              style={{
+                backgroundColor: '#d32f2f',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                width: '40px',
+                height: '35px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+              <i className="fa fa-eraser"></i>
             </button>
 
-            {searchTerm && filteredPuntos.length > 0 && (
-              <ul className="dropdown" style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                zIndex: 1000,
-                backgroundColor: 'white',
-                border: '1px solid #ccc',
-                maxHeight: '200px',
-                overflowY: 'auto',
-                width: '100%'
-              }}>
-                {filteredPuntos.map((punto) => (
-                  <li
-                    key={punto.id}
-                    onClick={() => handleSelectPunto(punto)}
-                    style={{ cursor: 'pointer', padding: '10px', borderBottom: '1px solid #eee' }}
-                  >
-                    <strong>{punto.nombre}</strong><br />
-                    {punto.direccion}
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
-          <div ref={mapRef} style={{ width: '100%', height: '100%' }}></div>
+
+          {/* MAPA */}
+          <div ref={mapRef} className="map" style={{ width: '100%', height: '100%', minHeight: '400px', borderRadius: '8px' }}></div>
         </section>
       </div>
     </div>

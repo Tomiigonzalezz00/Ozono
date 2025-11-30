@@ -149,3 +149,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Cambia esto si tu frontend corre en otro puerto
 ]
+
+# Configuración de Email para Desarrollo (Imprime en la terminal de Docker)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST_USER = 'no-reply@ozono.com' # Remitente por defecto
