@@ -12,9 +12,9 @@ const normalizeText = (text) => {
     : "";
 };
 
-// --- HELPER: Calcular distancia (Haversine) ---
+// --- HELPER: Calcular distancia entre dos coordenadas (Haversine) ---
 const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
-  const R = 6371; 
+  const R = 6371; // Radio de la tierra en km
   const dLat = deg2rad(lat2 - lat1);
   const dLon = deg2rad(lon2 - lon1);
   const a =
@@ -22,55 +22,13 @@ const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
     Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; 
+  const d = R * c; // Distancia en km
+  return d;
 };
 
-const deg2rad = (deg) => deg * (Math.PI / 180);
-
-// --- HELPER: Analizar si está abierto AHORA ---
-const isPointOpen = (scheduleString, targetDate) => {
-    if (!scheduleString) return false;
-    const str = normalizeText(scheduleString);
-    const currentDay = targetDate.getDay(); // 0 Dom, 1 Lun, ...
-    const currentHour = targetDate.getHours();
-
-    // 1. Chequeo básico de Días (Lun a Vie)
-    let openToday = true; // Asumimos abierto si no especifica días
-    if (str.includes('lun') && str.includes('vie')) {
-        if (currentDay === 0 || currentDay === 6) openToday = false; // Cerrado fines de semana
-    }
-    
-    if (!openToday) return false;
-
-    // 2. Chequeo de Horas (Busca patrones como "10 a 18", "09 - 17")
-    const timeRegex = /(\d{1,2})(?::(\d{2}))?\s*(?:a|al|-|h|hs)\s*(\d{1,2})/;
-    const match = str.match(timeRegex);
-    
-    if (match) {
-        const start = parseInt(match[1]);
-        const end = parseInt(match[3]);
-        return currentHour >= start && currentHour < end;
-    }
-    
-    return false; // Si no entiende el horario, asume cerrado para ser estricto
+const deg2rad = (deg) => {
+  return deg * (Math.PI / 180);
 };
-
-// --- HELPER: Analizar si está abierto a una HORA específica ---
-const isOpenAtTime = (scheduleString, hourToCheck) => {
-    if (!scheduleString) return false;
-    const str = normalizeText(scheduleString);
-    // Busca rango horario
-    const timeRegex = /(\d{1,2})(?::(\d{2}))?\s*(?:a|al|-|h|hs)\s*(\d{1,2})/;
-    const match = str.match(timeRegex);
-    
-    if (match) {
-        const start = parseInt(match[1]);
-        const end = parseInt(match[3]);
-        return hourToCheck >= start && hourToCheck < end;
-    }
-    return false;
-};
-
 
 const Home = () => {
   // Estados de UI
@@ -86,7 +44,7 @@ const Home = () => {
   const [filteredPuntos, setFilteredPuntos] = useState([]);
   const [selectedPunto, setSelectedPunto] = useState(null);
 
-  // Estado de Ubicación
+  // --- NUEVO: Estado de Ubicación del Usuario ---
   const [userLocation, setUserLocation] = useState(null);
 
   // Estados de Filtros
@@ -94,9 +52,6 @@ const Home = () => {
   const [barrioFilter, setBarrioFilter] = useState('');
   const [horarioFilter, setHorarioFilter] = useState('');
   const [selectedMaterials, setSelectedMaterials] = useState([]);
-  
-  // --- NUEVO: Estado para botón "Abierto Ahora" ---
-  const [onlyOpenNow, setOnlyOpenNow] = useState(false);
 
   const materialOptions = ['Orgánicos', 'Inorgánicos'];
 
@@ -127,7 +82,7 @@ const Home = () => {
     return () => { document.body.style.overflow = originalOverflow; };
   }, []);
 
-  // 2. LOGICA DEL MAPA
+  // 2. LOGICA DEL MAPA E INICIALIZACIÓN
   useEffect(() => {
     if (!mapInstance.current && mapRef.current) {
       mapInstance.current = L.map(mapRef.current).setView([-34.61, -58.38], 13);
@@ -203,47 +158,71 @@ const Home = () => {
       fetchPuntosVerdes();
     }
 
-    // Geolocalización
+    // --- NUEVO: PEDIR UBICACIÓN AL CARGAR ---
     if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition((position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             setUserLocation({ lat, lng });
+
+            // Centrar mapa en el usuario y mostrarlo
             if (mapInstance.current) {
                 mapInstance.current.setView([lat, lng], 14);
                 L.circleMarker([lat, lng], {
-                    radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8
+                    radius: 8,
+                    fillColor: "#3388ff",
+                    color: "#fff",
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
                 }).addTo(mapInstance.current).bindPopup("Estás aquí");
             }
-        }, (error) => console.log(error));
+        }, (error) => {
+            console.log("Ubicación no permitida:", error);
+        });
     }
 
-    return () => {};
+    return () => {
+      // Limpieza opcional
+    };
   }, []);
 
-  // 3. LOGICA DE FILTRADO
+  // 3. LOGICA DE FILTRADO (Con Proximidad Inteligente)
   useEffect(() => {
     if (!markersLayer.current) return;
+
     markersLayer.current.clearLayers();
 
     let baseList = puntosVerdes;
 
-    // Proximidad (solo si no hay filtros manuales)
-    const isManualSearch = searchTerm || barrioFilter || horarioFilter || selectedMaterials.length > 0 || onlyOpenNow;
+    // --- LÓGICA DE PROXIMIDAD ---
+    // Si no hay filtros manuales activos y tenemos ubicación, filtramos por cercanía
+    const isManualSearch = searchTerm || barrioFilter || horarioFilter || selectedMaterials.length > 0;
 
     if (userLocation && !isManualSearch && !selectedPunto) {
         const puntosConDistancia = puntosVerdes.map(p => ({
             ...p,
             distanciaKm: getDistanceFromLatLonInKm(userLocation.lat, userLocation.lng, p.latitud, p.longitud)
         }));
+
+        // 1. Intentar 1km
         let cercanos = puntosConDistancia.filter(p => p.distanciaKm <= 1);
-        if (cercanos.length === 0) cercanos = puntosConDistancia.filter(p => p.distanciaKm <= 10);
-        if (cercanos.length > 0) baseList = cercanos;
+
+        // 2. Si no hay, intentar 10km
+        if (cercanos.length === 0) {
+            cercanos = puntosConDistancia.filter(p => p.distanciaKm <= 10);
+        }
+
+        // 3. Si hay resultados en alguno de los radios, usamos eso. Si no, mostramos todos (baseList)
+        if (cercanos.length > 0) {
+            baseList = cercanos;
+        }
     }
 
+    // --- APLICAR FILTROS MANUALES SOBRE LA LISTA BASE ---
     let filtered = baseList;
 
-    // A. Búsqueda
+    // A. Búsqueda General
     if (searchTerm) {
       const term = normalizeText(searchTerm);
       filtered = filtered.filter(p =>
@@ -252,33 +231,23 @@ const Home = () => {
       );
     }
 
-    // B. Barrio
+    // B. Filtro por Barrio
     if (barrioFilter) {
       const barrioF = normalizeText(barrioFilter);
       filtered = filtered.filter(p => normalizeText(p.barrio).includes(barrioF));
     }
 
-    // C. Horario (Lógica Nueva)
-    if (onlyOpenNow) {
-        const now = new Date();
-        filtered = filtered.filter(p => isPointOpen(p.dia_hora, now));
-    } 
-    else if (horarioFilter) {
-        const hour = parseInt(horarioFilter);
-        if (!isNaN(hour)) {
-            // Si escribió un número (ej: 15), busca abiertos a esa hora
-            filtered = filtered.filter(p => isOpenAtTime(p.dia_hora, hour));
-        } else {
-            // Si escribió texto, busca coincidencia normal
-            const horarioF = normalizeText(horarioFilter);
-            filtered = filtered.filter(p => normalizeText(p.dia_hora).includes(horarioF));
-        }
+    // C. Filtro por Horario
+    if (horarioFilter) {
+      const horarioF = normalizeText(horarioFilter);
+      filtered = filtered.filter(p => normalizeText(p.dia_hora).includes(horarioF));
     }
 
     // D. Materiales
     if (selectedMaterials.length > 0) {
       const buscaOrganico = selectedMaterials.includes('Orgánicos');
       const buscaInorganico = selectedMaterials.includes('Inorgánicos');
+
       filtered = filtered.filter(punto => {
         if (buscaOrganico && buscaInorganico) return true;
         if (buscaOrganico) return punto.isOrganic;
@@ -290,10 +259,12 @@ const Home = () => {
     setFilteredPuntos(selectedPunto ? [] : filtered);
 
     filtered.forEach(punto => {
-      if (punto.marker) markersLayer.current.addLayer(punto.marker);
+      if (punto.marker) {
+        markersLayer.current.addLayer(punto.marker);
+      }
     });
 
-  }, [searchTerm, barrioFilter, horarioFilter, selectedMaterials, puntosVerdes, selectedPunto, userLocation, onlyOpenNow]);
+  }, [searchTerm, barrioFilter, horarioFilter, selectedMaterials, puntosVerdes, selectedPunto, userLocation]);
 
 
   // --- HANDLERS ---
@@ -313,11 +284,14 @@ const Home = () => {
     setHorarioFilter('');
     setSelectedMaterials([]);
     setSelectedPunto(null);
-    setOnlyOpenNow(false);
 
+    // Al limpiar, si tenemos ubicación, volvemos al zoom del usuario
     if (mapInstance.current) {
-      if (userLocation) mapInstance.current.setView([userLocation.lat, userLocation.lng], 14);
-      else mapInstance.current.setView([-34.61, -58.38], 13);
+      if (userLocation) {
+         mapInstance.current.setView([userLocation.lat, userLocation.lng], 14);
+      } else {
+         mapInstance.current.setView([-34.61, -58.38], 13);
+      }
       mapInstance.current.closePopup();
     }
   };
@@ -329,19 +303,29 @@ const Home = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token'); localStorage.removeItem('username'); window.location.href = '/login';
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    window.location.href = '/login';
   };
-  const handleLogin = () => { window.location.href = '/login'; };
+
+  const handleLogin = () => {
+    window.location.href = '/login';
+  };
 
   return (
     <div className="home-container">
       <header className="top-bar">
         <img src="/images/logoOzono.png" alt="Ozono" className="brand-image" />
         <div className="user-info" onClick={toggleProfileMenu}>
-          <i className="fa fa-user"></i><span className="user-name">{username}</span>
+          <i className="fa fa-user"></i>
+          <span className="user-name">{username}</span>
           {isProfileOpen && (
             <div className="profile-menu" ref={menuRef}>
-              {isLoggedIn ? <button onClick={handleLogout} style={{ color: '#d32f2f' }}>Cerrar sesión</button> : <button onClick={handleLogin} style={{ color: '#006400' }}>Iniciar sesión</button>}
+              {isLoggedIn ? (
+                <button onClick={handleLogout} style={{ color: '#d32f2f' }}>Cerrar sesión</button>
+              ) : (
+                <button onClick={handleLogin} style={{ color: '#006400' }}>Iniciar sesión</button>
+              )}
             </div>
           )}
         </div>
@@ -357,67 +341,134 @@ const Home = () => {
         </aside>
 
         <section className="map-section">
-          <div className="search-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center', padding: '10px', backgroundColor: 'none', borderRadius: '8px', marginBottom: '10px' }}>
+          {/* BARRA DE HERRAMIENTAS */}
+          <div className="search-bar" style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '20px',
+            alignItems: 'center',
+            padding: '10px',
+            backgroundColor: 'none',
+            borderRadius: '8px',
+            marginBottom: '10px'
+          }}>
 
-            {/* 1. BUSCADOR */}
+            {/* 1. BUSCADOR PRINCIPAL */}
             <div style={{ flex: '2', minWidth: '250px', position: 'relative' }}>
-              <input type="text" placeholder="Buscar punto verde..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setSelectedPunto(null); }} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
+              <input
+                type="text"
+                placeholder="Buscar punto verde..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setSelectedPunto(null);
+                }}
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+              />
+
+              {/* Dropdown de autocompletado */}
               {searchTerm && filteredPuntos.length > 0 && !selectedPunto && (
                 <ul className="dropdown" style={{ width: '100%', position: 'absolute', top: '100%', left: 0, zIndex: 1000 }}>
                   {filteredPuntos.slice(0, 5).map(punto => (
                     <li key={punto.id} onClick={() => handleSelectPunto(punto)} style={{ backgroundColor: 'white', padding: '5px', borderBottom: '1px solid #eee', cursor: 'pointer' }}>
-                      <strong>{punto.nombre}</strong><br /><small>{punto.barrio}</small>
+                      <strong>{punto.nombre}</strong><br />
+                      <small>{punto.barrio}</small>
                     </li>
                   ))}
                 </ul>
               )}
             </div>
 
-            {/* 2. BARRIO */}
+            {/* 2. FILTRO BARRIO */}
             <div style={{ flex: '1', minWidth: '150px' }}>
-              <input type="text" placeholder="Escribe un barrio..." value={barrioFilter} onChange={(e) => setBarrioFilter(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
+              <input
+                type="text"
+                placeholder="Escribe un barrio..."
+                value={barrioFilter}
+                onChange={(e) => setBarrioFilter(e.target.value)}
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+              />
             </div>
 
-            {/* 3. MATERIALES */}
+            {/* 3. BOTÓN MATERIALES */}
             <div style={{ position: 'relative' }}>
-              <button onClick={toggleMaterialDropdown} style={{ padding: '8px 15px', borderRadius: '4px', backgroundColor: '#07753c4a', border: '1px solid #ccc', cursor: 'pointer', minWidth: '120px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>Materiales <i className="fa fa-caret-down"></i></button>
+              <button
+                onClick={toggleMaterialDropdown}
+                style={{
+                  padding: '8px 15px',
+                  borderRadius: '4px',
+                  backgroundColor: '#07753c4a',
+                  border: '1px solid #ccc',
+                  cursor: 'pointer',
+                  minWidth: '120px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                Materiales <i className="fa fa-caret-down"></i>
+              </button>
+
               {materialDropdownOpen && (
-                <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 1001, backgroundColor: 'green', border: '1px solid #07753c4a', borderRadius: '4px', padding: '10px', width: '150px', marginTop: '5px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  zIndex: 1001,
+                  backgroundColor: 'green',
+                  border: '1px solid #07753c4a',
+                  borderRadius: '4px',
+                  padding: '10px',
+                  width: '150px',
+                  marginTop: '5px',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+                }}>
                   {materialOptions.map((material) => (
-                    <label key={material} style={{ display: 'block', marginBottom: '8px', cursor: 'pointer' }}><input type="checkbox" checked={selectedMaterials.includes(material)} onChange={() => handleMaterialChange(material)} style={{ marginRight: '8px' }} /> {material}</label>
+                    <label key={material} style={{ display: 'block', marginBottom: '8px', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedMaterials.includes(material)}
+                        onChange={() => handleMaterialChange(material)}
+                        style={{ marginRight: '8px' }}
+                      /> {material}
+                    </label>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* 4. FILTRO HORARIO Y BOTÓN AHORA (Modificado) */}
-            <div style={{ flex: '1.5', minWidth: '220px', display: 'flex', gap: '5px' }}>
-              <input 
-                type="text" 
-                placeholder="Hora (ej: 15)" 
-                value={horarioFilter} 
-                onChange={(e) => { setHorarioFilter(e.target.value); setOnlyOpenNow(false); }} 
-                style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} 
+            {/* 4. FILTRO HORARIO */}
+            <div style={{ flex: '1', minWidth: '150px' }}>
+              <input
+                type="text"
+                placeholder="Filtrar por horario"
+                value={horarioFilter}
+                onChange={(e) => setHorarioFilter(e.target.value)}
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
               />
-              <button 
-                onClick={() => { setOnlyOpenNow(!onlyOpenNow); setHorarioFilter(''); }}
-                title="Abiertos ahora"
-                style={{ 
-                    backgroundColor: onlyOpenNow ? '#2e7d32' : '#f0f0f0', 
-                    color: onlyOpenNow ? 'white' : '#333',
-                    border: '1px solid #ccc', borderRadius: '4px', padding: '0 15px', cursor: 'pointer', fontWeight: 'bold'
-                }}>
-                Ahora
-              </button>
             </div>
 
-            {/* 5. LIMPIAR */}
-            <button onClick={clearFilters} title="Limpiar filtros" style={{ backgroundColor: '#d32f2f', color: 'white', border: 'none', borderRadius: '4px', width: '40px', height: '35px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {/* 5. BOTÓN LIMPIAR */}
+            <button
+              onClick={clearFilters}
+              title="Limpiar filtros"
+              style={{
+                backgroundColor: '#d32f2f',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                width: '40px',
+                height: '35px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
               <i className="fa fa-eraser"></i>
             </button>
 
           </div>
 
+          {/* MAPA */}
           <div ref={mapRef} className="map" style={{ width: '100%', height: '100%', minHeight: '400px', borderRadius: '8px' }}></div>
         </section>
       </div>
