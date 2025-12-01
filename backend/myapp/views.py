@@ -26,6 +26,10 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 
+from .models import Favorite
+from .serializers import FavoriteSerializer
+from rest_framework.permissions import IsAuthenticated
+
 def home(request):
     items = Item.objects.all()
     return render(request, 'myapp/home.html', {'items': items})
@@ -156,3 +160,30 @@ def get_calendario_ambiental(request):
     calendario = CalendarioAmbiental.objects.all()
     serializer = CalendarioAmbientalSerializer(calendario, many=True)
     return Response(serializer.data)
+
+#--- Puntos verdes Favoritos ---
+class FavoriteToggleView(APIView):
+    permission_classes = [IsAuthenticated] # Solo usuarios logueados
+
+    def post(self, request, punto_id):
+        user = request.user
+        try:
+            punto = PuntoVerde.objects.get(id=punto_id)
+        except PuntoVerde.DoesNotExist:
+            return Response({"error": "Punto no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Lógica Toggle: Si existe lo borramos, si no, lo creamos
+        favorite_item, created = Favorite.objects.get_or_create(user=user, punto_verde=punto)
+
+        if not created:
+            favorite_item.delete()
+            return Response({"status": "removed"}, status=status.HTTP_200_OK)
+        
+        return Response({"status": "added"}, status=status.HTTP_201_CREATED)
+
+class UserFavoritesView(generics.ListAPIView):
+    serializer_class = FavoriteSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Favorite.objects.filter(user=self.request.user)

@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class Item(models.Model):
     """
@@ -68,3 +69,15 @@ class CalendarioAmbiental(models.Model):
 
     def __str__(self):
         return str(self.evento)
+
+#--- Puntos verdes Favoritos ---
+class Favorite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites')
+    punto_verde = models.ForeignKey(PuntoVerde, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'punto_verde') # Un usuario no puede favoritear 2 veces el mismo punto
+
+    def __str__(self):
+        return f"{self.user.username} -> {self.punto_verde.nombre}"

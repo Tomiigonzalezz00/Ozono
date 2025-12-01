@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
-from .views import ItemViewSet, RegisterView, CustomLoginView, PasswordResetRequestView, PasswordResetConfirmView
+from .views import ItemViewSet, RegisterView, CustomLoginView, PasswordResetRequestView, PasswordResetConfirmView, FavoriteToggleView, UserFavoritesView
 
 
 router = DefaultRouter()
@@ -19,6 +19,11 @@ urlpatterns = [
     path('api/password_reset/', PasswordResetRequestView.as_view(), name='password_reset_request'),
     path('api/password_reset/confirm/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     
+    # --- ENDPOINTS DE PUNTOS VERDES FAVORITOS ---
+    path('api/favorites/toggle/<str:punto_id>/', FavoriteToggleView.as_view(), name='favorite_toggle'),
+    path('api/favorites/', UserFavoritesView.as_view(), name='user_favorites'),
+    
+    # --- ENDPOINTS DE PUNTOS VERDES, CONSEJOS Y CALENDARIO ---
     path('api/puntos-verdes/', views.get_puntos_verdes, name='get_puntos_verdes'),
     path('api/consejos/', views.get_consejos, name='get_consejos'),
     path('api/calendario-ambiental/', views.get_calendario_ambiental, name='get_calendario_ambiental'),

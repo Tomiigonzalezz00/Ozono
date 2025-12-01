@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
-
+from .models import Favorite
 
 class ItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -79,3 +79,9 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         self.user.set_password(self.validated_data['new_password'])
         self.user.save()
         return self.user
+ 
+#--- Puntos verdes Favoritos ---
+class FavoriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Favorite
+        fields = ['id', 'punto_verde', 'created_at']
