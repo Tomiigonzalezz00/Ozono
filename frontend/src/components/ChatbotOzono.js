@@ -275,7 +275,7 @@ const ChatbotOzono = () => {
               <div className="chat-interface-container">
                 <div className="chat-messages">
                   {!isLoggedIn && messages.length === 0 && (
-                      <div className="message bot">Inicia sesión para guardar tu historial de chat.</div>
+                      <div className="message bot">¡Hola! Soy Ozzy, el asistente de Ozono.¿En qué puedo ayudarte?. Reuerda que puedes iniciar sesión para guardar tu historial de chat.</div>
                   )}
                   {messages.map((msg, i) => (
                     <div key={i} className={`message ${msg.sender}`}>
