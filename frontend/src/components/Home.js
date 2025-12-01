@@ -12,19 +12,40 @@ const normalizeText = (text) => {
     : "";
 };
 
+// --- HELPER: Calcular distancia entre dos coordenadas (Haversine) ---
+const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
+  const R = 6371; // Radio de la tierra en km
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const d = R * c; // Distancia en km
+  return d;
+};
+
+const deg2rad = (deg) => {
+  return deg * (Math.PI / 180);
+};
+
 const Home = () => {
   // Estados de UI
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [materialDropdownOpen, setMaterialDropdownOpen] = useState(false);
 
-  // Estado de Usuario y Sesión
+  // Estado de Usuario
   const [username, setUsername] = useState('Usuario');
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Nuevo estado para controlar la sesión
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Estados de Datos
   const [puntosVerdes, setPuntosVerdes] = useState([]);
   const [filteredPuntos, setFilteredPuntos] = useState([]);
   const [selectedPunto, setSelectedPunto] = useState(null);
+
+  // --- NUEVO: Estado de Ubicación del Usuario ---
+  const [userLocation, setUserLocation] = useState(null);
 
   // Estados de Filtros
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,18 +64,17 @@ const Home = () => {
   const toggleProfileMenu = () => setIsProfileOpen(prev => !prev);
   const toggleMaterialDropdown = () => setMaterialDropdownOpen(!materialDropdownOpen);
 
-  // 1. LEER USUARIO Y ESTADO DE SESIÓN
+  // 1. LEER USUARIO
   useEffect(() => {
     const token = localStorage.getItem('token');
     const storedName = localStorage.getItem('username');
-
-    // Lógica para determinar si está logueado
+    
     if (token) {
-      setIsLoggedIn(true);
-      if (storedName) setUsername(storedName);
+        setIsLoggedIn(true);
+        if (storedName) setUsername(storedName);
     } else {
-      setIsLoggedIn(false);
-      setUsername('Invitado'); // Cambiamos el nombre si no hay sesión
+        setIsLoggedIn(false);
+        setUsername('Invitado');
     }
 
     const originalOverflow = document.body.style.overflow;
@@ -62,7 +82,7 @@ const Home = () => {
     return () => { document.body.style.overflow = originalOverflow; };
   }, []);
 
-  // 2. LOGICA DEL MAPA
+  // 2. LOGICA DEL MAPA E INICIALIZACIÓN
   useEffect(() => {
     if (!mapInstance.current && mapRef.current) {
       mapInstance.current = L.map(mapRef.current).setView([-34.61, -58.38], 13);
@@ -138,18 +158,69 @@ const Home = () => {
       fetchPuntosVerdes();
     }
 
+    // --- NUEVO: PEDIR UBICACIÓN AL CARGAR ---
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            setUserLocation({ lat, lng });
+
+            // Centrar mapa en el usuario y mostrarlo
+            if (mapInstance.current) {
+                mapInstance.current.setView([lat, lng], 14);
+                L.circleMarker([lat, lng], {
+                    radius: 8,
+                    fillColor: "#3388ff",
+                    color: "#fff",
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(mapInstance.current).bindPopup("Estás aquí");
+            }
+        }, (error) => {
+            console.log("Ubicación no permitida:", error);
+        });
+    }
+
     return () => {
       // Limpieza opcional
     };
   }, []);
 
-  // 3. LOGICA DE FILTRADO
+  // 3. LOGICA DE FILTRADO (Con Proximidad Inteligente)
   useEffect(() => {
     if (!markersLayer.current) return;
 
     markersLayer.current.clearLayers();
 
-    let filtered = puntosVerdes;
+    let baseList = puntosVerdes;
+
+    // --- LÓGICA DE PROXIMIDAD ---
+    // Si no hay filtros manuales activos y tenemos ubicación, filtramos por cercanía
+    const isManualSearch = searchTerm || barrioFilter || horarioFilter || selectedMaterials.length > 0;
+
+    if (userLocation && !isManualSearch && !selectedPunto) {
+        const puntosConDistancia = puntosVerdes.map(p => ({
+            ...p,
+            distanciaKm: getDistanceFromLatLonInKm(userLocation.lat, userLocation.lng, p.latitud, p.longitud)
+        }));
+
+        // 1. Intentar 1km
+        let cercanos = puntosConDistancia.filter(p => p.distanciaKm <= 1);
+
+        // 2. Si no hay, intentar 10km
+        if (cercanos.length === 0) {
+            cercanos = puntosConDistancia.filter(p => p.distanciaKm <= 10);
+        }
+
+        // 3. Si hay resultados en alguno de los radios, usamos eso. Si no, mostramos todos (baseList)
+        if (cercanos.length > 0) {
+            baseList = cercanos;
+        }
+    }
+
+    // --- APLICAR FILTROS MANUALES SOBRE LA LISTA BASE ---
+    let filtered = baseList;
 
     // A. Búsqueda General
     if (searchTerm) {
@@ -160,7 +231,7 @@ const Home = () => {
       );
     }
 
-    // B. Filtro por Barrio (TEXTO - Coincidencia parcial)
+    // B. Filtro por Barrio
     if (barrioFilter) {
       const barrioF = normalizeText(barrioFilter);
       filtered = filtered.filter(p => normalizeText(p.barrio).includes(barrioF));
@@ -193,7 +264,7 @@ const Home = () => {
       }
     });
 
-  }, [searchTerm, barrioFilter, horarioFilter, selectedMaterials, puntosVerdes, selectedPunto]);
+  }, [searchTerm, barrioFilter, horarioFilter, selectedMaterials, puntosVerdes, selectedPunto, userLocation]);
 
 
   // --- HANDLERS ---
@@ -214,8 +285,13 @@ const Home = () => {
     setSelectedMaterials([]);
     setSelectedPunto(null);
 
+    // Al limpiar, si tenemos ubicación, volvemos al zoom del usuario
     if (mapInstance.current) {
-      mapInstance.current.setView([-34.61, -58.38], 13);
+      if (userLocation) {
+         mapInstance.current.setView([userLocation.lat, userLocation.lng], 14);
+      } else {
+         mapInstance.current.setView([-34.61, -58.38], 13);
+      }
       mapInstance.current.closePopup();
     }
   };
@@ -232,7 +308,6 @@ const Home = () => {
     window.location.href = '/login';
   };
 
-  // Nueva función para ir al login si es invitado
   const handleLogin = () => {
     window.location.href = '/login';
   };
