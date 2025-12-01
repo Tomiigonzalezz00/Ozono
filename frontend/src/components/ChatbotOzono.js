@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import 'font-awesome/css/font-awesome.min.css';
-import './ChatbotOzono.css';
+
+import './ChatbotOzono.css'; 
 
 const ChatbotOzono = () => {
   // --- ESTADOS DE UI Y SESIÓN ---
@@ -11,9 +12,9 @@ const ChatbotOzono = () => {
   const [token, setToken] = useState(null);
   
   // --- ESTADOS DEL CHAT ---
-  const [sessions, setSessions] = useState([]); // Lista de historiales
-  const [currentSessionId, setCurrentSessionId] = useState(null); // Chat activo
-  const [messages, setMessages] = useState([]); // Mensajes del chat activo
+  const [sessions, setSessions] = useState([]); 
+  const [currentSessionId, setCurrentSessionId] = useState(null); 
+  const [messages, setMessages] = useState([]); 
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -22,7 +23,7 @@ const ChatbotOzono = () => {
 
   const toggleProfileMenu = () => setIsProfileOpen(prev => !prev);
 
-  // 1. INICIALIZACIÓN (Login y Carga de Historial)
+  // 1. INICIALIZACIÓN
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedName = localStorage.getItem('username');
@@ -31,22 +32,20 @@ const ChatbotOzono = () => {
         setIsLoggedIn(true);
         setToken(storedToken);
         if (storedName) setUsername(storedName);
-        loadChatHistory(storedToken); // Cargar lista de chats
+        loadChatHistory(storedToken); 
     } else {
         setIsLoggedIn(false);
         setUsername('Invitado');
     }
   }, []);
 
-  // Auto-scroll al final
+  // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
 
   // --- API CALLS ---
-
-  // Cargar lista de sesiones
   const loadChatHistory = async (authToken) => {
     try {
       const response = await fetch('http://localhost:8000/api/chat/sessions/', {
@@ -61,7 +60,6 @@ const ChatbotOzono = () => {
     }
   };
 
-  // Crear nueva sesión
   const createNewSession = async () => {
     if (!token) return;
     try {
@@ -75,7 +73,7 @@ const ChatbotOzono = () => {
       });
       if (response.ok) {
         const newSession = await response.json();
-        setSessions([newSession, ...sessions]); // Agregar al principio
+        setSessions([newSession, ...sessions]); 
         setCurrentSessionId(newSession.id);
         setMessages([{ sender: 'bot', text: 'Hola, soy Ozzy. ¿En qué puedo ayudarte?' }]);
       }
@@ -84,7 +82,6 @@ const ChatbotOzono = () => {
     }
   };
 
-  // Cargar mensajes de una sesión específica
   const selectSession = async (sessionId) => {
     setCurrentSessionId(sessionId);
     setIsLoading(true);
@@ -94,7 +91,6 @@ const ChatbotOzono = () => {
         });
         if (response.ok) {
             const data = await response.json();
-            // Mapeamos los mensajes del backend al formato del frontend
             const historyMessages = data.messages.map(m => ({
                 sender: m.sender,
                 text: m.text
@@ -108,7 +104,35 @@ const ChatbotOzono = () => {
     }
   };
 
-  // Guardar mensaje en Backend
+  // --- NUEVA FUNCIÓN: ELIMINAR SESIÓN ---
+  const deleteSession = async (e, sessionId) => {
+    e.stopPropagation(); // Evita abrir el chat al hacer click en borrar
+
+    if (!window.confirm("¿Estás seguro de que deseas eliminar este chat?")) return;
+
+    try {
+      const response = await fetch(`http://localhost:8000/api/chat/sessions/${sessionId}/`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Token ${token}` 
+        }
+      });
+
+      if (response.ok) {
+        // Filtrar la sesión eliminada de la lista visual
+        setSessions(prevSessions => prevSessions.filter(session => session.id !== sessionId));
+
+        // Si la sesión eliminada era la que estaba abierta, limpiar pantalla
+        if (currentSessionId === sessionId) {
+          setCurrentSessionId(null);
+          setMessages([]);
+        }
+      }
+    } catch (error) {
+      console.error("Error eliminando sesión:", error);
+    }
+  };
+
   const saveMessageToBackend = async (text, sender) => {
       if (!currentSessionId || !token) return;
       try {
@@ -125,14 +149,11 @@ const ChatbotOzono = () => {
       }
   };
 
-  // Enviar Mensaje
   const handleSend = async () => {
     if (!input.trim()) return;
     
-    // Si no hay sesión activa y el usuario está logueado, creamos una antes de enviar
     if (!currentSessionId && isLoggedIn) {
         await createNewSession();
-        // (En una implementación ideal, esperaríamos a tener el ID, aquí asumimos que el usuario crea sesión primero o el sistema lo maneja)
     }
 
     const userText = input;
@@ -142,11 +163,9 @@ const ChatbotOzono = () => {
     setInput('');
     setIsLoading(true);
 
-    // 1. Guardar mensaje del usuario en DB
     if (isLoggedIn && currentSessionId) saveMessageToBackend(userText, 'user');
 
     try {
-      // 2. Llamar a n8n (IA)
       const response = await fetch('http://localhost:5678/webhook/chat-ozono', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -161,11 +180,10 @@ const ChatbotOzono = () => {
 
       setMessages(prev => [...prev, botMessage]);
       
-      // 3. Guardar respuesta del bot en DB
       if (isLoggedIn && currentSessionId) {
           saveMessageToBackend(botText, 'bot');
-          // Recargar lista de sesiones para actualizar el título si cambió
-          loadChatHistory(token); 
+          // Opcional: recargar historial para actualizar títulos si cambian
+          // loadChatHistory(token); 
       }
 
     } catch (error) {
@@ -190,7 +208,6 @@ const ChatbotOzono = () => {
   };
   const handleLogin = () => window.location.href = '/login';
 
-
   return (
     <div className="home-container">
       <header className="top-bar">
@@ -214,9 +231,9 @@ const ChatbotOzono = () => {
           </ul>
         </aside>
 
-        <section className="content-section" style={{ display: 'flex', flexDirection: 'row', height: 'calc(100vh - 60px)', overflow: 'hidden', padding: 0 }}>
+        <section className="chatbot-layout-section">
           
-          {/* --- BARRA LATERAL DE HISTORIAL (NUEVO) --- */}
+          {/* --- BARRA LATERAL DE HISTORIAL --- */}
           {isLoggedIn && (
               <div className="chat-history-sidebar">
                 <button className="new-chat-btn" onClick={createNewSession}>
@@ -229,8 +246,20 @@ const ChatbotOzono = () => {
                             className={`history-item ${currentSessionId === session.id ? 'active' : ''}`}
                             onClick={() => selectSession(session.id)}
                         >
-                            <i className="fa fa-comment-o"></i>
-                            <span>{session.title}</span>
+                            {/* Contenedor del Título e Icono */}
+                            <div className="history-item-content">
+                                <i className="fa fa-comment-o"></i>
+                                <span className="session-title">{session.title}</span>
+                            </div>
+
+                            {/* Botón de Eliminar */}
+                            <button 
+                                className="delete-chat-btn"
+                                onClick={(e) => deleteSession(e, session.id)}
+                                title="Eliminar chat"
+                            >
+                                <i className="fa fa-trash"></i>
+                            </button>
                         </div>
                     ))}
                 </div>
@@ -243,9 +272,9 @@ const ChatbotOzono = () => {
                 <h1><img src="/images/bot-icon.png" alt="Bot" className="chatbot-icon" /> Chatbot Ozono</h1>
               </div>
 
-              <div className="chat-container" style={{ height: '100%', border: 'none', boxShadow: 'none' }}>
+              <div className="chat-interface-container">
                 <div className="chat-messages">
-                  {!isLoggedIn && messages.length === 1 && (
+                  {!isLoggedIn && messages.length === 0 && (
                       <div className="message bot">Inicia sesión para guardar tu historial de chat.</div>
                   )}
                   {messages.map((msg, i) => (
@@ -253,7 +282,7 @@ const ChatbotOzono = () => {
                       {msg.text}
                     </div>
                   ))}
-                  {isLoading && <div className="message bot typing-indicator">...</div>}
+                  {isLoading && <div className="message bot typing-indicator">...<span className="dot">.</span><span className="dot">.</span></div>}
                   <div ref={messagesEndRef} />
                 </div>
 
@@ -264,12 +293,12 @@ const ChatbotOzono = () => {
                     onChange={e => setInput(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Escribí tu pregunta..."
-                    disabled={isLoggedIn && !currentSessionId} // Obliga a crear chat si está logueado
+                    disabled={isLoggedIn && !currentSessionId} 
                   />
                   <button onClick={handleSend} disabled={isLoggedIn && !currentSessionId}>Enviar</button>
                 </div>
                 {isLoggedIn && !currentSessionId && (
-                    <div style={{textAlign:'center', padding:'10px', color:'#666'}}>
+                    <div style={{textAlign:'center', padding:'10px', color:'#eee', fontSize: '0.9em'}}>
                         Selecciona un chat o crea uno nuevo para empezar.
                     </div>
                 )}
