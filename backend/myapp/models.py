@@ -33,29 +33,6 @@ class PuntoVerde(models.Model):
     objects = models.Manager()
     def __str__(self):
         return str(self.nombre)
-    
-class Consejo(models.Model):
-    """
-    Modelo que representa un consejo en el sistema.
-    """
-    CATEGORIA_CHOICES = [
-        ('reciclaje', 'Reciclaje'),
-        ('reutilizacion', 'Reutilización'),
-        ('reduccion', 'Reducción de Consumo'),
-    ]
-
-    id = models.CharField(max_length=10, primary_key=True) 
-    titulo = models.CharField(max_length=100)  
-    categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES, default='reciclaje')
-    descripcion = models.TextField()
-    objects = models.Manager()
-
-    def __str__(self):
-        return str(self.titulo)
-
-    class Meta:
-        verbose_name = "Consejo"
-        verbose_name_plural = "Consejos"
 
 class CalendarioAmbiental(models.Model):
     """

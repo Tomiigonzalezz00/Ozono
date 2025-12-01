@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Item, PuntoVerde, Consejo, CalendarioAmbiental, Favorite, ChatSession, ChatMessage
+from .models import Item, PuntoVerde, CalendarioAmbiental, Favorite, ChatSession, ChatMessage
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
@@ -15,13 +15,6 @@ class PuntoVerdeSerializer(serializers.ModelSerializer):
     class Meta:
         model = PuntoVerde
         fields = '__all__'
-
-
-class ConsejoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Consejo
-        fields = ['id', 'titulo', 'categoria', 'descripcion']
-
 
 class CalendarioAmbientalSerializer(serializers.ModelSerializer):
     class Meta:

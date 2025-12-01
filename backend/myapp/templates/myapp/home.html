@@ -1,29 +1,204 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
+    <title>API Dashboard</title>
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+
+            /* Colores por categoría */
+            --color-auth: #3f51b5;
+            /* Indigo */
+            --color-info: #2e7d32;
+            /* Verde */
+            --color-chat: #7b1fa2;
+            /* Violeta */
+            --color-favs: #c2185b;
+            /* Rosa */
+            --color-admin: #d32f2f;
+            /* Rojo */
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        /* Estilos de las Secciones */
+        .section-title {
+            margin-top: 40px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #333;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1.5px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        /* Estilos de los Botones */
+        .btn {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-decoration: none;
+            color: white;
+            border-radius: 8px;
+            transition: transform 0.2s, filter 0.2s;
+            text-align: center;
+            font-weight: 500;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            filter: brightness(1.2);
+        }
+
+        .btn span {
+            display: block;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            opacity: 0.7;
+            font-weight: normal;
+        }
+
+        /* Asignación de colores */
+        .auth {
+            background-color: var(--color-auth);
+        }
+
+        .info {
+            background-color: var(--color-info);
+        }
+
+        .chat {
+            background-color: var(--color-chat);
+        }
+
+        .favs {
+            background-color: var(--color-favs);
+        }
+
+        .admin {
+            background-color: var(--color-admin);
+        }
+
+        .note {
+            font-size: 0.8rem;
+            color: #ff9800;
+            margin-top: 5px;
+            font-style: italic;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>Para ingresar a la API, ingrese a la siguiente URL: http://127.0.0.1:8000/api/
-        <br>
-        <br>
-        Para ingresar al administrador, ingrese a la siguiente URL: http://127.0.0.1:8000/admin
-        <br>
-        <br>
-        Para ingresar a la API y llamar a los endpoints de los puntos verdes, ingrese a la siguiente URL: http://127.0.0.1:8000/api/puntos-verdes/
-        <br>
-        <br>
-        Para ingresar a la API y llamar a los endpoints de los consejos RRR, ingrese a la siguiente URL: http://127.0.0.1:8000/api/consejos-rrr/
-        <br>
-        <br>
-        Para ingresar a la API y llamar a los endpoints del calendario ambiental, ingrese a la siguiente URL: http://127.0.0.1:8000/api/calendario-ambiental/
-    </h1>
-    <ul>
-    {% for item in items %}
-        <li>{{ item.name }}</li>
-    {% endfor %}
-    </ul>
+
+    <div class="container">
+        <h1>API & Backend Dashboard</h1>
+
+        <div class="section-title">Administración</div>
+        <div class="grid">
+            <a href="/admin/" class="btn admin">
+                Panel Admin Django
+                <span>Gestión de BD</span>
+            </a>
+        </div>
+
+        <div class="section-title">Información Ambiental (Público)</div>
+        <div class="grid">
+            <a href="/api/puntos-verdes/" class="btn info">
+                Puntos Verdes
+                <span>GET Listado</span>
+            </a>
+            <a href="/api/calendario-ambiental/" class="btn info">
+                Calendario Ambiental
+                <span>GET Fechas</span>
+            </a>
+        </div>
+
+        <div class="section-title">Autenticación</div>
+        <div class="grid">
+            <a href="/api/register/" class="btn auth">
+                Registro
+                <span>POST Usuario</span>
+            </a>
+            <a href="/api/login/" class="btn auth">
+                Login
+                <span>POST Credenciales</span>
+            </a>
+            <a href="/api/password_reset/" class="btn auth">
+                Reset Password
+                <span>Solicitud</span>
+            </a>
+        </div>
+
+        <div class="section-title">Favoritos</div>
+        <div class="grid">
+            <a href="/api/favorites/" class="btn favs">
+                Ver Mis Favoritos
+                <span>GET Listado</span>
+            </a>
+            <a href="/api/favorites/toggle/1/" class="btn favs"
+                onclick="alert('Este enlace usa un ID de prueba (1). Edita la URL según necesites.')">
+                Toggle Favorito (Test ID: 1)
+                <span>POST Toggle</span>
+            </a>
+        </div>
+
+        <div class="section-title">Historial de Chat</div>
+        <div class="grid">
+            <a href="/api/chat/sessions/" class="btn chat">
+                Ver Sesiones
+                <span>GET Listado</span>
+            </a>
+            <a href="/api/chat/sessions/1/" class="btn chat"
+                onclick="alert('Este enlace busca la sesión con ID 1. Si no existe, dará error 404.')">
+                Detalle Sesión (Test ID: 1)
+                <span>GET Detalle</span>
+            </a>
+            <a href="/api/chat/sessions/1/messages/" class="btn chat"
+                onclick="alert('Este endpoint es para crear mensajes en la sesión 1.')">
+                Crear Mensaje (Test ID: 1)
+                <span>POST Mensaje</span>
+            </a>
+        </div>
+
+        <p style="text-align: center; margin-top: 50px; color: #666; font-size: 0.8rem;">
+            Nota: Los botones con parámetros de prueba (IDs) redirigen a /1/ por defecto.
+        </p>
+    </div>
+
 </body>
+
 </html>

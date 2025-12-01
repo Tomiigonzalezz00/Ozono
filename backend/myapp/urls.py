@@ -28,8 +28,7 @@ urlpatterns = [
     path('api/chat/sessions/<int:id>/', ChatSessionDetailView.as_view(), name='chat_session_detail'),
     path('api/chat/sessions/<int:session_id>/messages/', ChatMessageCreateView.as_view(), name='chat_message_create'),
     
-    # --- ENDPOINTS DE PUNTOS VERDES, CONSEJOS Y CALENDARIO ---
+    # --- ENDPOINTS DE PUNTOS VERDES Y CALENDARIO ---
     path('api/puntos-verdes/', views.get_puntos_verdes, name='get_puntos_verdes'),
-    path('api/consejos/', views.get_consejos, name='get_consejos'),
     path('api/calendario-ambiental/', views.get_calendario_ambiental, name='get_calendario_ambiental'),
 ]
