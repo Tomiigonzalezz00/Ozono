@@ -1,10 +1,9 @@
 from rest_framework import serializers
-from .models import Item, PuntoVerde, Consejo, CalendarioAmbiental
+from .models import Item, PuntoVerde, Consejo, CalendarioAmbiental, Favorite, ChatSession, ChatMessage
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
-from .models import Favorite
 
 class ItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -85,3 +84,17 @@ class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
         fields = ['id', 'punto_verde', 'created_at']
+
+#---Historial de chat---
+class ChatMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatMessage
+        fields = ['id', 'sender', 'text', 'created_at']
+
+class ChatSessionSerializer(serializers.ModelSerializer):
+    # Incluimos el último mensaje como 'preview' 
+    messages = ChatMessageSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = ChatSession
+        fields = ['id', 'title', 'created_at', 'messages']

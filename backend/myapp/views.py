@@ -1,34 +1,24 @@
 from django.shortcuts import render
-from .models import Item, PuntoVerde, Consejo, CalendarioAmbiental
+from .models import Item, PuntoVerde, Consejo, CalendarioAmbiental, Favorite, ChatSession, ChatMessage
 from rest_framework import viewsets
-from .serializers import ItemSerializer, PuntoVerdeSerializer, ConsejoSerializer, CalendarioAmbientalSerializer,PasswordResetRequestSerializer,PasswordResetConfirmSerializer
+from .serializers import ItemSerializer, PuntoVerdeSerializer, ConsejoSerializer, CalendarioAmbientalSerializer, UserRegistrationSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer, FavoriteSerializer, ChatSessionSerializer, ChatMessageSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view
-from rest_framework import generics
 from rest_framework import filters
-
-from .serializers import UserRegistrationSerializer
-from rest_framework import generics, status
-from rest_framework.response import Response
 from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.authtoken.models import Token
 from django.core.mail import send_mail
 from django.conf import settings
-from django.contrib.auth.models import User
-
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 
-from .models import Favorite
-from .serializers import FavoriteSerializer
-from rest_framework.permissions import IsAuthenticated
+
 
 def home(request):
     items = Item.objects.all()
@@ -187,3 +177,41 @@ class UserFavoritesView(generics.ListAPIView):
 
     def get_queryset(self):
         return Favorite.objects.filter(user=self.request.user)
+
+#--- Historial de chat ---
+class ChatSessionView(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ChatSessionSerializer
+
+    def get_queryset(self):
+        # Retorna solo los chats del usuario, ordenados del más reciente al más viejo
+        return ChatSession.objects.filter(user=self.request.user).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class ChatSessionDetailView(generics.RetrieveDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ChatSessionSerializer
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        return ChatSession.objects.filter(user=self.request.user)
+
+class ChatMessageCreateView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ChatMessageSerializer
+
+    def perform_create(self, serializer):
+        session_id = self.kwargs.get('session_id')
+        session = ChatSession.objects.get(id=session_id, user=self.request.user)
+        
+        # Guardamos el mensaje vinculado a la sesión
+        serializer.save(session=session)
+        
+        # Opcional: Actualizar título del chat con el primer mensaje del usuario si es "Nueva conversación"
+        if session.messages.count() == 1 and serializer.validated_data['sender'] == 'user':
+             # Tomamos los primeros 30 caracteres como título
+             new_title = serializer.validated_data['text'][:30] + "..."
+             session.title = new_title
+             session.save()

@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
-from .views import ItemViewSet, RegisterView, CustomLoginView, PasswordResetRequestView, PasswordResetConfirmView, FavoriteToggleView, UserFavoritesView
+from .views import ItemViewSet, RegisterView, CustomLoginView, PasswordResetRequestView, PasswordResetConfirmView, FavoriteToggleView, UserFavoritesView, ChatSessionView, ChatMessageCreateView, ChatSessionDetailView
 
 
 router = DefaultRouter()
@@ -22,6 +22,11 @@ urlpatterns = [
     # --- ENDPOINTS DE PUNTOS VERDES FAVORITOS ---
     path('api/favorites/toggle/<str:punto_id>/', FavoriteToggleView.as_view(), name='favorite_toggle'),
     path('api/favorites/', UserFavoritesView.as_view(), name='user_favorites'),
+
+    #---ENDPOINTS DE HISTORIAL DE CHAT---
+    path('api/chat/sessions/', ChatSessionView.as_view(), name='chat_sessions'),
+    path('api/chat/sessions/<int:id>/', ChatSessionDetailView.as_view(), name='chat_session_detail'),
+    path('api/chat/sessions/<int:session_id>/messages/', ChatMessageCreateView.as_view(), name='chat_message_create'),
     
     # --- ENDPOINTS DE PUNTOS VERDES, CONSEJOS Y CALENDARIO ---
     path('api/puntos-verdes/', views.get_puntos_verdes, name='get_puntos_verdes'),

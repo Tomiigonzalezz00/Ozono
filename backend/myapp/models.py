@@ -81,3 +81,22 @@ class Favorite(models.Model):
 
     def __str__(self):
         return f"{self.user.username} -> {self.punto_verde.nombre}"
+
+#---Historial del chatbot---
+
+class ChatSession(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=100, default="Nueva conversación")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Chat {self.id} - {self.user.username}"
+
+class ChatMessage(models.Model):
+    session = models.ForeignKey(ChatSession, related_name='messages', on_delete=models.CASCADE)
+    sender = models.CharField(max_length=10) # 'user' o 'bot'
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.sender}: {self.text[:20]}..."
