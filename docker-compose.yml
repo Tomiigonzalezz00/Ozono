@@ -32,6 +32,10 @@ services:
       - "5678:5678"
     environment:
       - N8N_SECURE_COOKIE=false
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_VERSION_NOTIFICATIONS_ENABLED=false
+      - EXTERNAL_FRONTEND_HOOKS_URLS=
     volumes:
       - n8n_data:/home/node/.n8n
     depends_on:
