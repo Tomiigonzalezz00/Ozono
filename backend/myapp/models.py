@@ -77,3 +77,12 @@ class ChatMessage(models.Model):
 
     def __str__(self):
         return f"{self.sender}: {self.text[:20]}..."
+
+class EventoUsuario(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='eventos')
+    fecha = models.DateField()
+    titulo = models.CharField(max_length=100)
+    descripcion = models.TextField()
+
+    def __str__(self):
+        return f"{self.titulo} ({self.user.username})"

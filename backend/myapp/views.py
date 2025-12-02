@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from .models import Item, PuntoVerde, CalendarioAmbiental, Favorite, ChatSession, ChatMessage
+from .models import Item, PuntoVerde, CalendarioAmbiental, Favorite, ChatSession, ChatMessage, EventoUsuario
 from rest_framework import viewsets
-from .serializers import ItemSerializer, PuntoVerdeSerializer, CalendarioAmbientalSerializer, UserRegistrationSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer, FavoriteSerializer, ChatSessionSerializer, ChatMessageSerializer
+from .serializers import ItemSerializer, PuntoVerdeSerializer, CalendarioAmbientalSerializer, UserRegistrationSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer, FavoriteSerializer, ChatSessionSerializer, ChatMessageSerializer, EventoUsuarioSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework import status, generics
@@ -207,3 +207,22 @@ class ChatMessageCreateView(generics.CreateAPIView):
              new_title = serializer.validated_data['text'][:30] + "..."
              session.title = new_title
              session.save()
+
+class EventoUsuarioViewSet(viewsets.ModelViewSet):
+    serializer_class = EventoUsuarioSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return EventoUsuario.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            print("Validation Errors:", serializer.errors)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

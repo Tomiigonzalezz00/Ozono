@@ -8,12 +8,15 @@ const Calendario = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [username, setUsername] = useState('Usuario');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  
+
   // Estados del Calendario
   const [fechasAmbientales, setFechasAmbientales] = useState([]);
+  const [userEvents, setUserEvents] = useState([]);
+  const [isAddingEvent, setIsAddingEvent] = useState(false);
+  const [newEventData, setNewEventData] = useState({ titulo: '', descripcion: '' });
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+
   const menuRef = useRef(null);
 
   const toggleProfileMenu = () => setIsProfileOpen(prevState => !prevState);
@@ -22,13 +25,13 @@ const Calendario = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const storedName = localStorage.getItem('username');
-    
+
     if (token) {
-        setIsLoggedIn(true);
-        if (storedName) setUsername(storedName);
+      setIsLoggedIn(true);
+      if (storedName) setUsername(storedName);
     } else {
-        setIsLoggedIn(false);
-        setUsername('Invitado');
+      setIsLoggedIn(false);
+      setUsername('Invitado');
     }
   }, []);
 
@@ -71,8 +74,8 @@ const Calendario = () => {
     };
 
     if (isProfileOpen) {
-        adjustMenuPosition();
-        window.addEventListener('resize', adjustMenuPosition);
+      adjustMenuPosition();
+      window.addEventListener('resize', adjustMenuPosition);
     }
     return () => window.removeEventListener('resize', adjustMenuPosition);
   }, [isProfileOpen]);
@@ -89,8 +92,30 @@ const Calendario = () => {
       }
     };
 
+    const fetchUserEvents = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const response = await fetch('http://localhost:8000/api/eventos-usuario/', {
+          headers: {
+            'Authorization': `Token ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUserEvents(data);
+        }
+      } catch (error) {
+        console.error('Error fetching user events:', error);
+      }
+    };
+
     fetchFechasAmbientales();
-  }, []);
+    if (isLoggedIn) {
+      fetchUserEvents();
+    }
+  }, [isLoggedIn]);
 
   const diasSemana = ["D", "L", "M", "M", "J", "V", "S"];
   const meses = [
@@ -119,23 +144,75 @@ const Calendario = () => {
       '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'
     ];
     const month = monthNames[mesIndex];
-    const year = 2025; 
+    const year = 2025;
 
     const formattedDate = `${year}-${month}-${String(dia).padStart(2, '0')}`;
+
+    // Check user events first
+    const userEvent = userEvents.find(evento => evento.fecha === formattedDate);
+    if (userEvent) return userEvent;
+
     return fechasAmbientales.find(evento => evento.fecha === formattedDate);
   };
 
   const handleDayClick = (dia, mesIndex) => {
     const event = getEventByDate(dia, mesIndex);
-    if (event) {
-      setSelectedEvent(event);
-      setIsModalOpen(true);
-    }
+    setSelectedEvent(event);
+    setIsModalOpen(true);
+
+    const monthNames = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+    const formattedDate = `2025-${monthNames[mesIndex]}-${String(dia).padStart(2, '0')}`;
+    setNewEventData({ titulo: '', descripcion: '', fecha: formattedDate });
+    setIsAddingEvent(false);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedEvent(null);
+    setIsAddingEvent(false);
+  };
+
+  const handleSaveEvent = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert("Debes iniciar sesión para guardar eventos.");
+      return;
+    }
+
+    if (!newEventData.titulo.trim()) {
+      alert("Por favor, ingresa un título para el evento.");
+      return;
+    }
+
+    console.log("Enviando evento:", newEventData);
+
+    try {
+      const response = await fetch('http://localhost:8000/api/eventos-usuario/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`
+        },
+        body: JSON.stringify(newEventData)
+      });
+
+      if (response.ok) {
+        const savedEvent = await response.json();
+        setUserEvents([...userEvents, savedEvent]);
+        setIsAddingEvent(false);
+        setSelectedEvent(savedEvent); // Show the new event
+        // Optionally close modal or show success message
+        alert("Evento guardado correctamente");
+        closeModal();
+      } else {
+        const errorData = await response.json();
+        console.error("Error del servidor:", errorData);
+        alert(`Error al guardar: ${JSON.stringify(errorData)}`);
+      }
+    } catch (error) {
+      console.error("Error saving event:", error);
+      alert("Error de conexión");
+    }
   };
 
   return (
@@ -146,13 +223,13 @@ const Calendario = () => {
         <div className="user-info" onClick={toggleProfileMenu}>
           <i className="fa fa-user"></i>
           <span className="user-name">{username}</span>
-          
+
           {isProfileOpen && (
             <div className="profile-menu" ref={menuRef}>
               {isLoggedIn ? (
-                  <button onClick={handleLogout} style={{color: '#d32f2f'}}>Cerrar sesión</button>
+                <button onClick={handleLogout} style={{ color: '#d32f2f' }}>Cerrar sesión</button>
               ) : (
-                  <button onClick={handleLogin} style={{color: '#006400'}}>Iniciar sesión</button>
+                <button onClick={handleLogin} style={{ color: '#006400' }}>Iniciar sesión</button>
               )}
             </div>
           )}
@@ -185,7 +262,7 @@ const Calendario = () => {
             <img src="/images/CalendarioAmbiental.jpeg" alt="Mundo Verde" className="imagen-titulo" />
             Calendario Ambiental
           </h1>
-          
+
           <div className="calendar-container">
             <div className="calendar">
               {meses.map((mes, index) => {
@@ -224,10 +301,51 @@ const Calendario = () => {
           {isModalOpen && (
             <div className="modalcal-overlay">
               <div className="modalcal-content">
-                <h3>{selectedEvent.evento}</h3>
-                <p>{formatDate(selectedEvent.fecha)}</p>
-                <p>{selectedEvent.descripcion}</p>
-                <button onClick={closeModal}>Cerrar</button>
+                {selectedEvent ? (
+                  <>
+                    <h3>{selectedEvent.evento || selectedEvent.titulo}</h3>
+                    <p>{formatDate(selectedEvent.fecha)}</p>
+                    <p>{selectedEvent.descripcion}</p>
+                    <button onClick={closeModal}>Cerrar</button>
+                    {!isAddingEvent && isLoggedIn && (
+                      <button onClick={() => setIsAddingEvent(true)} style={{ marginLeft: '10px', backgroundColor: '#4CAF50' }}>
+                        Agregar otro evento
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <h3>{formatDate(newEventData.fecha)}</h3>
+                    <p>No hay eventos para esta fecha.</p>
+                    {!isAddingEvent && isLoggedIn && (
+                      <button onClick={() => setIsAddingEvent(true)} style={{ backgroundColor: '#4CAF50' }}>
+                        Agregar evento
+                      </button>
+                    )}
+                    <button onClick={closeModal} style={{ marginLeft: '10px' }}>Cerrar</button>
+                  </>
+                )}
+
+                {isAddingEvent && (
+                  <div className="add-event-form" style={{ marginTop: '20px', borderTop: '1px solid #ccc', paddingTop: '10px' }}>
+                    <h4>Nuevo Evento</h4>
+                    <input
+                      type="text"
+                      placeholder="Título"
+                      value={newEventData.titulo}
+                      onChange={(e) => setNewEventData({ ...newEventData, titulo: e.target.value })}
+                      style={{ display: 'block', width: '100%', marginBottom: '10px', padding: '5px' }}
+                    />
+                    <textarea
+                      placeholder="Descripción"
+                      value={newEventData.descripcion}
+                      onChange={(e) => setNewEventData({ ...newEventData, descripcion: e.target.value })}
+                      style={{ display: 'block', width: '100%', marginBottom: '10px', padding: '5px' }}
+                    />
+                    <button onClick={handleSaveEvent} style={{ backgroundColor: '#008CBA' }}>Guardar</button>
+                    <button onClick={() => setIsAddingEvent(false)} style={{ marginLeft: '10px', backgroundColor: '#f44336' }}>Cancelar</button>
+                  </div>
+                )}
               </div>
             </div>
           )}

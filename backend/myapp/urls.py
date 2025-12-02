@@ -1,11 +1,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
-from .views import ItemViewSet, RegisterView, CustomLoginView, PasswordResetRequestView, PasswordResetConfirmView, FavoriteToggleView, UserFavoritesView, ChatSessionView, ChatMessageCreateView, ChatSessionDetailView
+from .views import ItemViewSet, RegisterView, CustomLoginView, PasswordResetRequestView, PasswordResetConfirmView, FavoriteToggleView, UserFavoritesView, ChatSessionView, ChatMessageCreateView, ChatSessionDetailView, EventoUsuarioViewSet
 
 
 router = DefaultRouter()
 router.register(r'items', ItemViewSet)
+router.register(r'eventos-usuario', EventoUsuarioViewSet, basename='eventousuario')
 
 urlpatterns = [
     path('', views.home, name='home'),

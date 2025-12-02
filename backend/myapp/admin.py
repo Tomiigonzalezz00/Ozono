@@ -1,8 +1,9 @@
 from django.contrib import admin
-from .models import PuntoVerde, CalendarioAmbiental, Favorite, ChatSession, ChatMessage
+from .models import PuntoVerde, CalendarioAmbiental, Favorite, ChatSession, ChatMessage, EventoUsuario
 # Register your models here.
 admin.site.register(PuntoVerde)
 admin.site.register(CalendarioAmbiental)
 admin.site.register(Favorite)
 admin.site.register(ChatSession)
 admin.site.register(ChatMessage)
+admin.site.register(EventoUsuario)
