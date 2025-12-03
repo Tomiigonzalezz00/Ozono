@@ -322,9 +322,10 @@ const Calendario = () => {
                       {[...Array(mes.dias)].map((_, dia) => {
                         const events = getEventsByDate(dia + 1, index);
                         const hasEvent = events.length > 0;
+                        const hasUserEvent = events.some(evt => userEvents.some(ue => ue.id === evt.id));
                         return (
                           <div
-                            className={`day ${hasEvent ? 'has-event' : ''}`}
+                            className={`day ${hasUserEvent ? 'has-local-event' : (hasEvent ? 'has-event' : '')}`}
                             key={dia + 1}
                             onClick={() => handleDayClick(dia + 1, index)}
                           >
