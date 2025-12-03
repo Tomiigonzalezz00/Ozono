@@ -14,7 +14,7 @@ const Calendario = () => {
   const [userEvents, setUserEvents] = useState([]);
   const [isAddingEvent, setIsAddingEvent] = useState(false);
   const [newEventData, setNewEventData] = useState({ titulo: '', descripcion: '' });
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedEvents, setSelectedEvents] = useState([]); // Changed to array
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const menuRef = useRef(null);
@@ -139,7 +139,7 @@ const Calendario = () => {
     return date.getDay();
   };
 
-  const getEventByDate = (dia, mesIndex) => {
+  const getEventsByDate = (dia, mesIndex) => {
     const monthNames = [
       '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'
     ];
@@ -148,16 +148,22 @@ const Calendario = () => {
 
     const formattedDate = `${year}-${month}-${String(dia).padStart(2, '0')}`;
 
-    // Check user events first
-    const userEvent = userEvents.find(evento => evento.fecha === formattedDate);
-    if (userEvent) return userEvent;
+    const events = [];
 
-    return fechasAmbientales.find(evento => evento.fecha === formattedDate);
+    // Add user events
+    const matchingUserEvents = userEvents.filter(evento => evento.fecha === formattedDate);
+    events.push(...matchingUserEvents);
+
+    // Add environmental events
+    const matchingEnvEvents = fechasAmbientales.filter(evento => evento.fecha === formattedDate);
+    events.push(...matchingEnvEvents);
+
+    return events;
   };
 
   const handleDayClick = (dia, mesIndex) => {
-    const event = getEventByDate(dia, mesIndex);
-    setSelectedEvent(event);
+    const events = getEventsByDate(dia, mesIndex);
+    setSelectedEvents(events);
     setIsModalOpen(true);
 
     const monthNames = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
@@ -168,8 +174,41 @@ const Calendario = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setSelectedEvent(null);
+    setSelectedEvents([]);
     setIsAddingEvent(false);
+  };
+
+  const handleDeleteEvent = async (eventToDelete) => {
+    if (!eventToDelete) return;
+
+    // Confirmación
+    if (!window.confirm("¿Estás seguro de que quieres eliminar este evento?")) return;
+
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`http://localhost:8000/api/eventos-usuario/${eventToDelete.id}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Token ${token}`
+        }
+      });
+
+      if (response.ok) {
+        // Actualizar estado eliminando el evento
+        const updatedUserEvents = userEvents.filter(e => e.id !== eventToDelete.id);
+        setUserEvents(updatedUserEvents);
+
+        // Actualizar la lista de eventos seleccionados en el modal
+        setSelectedEvents(selectedEvents.filter(e => e.id !== eventToDelete.id));
+
+        alert("Evento eliminado correctamente");
+      } else {
+        alert("Error al eliminar el evento");
+      }
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      alert("Error de conexión");
+    }
   };
 
   const handleSaveEvent = async () => {
@@ -200,10 +239,11 @@ const Calendario = () => {
         const savedEvent = await response.json();
         setUserEvents([...userEvents, savedEvent]);
         setIsAddingEvent(false);
-        setSelectedEvent(savedEvent); // Show the new event
-        // Optionally close modal or show success message
+
+        // Add to currently selected events so it shows up immediately
+        setSelectedEvents([...selectedEvents, savedEvent]);
+
         alert("Evento guardado correctamente");
-        closeModal();
       } else {
         const errorData = await response.json();
         console.error("Error del servidor:", errorData);
@@ -280,10 +320,11 @@ const Calendario = () => {
                         <div className="day empty" key={`empty-${emptyIndex}`}></div>
                       ))}
                       {[...Array(mes.dias)].map((_, dia) => {
-                        const event = getEventByDate(dia + 1, index);
+                        const events = getEventsByDate(dia + 1, index);
+                        const hasEvent = events.length > 0;
                         return (
                           <div
-                            className={`day ${event ? 'has-event' : ''}`}
+                            className={`day ${hasEvent ? 'has-event' : ''}`}
                             key={dia + 1}
                             onClick={() => handleDayClick(dia + 1, index)}
                           >
@@ -301,12 +342,30 @@ const Calendario = () => {
           {isModalOpen && (
             <div className="modalcal-overlay">
               <div className="modalcal-content">
-                {selectedEvent ? (
+                {selectedEvents.length > 0 ? (
                   <>
-                    <h3>{selectedEvent.evento || selectedEvent.titulo}</h3>
-                    <p>{formatDate(selectedEvent.fecha)}</p>
-                    <p>{selectedEvent.descripcion}</p>
+                    <h3>Eventos del {formatDate(selectedEvents[0].fecha)}</h3>
+                    <div className="events-list" style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '15px' }}>
+                      {selectedEvents.map((event, idx) => (
+                        <div key={idx} className="event-item" style={{ borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '10px' }}>
+                          <h4 style={{ margin: '5px 0', color: '#2e7d32', fontSize: '1.1rem' }}>{event.evento || event.titulo}</h4>
+                          <p style={{ margin: '5px 0', fontSize: '0.9rem', color: '#555' }}>{event.descripcion}</p>
+
+                          {/* Delete button only for user events */}
+                          {userEvents.some(e => e.id === event.id) && (
+                            <button
+                              onClick={() => handleDeleteEvent(event)}
+                              style={{ background: '#d32f2f', padding: '5px 10px', fontSize: '0.8rem' }}
+                            >
+                              Eliminar
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
                     <button onClick={closeModal}>Cerrar</button>
+
                     {!isAddingEvent && isLoggedIn && (
                       <button onClick={() => setIsAddingEvent(true)} style={{ marginLeft: '10px', backgroundColor: '#4CAF50' }}>
                         Agregar otro evento
