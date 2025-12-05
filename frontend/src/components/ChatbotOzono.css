@@ -7,15 +7,15 @@
   /* --- CAMBIO: Ajuste de altura y márgenes --- */
   /* Restamos un poco más (130-140px) para dar aire arriba y abajo y evitar cortes */
   height: calc(100vh - 130px);
-  margin-top: 15px; 
+  margin-top: 15px;
   margin-bottom: 15px;
-  
-  overflow: hidden; 
+
+  overflow: hidden;
   padding: 0;
   background: transparent;
   width: 100%;
   max-width: 100%;
-  
+
   /* --- IMPORTANTE: Evita problemas de cálculo de tamaño --- */
   box-sizing: border-box;
 }
@@ -27,7 +27,7 @@
   flex-direction: column;
   height: 100%;
   position: relative;
-  overflow: hidden; 
+  overflow: hidden;
   min-height: 0;
   box-sizing: border-box;
 }
@@ -38,7 +38,7 @@
   justify-content: center;
   align-items: center;
   padding-top: 20px;
-  flex-shrink: 0; 
+  flex-shrink: 0;
   /* Altura aproximada del header para tus cálculos mentales: ~100px con padding */
 }
 
@@ -67,7 +67,7 @@
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(15px);
   border-radius: 20px;
-  box-shadow: none; 
+  box-shadow: none;
   border: none;
   padding: 20px 30px;
   width: 100%;
@@ -75,10 +75,11 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  height: 100%; 
-  overflow: hidden; 
+  height: 100%;
+  overflow: hidden;
   color: #fff;
-  box-sizing: border-box; /* Asegura que el padding no rompa el 100% width/height */
+  box-sizing: border-box;
+  /* Asegura que el padding no rompa el 100% width/height */
 }
 
 /* --- Mensajes --- */
@@ -88,8 +89,8 @@
   margin-bottom: 20px;
   padding-right: 10px;
   user-select: text;
-  min-height: 0; 
-  
+  min-height: 0;
+
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
 }
@@ -97,13 +98,16 @@
 .chat-messages::-webkit-scrollbar {
   width: 8px;
 }
+
 .chat-messages::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .chat-messages::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.3);
   border-radius: 4px;
 }
+
 .chat-messages::-webkit-scrollbar-thumb:hover {
   background-color: rgba(255, 255, 255, 0.5);
 }
@@ -150,7 +154,7 @@
   display: flex;
   gap: 10px;
   margin-bottom: 10px;
-  flex-shrink: 0; 
+  flex-shrink: 0;
 }
 
 .chat-input-container input {
@@ -201,12 +205,13 @@
   display: flex;
   flex-direction: column;
   padding: 15px;
-  
+
   /* --- CAMBIO: Gestión del scroll y box-sizing --- */
-  overflow-y: auto; 
+  overflow-y: auto;
   height: 100%;
-  box-sizing: border-box; /* CRUCIAL: Evita que el padding sume altura y corte el final */
-  
+  box-sizing: border-box;
+  /* CRUCIAL: Evita que el padding sume altura y corte el final */
+
   /* Estilo scrollbar igual al chat para consistencia */
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
@@ -216,13 +221,16 @@
 .chat-history-sidebar::-webkit-scrollbar {
   width: 6px;
 }
+
 .chat-history-sidebar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .chat-history-sidebar::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
 }
+
 .chat-history-sidebar::-webkit-scrollbar-thumb:hover {
   background-color: rgba(255, 255, 255, 0.4);
 }
@@ -242,8 +250,8 @@
   justify-content: center;
   gap: 8px;
   transition: background 0.3s;
-  flex-shrink: 0; 
-  
+  flex-shrink: 0;
+
   /* Opcional: Si quisieras que el botón se quede fijo al hacer scroll, descomenta esto: */
   /* position: sticky; top: 0; z-index: 10; box-shadow: 0 4px 6px rgba(0,0,0,0.2); */
 }
@@ -264,7 +272,7 @@
   margin-bottom: 5px;
   transition: background 0.2s;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  flex-shrink: 0; 
+  flex-shrink: 0;
 }
 
 .history-item:hover {
@@ -337,10 +345,23 @@
   animation: blink 1.4s infinite both;
 }
 
-.dot:nth-child(2) { animation-delay: 0.2s; }
-.dot:nth-child(3) { animation-delay: 0.4s; }
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
 
 @keyframes blink {
-  0%, 80%, 100% { opacity: 0; }
-  40% { opacity: 1; }
+
+  0%,
+  80%,
+  100% {
+    opacity: 0;
+  }
+
+  40% {
+    opacity: 1;
+  }
 }

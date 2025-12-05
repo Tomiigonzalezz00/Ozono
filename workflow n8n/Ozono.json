@@ -11,10 +11,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        0,
-        0
+        -624,
+        -320
       ],
-      "id": "08d118fd-e7c2-4445-81f4-8c707ff63c61",
+      "id": "27b139ec-0697-402d-a413-a9c557b28b02",
       "name": "Chat Entrada",
       "webhookId": "2cb633f3-9147-4cb7-b27e-e6ab764346d0"
     },
@@ -27,39 +27,39 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        1392,
-        0
+        768,
+        -320
       ],
-      "id": "de50d1c8-31af-41d6-962e-65a801aabff6",
+      "id": "84df0952-f60c-47d3-bfe7-fe4ee0bc4e44",
       "name": "Respond to Webhook",
       "alwaysOutputData": false
     },
     {
       "parameters": {
         "promptType": "define",
-        "text": "=Sos Ozono, el asistente inteligente de reciclaje de CABA.\nTenes acceso a la BASE DE DATOS COMPLETA de Puntos Verdes abajo.\n\nDATOS:\n- Mensaje del usuario: \"{{ $json.usuario_dice }}\"\n- Base de datos (JSON): {{ JSON.stringify($json.base_datos_puntos) }}\n\nINSTRUCCIONES DE PROCESAMIENTO:\n1. Analizá el mensaje para detectar MATERIAL y BARRIO/ZONA.\n2. Buscá en la base de datos la mejor opción.\n3. Escribí la respuesta siguiendo estas reglas DE ESTILO:\n   - **CERO ROBOT:**\n   - **NATURALIDAD:** Integrá el material y el barrio en la frase de forma fluida.\n     * Bien: \"¡Dale! Para dejar esas pilas en Retiro te conviene...\"\n     * Bien: \"Buenísimo que recicles plástico. En Nuñez tenés...\"\n     * Bien: \"Si estás por esa zona con aceite, andá a...\"\n   - **VARIEDAD:** Cambiá la forma de saludar y confirmar en cada turno.\n\nRESPUESTA (Formato JSON):\n{\n  \"respuesta\": \"Tu respuesta fluida aquí. Nombre del punto, dirección y horario. Si NO hay punto en su zona (como Baradero), aclaralo amablemente y sugerí el más cercano de la lista o recomendá consultar a su municipio. Cerrá con el tip de reciclaje.\",\n  \"punto_sugerido_id\": \"ID del punto (o vacío)\",\n  \"material\": \"Material detectado\",\n  \"barrio\": \"Barrio detectado\"\n}",
+        "text": "=Sos \"Ozzy\", el chatbot oficial de Ozono CABA.\nMisión: Guiar a Puntos Verdes y educar sobre reciclaje (3R).\n\nBASE DE DATOS: {{ JSON.stringify($json.base_datos_puntos) }}\nMENSAJE USUARIO: \"{{ $json.usuario_dice }}\"\n\n---\n### GUARDRAILS (ALCANCE):\n1. **SOLO** temas ambientales/reciclaje. Si no, rechazar amablemente.\n2. **TONO:** Empático, voseo argentino, natural.\n\n---\n### CEREBRO DE DECISIÓN:\n\n**CASO 1: CONFUSIÓN / \"NO ENTIENDO\" (PRIORIDAD ALTA)**\nSi el usuario dice \"No entiendo\", \"Me explicás mejor\", \"¿Cómo?\", o parece confundido:\n1. **ACCIÓN:** No des vueltas con texto largo.\n2. **OBLIGATORIO:** Generá una frase corta de ánimo y poné un LINK DE VIDEO INMEDIATAMENTE.\n3. **FÓRMULA:** \"¡Tranqui! Es más fácil verlo que explicarlo. Mirá este paso a paso: https://www.youtube.com/results?search_query=como+reciclar+TEMA_ANTERIOR_O_GENERAL\"\n   *(Si no sabés de qué hablaban antes, usá \"reciclaje+en+casa\").*\n\n**CASO 2: UBICACIÓN / \"¿DÓNDE TIRO...?\"**\n1. Buscá en la DB.\n2. Reglas de Oro:\n   - Aceite: \"Frío y en botella cerrada\".\n   - Orgánicos: \"Jueves\".\n3. Si no hay punto cerca -> Sugerí municipio.\n\n**CASO 3: CONSEJO RRR**\n1. Explicá la técnica.\n2. **¿LLEVA LINK?**\n   - Si es algo visual (compost, manualidad, proceso complejo) -> **SÍ, LINK OBLIGATORIO**.\n   - Si es dato curioso -> No hace falta.\n\n---\n### FORMATO DE SALIDA (JSON PURO):\n{\n  \"respuesta\": \"Texto de respuesta. Si aplica Caso 1 o 3, el link de YouTube DEBE estar pegado aquí al final.\",\n  \"punto_sugerido_id\": \"ID o null\",\n  \"material\": \"Material detectado o null\",\n  \"barrio\": \"Barrio detectado o null\"\n}",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.1,
       "position": [
-        784,
-        0
+        160,
+        -320
       ],
-      "id": "6d39e72a-9218-444e-89a8-6e1891b2a795",
+      "id": "a22ed493-aac0-48b3-966b-8f9b141d1e96",
       "name": "AI Agent"
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first();\nconst contenido = item.json.message?.content || item.json.output || item.json.text || \"\";\n\n// Buscamos algo que parezca un JSON (entre llaves)\nconst jsonMatch = contenido.match(/\\{[\\s\\S]*\\}/);\n\nlet resultado = { respuesta: \"\" };\n\nif (jsonMatch) {\n  try {\n    resultado = JSON.parse(jsonMatch[0]);\n  } catch (e) {\n    // Si falla el parseo, devolvemos el texto original como respuesta\n    resultado = { respuesta: contenido };\n  }\n} else {\n  // Si no se encontró ningún JSON, devolvemos el texto original\n  resultado = { respuesta: contenido };\n}\n\nreturn { json: resultado };"
+        "jsCode": "const item = $input.first();\n\n// Leemos la salida de la IA\nlet contenido = item.json.output || item.json.text || item.json.message?.content || \"\";\n\n// LIMPIEZA: Quitamos ```json y ``` que suele poner GPT-4/GPT-5\ncontenido = contenido.replace(/```json/g, \"\").replace(/```/g, \"\").trim();\n\n// Regex para cazar el JSON\nconst jsonMatch = contenido.match(/\\{[\\s\\S]*\\}/);\n\nlet resultado = { \n    respuesta: \"Perdón, me marée procesando tu consulta. ¿Me la repetís?\",\n    punto_sugerido_id: null,\n    material: null,\n    barrio: null\n};\n\nif (jsonMatch) {\n  try {\n    const parsed = JSON.parse(jsonMatch[0]);\n    resultado = {\n        // Aquí llegará el link dentro del texto SOLO si la IA detectó que era necesario\n        respuesta: parsed.respuesta || \"No pude generar texto.\",\n        punto_sugerido_id: parsed.punto_sugerido_id || null,\n        material: parsed.material || null,\n        barrio: parsed.barrio || null\n    };\n  } catch (e) {\n    resultado.respuesta = contenido; // Fallback a texto plano\n  }\n} else {\n  resultado.respuesta = contenido; // Fallback a texto plano\n}\n\nreturn { json: resultado };"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1184,
-        0
+        560,
+        -320
       ],
-      "id": "50fe287d-5794-483f-baf4-8bf7a553bf2b",
+      "id": "99c9e66b-458b-4644-b030-8a4a4579a0d9",
       "name": "Function"
     },
     {
@@ -70,33 +70,33 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        320,
-        0
+        -304,
+        -320
       ],
-      "id": "257e8ae3-4129-45c0-8950-b8bda11cd354",
+      "id": "f45792f9-66f9-4cf6-96e8-082afbd4189f",
       "name": "Cargar puntos verdes"
     },
     {
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "gpt-5",
+          "value": "gpt-4o-mini",
           "mode": "list",
-          "cachedResultName": "gpt-5"
+          "cachedResultName": "gpt-4o-mini"
         },
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        784,
-        208
+        160,
+        -112
       ],
-      "id": "15343a66-260b-481d-bbfa-49bb4239aeed",
+      "id": "479d0007-54ea-4523-931d-24f81f464456",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
-          "id": "QhS2OyD2ByMRaxaD",
+          "id": "cR39yOwAcVSq5kWT",
           "name": "OpenAi account"
         }
       }
@@ -108,10 +108,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        544,
-        0
+        -80,
+        -320
       ],
-      "id": "61ef431e-95c3-49ff-9288-bea8bc83bdfe",
+      "id": "a0e70ca2-25a6-4de8-a4ea-bca881c3cbc4",
       "name": "Filtrar candidatos"
     }
   ],
@@ -188,11 +188,11 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "d962acff-9b45-4d4c-9f7e-88779ab5fd5b",
+  "versionId": "e8c85b08-170d-43b0-b7b0-7584ce1a0dc4",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "1730ab3ec15ab720707590fd29cef490fc48e358de0ca4ee5c4f48373df47fd3"
+    "instanceId": "dcf494a08cfa8d4ff47d8cb125da84fd537657e692696ce6100568f14c216622"
   },
-  "id": "z6uCQoZ1vf7i27HO",
+  "id": "uvTUAQ4zIKdJAHZS",
   "tags": []
 }
