@@ -38,6 +38,7 @@ services:
       - EXTERNAL_FRONTEND_HOOKS_URLS=
     volumes:
       - n8n_data:/home/node/.n8n
+      - ./workflow n8n:/workflows
     depends_on:
       - backend
 
