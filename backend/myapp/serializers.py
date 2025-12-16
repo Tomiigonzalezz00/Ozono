@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Item, PuntoVerde, CalendarioAmbiental, Favorite, ChatSession, ChatMessage, EventoUsuario
+from .models import Item, PuntoVerde, CalendarioAmbiental, Favorite, ChatSession, ChatMessage, EventoUsuario, PuntoVote
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
@@ -96,3 +96,29 @@ class EventoUsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventoUsuario
         fields = ['id', 'fecha', 'titulo', 'descripcion']
+    
+class PuntoVerdeSerializer(serializers.ModelSerializer):
+    valid_count = serializers.SerializerMethodField()
+    invalid_count = serializers.SerializerMethodField()
+    user_vote = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PuntoVerde
+        fields = '__all__'
+        # Solo lectura (el usuario no envía esto en el JSON al crear)
+        read_only_fields = ('id', 'is_user_generated', 'creator', 'valid_count', 'invalid_count', 'user_vote')
+
+    def get_valid_count(self, obj):
+        return obj.votes.filter(vote_type='valid').count()
+
+    def get_invalid_count(self, obj):
+        return obj.votes.filter(vote_type='invalid').count()
+
+    def get_user_vote(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            try:
+                return PuntoVote.objects.get(user=request.user, punto=obj).vote_type
+            except PuntoVote.DoesNotExist:
+                return None
+        return None

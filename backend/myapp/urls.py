@@ -1,12 +1,13 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
-from .views import ItemViewSet, RegisterView, CustomLoginView, PasswordResetRequestView, PasswordResetConfirmView, FavoriteToggleView, UserFavoritesView, ChatSessionView, ChatMessageCreateView, ChatSessionDetailView, EventoUsuarioViewSet
+from .views import ItemViewSet, RegisterView, CustomLoginView, PasswordResetRequestView, PasswordResetConfirmView, FavoriteToggleView, UserFavoritesView, ChatSessionView, ChatMessageCreateView, ChatSessionDetailView, EventoUsuarioViewSet, PuntoVerdeViewSet, VotePuntoView
 
 
 router = DefaultRouter()
 router.register(r'items', ItemViewSet)
 router.register(r'eventos-usuario', EventoUsuarioViewSet, basename='eventousuario')
+router.register(r'puntos-verdes', PuntoVerdeViewSet, basename='puntosverdes')
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -29,7 +30,13 @@ urlpatterns = [
     path('api/chat/sessions/<int:id>/', ChatSessionDetailView.as_view(), name='chat_session_detail'),
     path('api/chat/sessions/<int:session_id>/messages/', ChatMessageCreateView.as_view(), name='chat_message_create'),
     
-    # --- ENDPOINTS DE PUNTOS VERDES Y CALENDARIO ---
-    path('api/puntos-verdes/', views.get_puntos_verdes, name='get_puntos_verdes'),
+    # --- ENDPOINTS DE CALENDARIO ---
     path('api/calendario-ambiental/', views.get_calendario_ambiental, name='get_calendario_ambiental'),
+
+    # --- ENDPOINTS DE PUNTO VERDE ---
+    # Ruta específica para la acción de votar
+    path('api/puntos-verdes/<int:punto_id>/vote/', VotePuntoView.as_view(), name='vote_punto'),
+
+    # Rutas del router (Puntos Verdes CRUD)
+    path('', include(router.urls)),
 ]

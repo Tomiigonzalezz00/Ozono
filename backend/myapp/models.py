@@ -17,22 +17,38 @@ class PuntoVerde(models.Model):
     """
     id = models.CharField(max_length=10, primary_key=True)
     nombre = models.CharField(max_length=100)
-    direccion = models.CharField(max_length=200)
     materiales = models.TextField()
-    mas_info = models.TextField()
-    dia_hora = models.CharField(max_length=100)
+    mas_info = models.TextField(blank=True, null=True, default="Creado por la comunidad")
+    direccion = models.CharField(max_length=200, blank=True, null=True)
+    dia_hora = models.CharField(max_length=100, blank=True, null=True)
     tipo = models.CharField(max_length=50)
     cooperativa = models.CharField(max_length=255, blank=True)
-    calle = models.CharField(max_length=100)
+    barrio = models.CharField(max_length=100, blank=True, null=True)
+    calle = models.CharField(max_length=100, blank=True, null=True)
     altura = models.IntegerField(null=True, blank=True)
+    comuna = models.CharField(max_length=50, blank=True, null=True) # No obligatorio
     calle2 = models.CharField(max_length=100, blank=True)
-    barrio = models.CharField(max_length=50)
-    comuna = models.CharField(max_length=20)
     longitud = models.FloatField()
     latitud = models.FloatField()
+
+# Control de Usuario
+    is_user_generated = models.BooleanField(default=False)
+    creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+
     objects = models.Manager()
     def __str__(self):
         return str(self.nombre)
+
+class PuntoVote(models.Model):
+    VOTE_CHOICES = [('valid', 'Validar'), ('invalid', 'Invalidar')]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    punto = models.ForeignKey(PuntoVerde, on_delete=models.CASCADE, related_name='votes')
+    vote_type = models.CharField(max_length=10, choices=VOTE_CHOICES)
+
+    class Meta:
+        # Un usuario solo vota una vez por punto
+        unique_together = ('user', 'punto')
 
 class CalendarioAmbiental(models.Model):
     """

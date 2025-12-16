@@ -1,21 +1,24 @@
-/* src/styles/Home.css */
+/* Home.css */
 
+/* --- LAYOUT PRINCIPAL --- */
 .home-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
   background-color: #f0f0f0;
+  overflow: hidden;
 }
 
 .top-bar {
   width: 100%;
-  height: 50px;
+  height: 60px;
   background-color: #006400;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 20px;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .brand-image {
@@ -27,7 +30,7 @@
   align-items: center;
   color: white;
   position: relative;
-  /* Para el menú desplegable de perfil */
+  cursor: pointer;
 }
 
 .user-name {
@@ -37,9 +40,11 @@
 .main-content {
   display: flex;
   flex: 1;
-  overflow: hidden;
+  overflow: hidden; /* CLAVE */
+  position: relative;
 }
 
+/* --- SIDEBAR --- */
 .sidebar {
   width: 60px;
   background-color: #2f2f2f;
@@ -47,7 +52,7 @@
   flex-direction: column;
   align-items: center;
   padding-top: 20px;
-  align-self: stretch;
+  flex-shrink: 0;
 }
 
 .sidebar-menu {
@@ -69,11 +74,17 @@
   font-size: 1.5rem;
 }
 
+.sidebar-menu i {
+  color: white;
+  font-size: 24px;
+}
+
+/* --- SECCIÓN DEL MAPA --- */
 .map-section {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 10px 20px 0 20px;
+  padding: 10px 20px 20px 20px;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -81,23 +92,27 @@
 .search-bar {
   position: relative;
   display: flex;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  gap: 10px;
 }
 
 .search-bar input {
   flex: 1;
   padding: 10px;
   border: 1px solid #ccc;
-  border-radius: 4px 0 0 4px;
+  border-radius: 4px;
 }
 
 .search-bar button {
-  padding: 10px;
+  padding: 0 15px;
   background-color: #006400;
   border: none;
   color: white;
   cursor: pointer;
-  border-radius: 0 4px 4px 0;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .map {
@@ -106,9 +121,10 @@
   border: 1px solid #ccc;
   border-radius: 8px;
   overflow: hidden;
+  z-index: 1;
 }
 
-/* Estilo para el menú desplegable del buscador */
+/* --- DROPDOWNS --- */
 .dropdown {
   position: absolute;
   top: 100%;
@@ -123,6 +139,7 @@
   margin: 0;
   padding: 0;
   border-radius: 0 0 4px 4px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .dropdown li {
@@ -135,231 +152,6 @@
   background-color: #f0f0f0;
 }
 
-/* Estilos para el contenedor del perfil */
-.user-info {
-  display: flex;
-  align-items: center;
-  position: relative;
-  cursor: pointer;
-}
-
-.user-name {
-  margin-left: 8px;
-}
-
-/* Estilos para el menú de perfil desplegable */
-.profile-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  padding: 10px;
-  width: 150px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.profile-menu button {
-  background: none;
-  border: none;
-  color: #f80404;
-  padding: 10px;
-  width: 100%;
-  text-align: center;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.profile-menu button:hover {
-  background-color: #f0f0f0;
-}
-
-.legend {
-  font-family: Arial, sans-serif;
-  background-color: white;
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  color: #333;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.legend h4 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: bold;
-  color: #006400;
-  margin-bottom: 8px;
-}
-
-.legend p {
-  display: flex;
-  align-items: center;
-  margin: 4px 0;
-}
-
-.legend i {
-  margin-right: 8px;
-}
-
-.popup-content {
-  padding: 10px;
-  max-width: 300px;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.popup-content strong {
-  font-weight: bold;
-}
-
-.popup-organico strong {
-  color: #0047AB !important;
-}
-
-.popup-noorganico strong {
-  color: #006400 !important;
-}
-
-/* Estilos para el borde inferior del título según tipo */
-.popup-organico .popup-content strong:first-child {
-  display: block !important;
-  font-size: 16px !important;
-  font-weight: bold;
-  margin-bottom: 10px !important;
-  padding-bottom: 8px !important;
-  border-bottom: 3px solid #0047AB !important;
-  /* barra azul */
-  padding-right: 35px !important;
-  /* espacio para el botón cerrar */
-  color: #0047AB !important;
-  /* título azul */
-}
-
-.popup-noorganico .popup-content strong:first-child {
-  border-bottom: 1px solid #006400 !important;
-  /* verde */
-  padding-right: 35px !important;
-  display: block !important;
-  font-size: 16px !important;
-  margin-bottom: 10px !important;
-  padding-bottom: 8px !important;
-}
-
-/* Ajuste para el contenido después del título */
-.popup-content br {
-  display: block !important;
-  margin: 5px 0 !important;
-}
-
-/* Ajuste para la flecha del popup */
-.leaflet-popup-tip {
-  background: white !important;
-  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2) !important;
-}
-
-.sidebar-menu i {
-  color: white;
-  font-size: 24px;
-}
-
-.popup-title {
-  font-size: 16px;
-  font-weight: bold;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.popup-label {
-  font-weight: bold;
-  display: inline-block;
-}
-
-/* Azul para orgánicos */
-.popup-organico .popup-title,
-.popup-organico .popup-label {
-  color: #0047AB;
-}
-
-/* Verde para no orgánicos */
-.popup-noorganico .popup-title,
-.popup-noorganico .popup-label {
-  color: #006400;
-}
-
-.leaflet-popup-content-wrapper {
-  padding: 0 !important;
-  border-radius: 8px !important;
-  margin: 0 !important;
-  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2) !important;
-}
-
-.leaflet-popup-content {
-  margin: 0 !important;
-  padding: 15px !important;
-  width: 20 !important;
-  min-width: 260px !important;
-}
-
-.leaflet-popup-close-button {
-  position: absolute !important;
-  right: 8px !important;
-  top: 8px !important;
-  width: 26px !important;
-  height: 26px !important;
-  font-size: 18px !important;
-  line-height: 0 !important;
-  background: #006400 !important;
-  color: white !important;
-  border-radius: 50% !important;
-  text-align: center !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  border: none !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
-  z-index: 1000 !important;
-  transition: all 0.3s ease !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.leaflet-popup-close-button:hover {
-  background: #004d00 !important;
-  transform: scale(1.1) !important;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3) !important;
-}
-
-.leaflet-popup-close-button span {
-  height: 26px !important;
-  line-height: 26px !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.barrio-autocomplete {
-  position: relative;
-  flex: 1;
-}
-
-.barrio-autocomplete input {
-  width: 95%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-/* ==== BUSCADOR DE BARRIOS ==== */
-
 .barrio-wrapper {
   flex: 1;
   min-width: 150px;
@@ -368,7 +160,7 @@
 
 .barrio-input {
   width: 100%;
-  padding: 8px;
+  padding: 10px;
   border-radius: 4px;
   border: 1px solid #ccc;
   text-align: left;
@@ -395,9 +187,184 @@
   cursor: pointer;
   border-bottom: 1px solid #eee;
   text-align: left;
-  transition: background 0.15s ease;
 }
 
 .barrio-dropdown li:hover {
   background: #f2f2f2;
 }
+
+.profile-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 2000;
+  padding: 10px;
+  width: 150px;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-menu button {
+  background: none;
+  border: none;
+  color: #d32f2f;
+  padding: 10px;
+  width: 100%;
+  text-align: center;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.profile-menu button:hover {
+  background-color: #f0f0f0;
+}
+
+/* --- LEAFLET POPUPS --- */
+.leaflet-popup-content-wrapper {
+  padding: 0 !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  width: 280px !important;
+  padding: 0 !important;
+}
+
+.popup-content {
+  padding: 15px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #333;
+}
+
+.popup-title {
+  display: block;
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #eee;
+}
+
+.popup-organico .popup-title { color: #0047AB; border-color: #0047AB; }
+.popup-noorganico .popup-title { color: #006400; border-color: #006400; }
+
+.leaflet-popup-close-button {
+  top: 10px !important;
+  right: 10px !important;
+  color: #555 !important;
+  font-size: 18px !important;
+}
+
+/* --- ESTILOS NUEVOS: Agregar Punto y Votar --- */
+
+/* 1. Cursor en cruz para agregar */
+.map-adding-mode {
+    cursor: crosshair !important;
+}
+
+/* 2. Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(2px);
+}
+
+.modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    color: #006400;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.modal-content input, 
+.modal-content select {
+    width: 100%;
+    margin-bottom: 12px;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.modal-btn.cancel { background-color: #e0e0e0; color: #333; }
+.modal-btn.save { background-color: #006400; color: white; }
+
+/* 3. Icono de Usuario y Botones de Voto */
+.custom-icon-user i {
+    color: #ff9800;
+    text-shadow: 0 0 3px red;
+    font-size: 35px;
+}
+
+.vote-section {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid #eee;
+}
+
+.vote-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.btn-vote {
+    flex: 1;
+    border: none;
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: white;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: background 0.2s;
+}
+
+.btn-vote.valid { background-color: #ccc; }
+.btn-vote.valid:hover { background-color: #a5d6a7; }
+.btn-vote.valid.active { background-color: #2e7d32; } 
+
+.btn-vote.invalid { background-color: #ccc; }
+.btn-vote.invalid:hover { background-color: #ef9a9a; }
+.btn-vote.invalid.active { background-color: #d32f2f; }

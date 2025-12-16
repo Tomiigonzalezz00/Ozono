@@ -1,10 +1,10 @@
 from django.shortcuts import render
-from .models import Item, PuntoVerde, CalendarioAmbiental, Favorite, ChatSession, ChatMessage, EventoUsuario
+from .models import Item, PuntoVerde, CalendarioAmbiental, Favorite, ChatSession, ChatMessage, EventoUsuario, PuntoVote
 from rest_framework import viewsets
 from .serializers import ItemSerializer, PuntoVerdeSerializer, CalendarioAmbientalSerializer, UserRegistrationSerializer, PasswordResetRequestSerializer, PasswordResetConfirmSerializer, FavoriteSerializer, ChatSessionSerializer, ChatMessageSerializer, EventoUsuarioSerializer
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-from rest_framework import status, generics
+from rest_framework import status, generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
@@ -226,3 +226,76 @@ class EventoUsuarioViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+class PuntoVerdeViewSet(viewsets.ModelViewSet):
+    queryset = PuntoVerde.objects.all()
+    serializer_class = PuntoVerdeSerializer
+
+    def get_permissions(self):
+        # Cualquiera puede ver, solo logueados pueden crear/editar/borrar
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
+
+    def perform_create(self, serializer):
+        # AQUÍ OCURRE LA MAGIA: 
+        # Al guardar, asignamos automáticamente el usuario y marcamos el flag
+        serializer.save(
+            creator=self.request.user, 
+            is_user_generated=True
+        )
+
+# --- VISTA DE VOTACIÓN Y ELIMINACIÓN ---
+class VotePuntoView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, punto_id):
+        vote_type = request.data.get('vote_type') # Espera 'valid' o 'invalid'
+        
+        try:
+            punto = PuntoVerde.objects.get(id=punto_id)
+        except PuntoVerde.DoesNotExist:
+            return Response({"error": "Punto no encontrado"}, status=404)
+
+        # Solo permitimos votar en puntos creados por usuarios
+        if not punto.is_user_generated:
+            return Response({"error": "Solo se pueden validar puntos de usuarios"}, status=400)
+
+        user = request.user
+
+        # 1. Lógica de Voto (Toggle)
+        try:
+            vote = PuntoVote.objects.get(user=user, punto=punto)
+            if vote.vote_type == vote_type:
+                # Si el usuario vota lo mismo que ya tenía, borramos el voto (deshacer)
+                vote.delete()
+            else:
+                # Si cambia de opinión, actualizamos
+                vote.vote_type = vote_type
+                vote.save()
+        except PuntoVote.DoesNotExist:
+            # Voto nuevo
+            PuntoVote.objects.create(user=user, punto=punto, vote_type=vote_type)
+
+        # 2. Lógica de Eliminación Automática
+        # Requisito: "Si la brecha no supera el 25% del total de números válidos, se elimina"
+        
+        valid_count = punto.votes.filter(vote_type='valid').count()
+        invalid_count = punto.votes.filter(vote_type='invalid').count()
+        
+        # Ponemos un mínimo de votos (ej: 3) para no borrar un punto apenas se crea con 1 voto negativo
+        if (valid_count + invalid_count) >= 3:
+            
+            diferencia = valid_count - invalid_count
+            umbral = valid_count * 0.25 # El 25% de los válidos
+            
+            # Si hay más inválidos que válidos, la diferencia es negativa, así que se elimina seguro.
+            # Si la diferencia es positiva pero muy pequeña (menor al 25%), también se elimina.
+            if diferencia < umbral:
+                punto.delete()
+                return Response({
+                    "status": "deleted", 
+                    "message": "Punto eliminado por la comunidad (exceso de votos inválidos)"
+                }, status=200)
+
+        return Response({"status": "ok"}, status=200)
