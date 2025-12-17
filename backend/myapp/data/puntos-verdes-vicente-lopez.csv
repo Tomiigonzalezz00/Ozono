@@ -1,0 +1,14 @@
+WKT,id,nombre,direccion,materiales,dias_horarios,comuna
+POINT (-58.5257893 -34.5388946),VL-001,Plaza La Paz,"Cornelio Saavedra 1901, Florida Oeste, Buenos Aires",,,Florida Oeste
+POINT (-58.5153963 -34.5372299),VL-002,Plaza Paseo de las Artes,"Bolivia 1600, B1604AON Florida Oeste, Buenos Aires",,,Florida Oeste
+POINT (-58.4839227 -34.5033833),VL-003,Plaza Prof. Chelia,Av. del Libertador 2921 Olivos Buenos Aires,,,Olivos
+POINT (-58.5071604 -34.5153373),VL-004,Plaza San Héctor Valdivieso Sáez,"Juan B. Justo & Cnel. Dorrego, Olivos",,,Olivos
+POINT (-58.477373 -34.505919),VL-005,Puerto de Olivos,"Juan D. de Solís y Matías Sturiza, Olivos, Buenos Aires",,,Olivos
+POINT (-58.5021641 -34.5460215),VL-006,Plazoleta Adolfo Vienni,"Av. Bartolomé Mitre y Francisco de Laprida, Villa Martelli",,,Villa Martelli
+POINT (-58.5207117 -34.5503633),VL-007,Plaza Almafuerte,"Gral. Balcarce y Gral. Lavalle, Villa Martelli",,,Villa Martelli
+POINT (-58.472523 -34.515637),VL-008,Paseo de la Costa,"Raul Ricardo Alfonsín y Pres. Hipólito Yrigoyen, Vicente López",,,Vicente López
+POINT (-58.470151 -34.52057),VL-009,Paseo de la Costa,"Raul Ricardo Alfonsín y Gral. Roca, Vicente López",,,Vicente López
+POINT (-58.46843 -34.524074),VL-010,Paseo de la Costa,"Raul Ricardo Alfonsín y Melo, Vicente López",,,Vicente López
+POINT (-58.467076 -34.52697),VL-011,Paseo de la Costa,"Raul Ricardo Alfonsín y Gral. Lavalle, Vicente López",,,Vicente López
+POINT (-58.535957 -34.527669),VL-012,Carrefour Independencia,"Independencia 3067, Carapachay, Buenos Aires",,,Carapachay
+POINT (-58.493812 -34.504591),VL-013,Carrefour San Lorenzo,"Maipu 3395, La Lucila, Buenos Aires",,,La Lucila
