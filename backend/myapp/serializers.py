@@ -11,10 +11,6 @@ class ItemSerializer(serializers.ModelSerializer):
         fields ='_all_'
 
 
-class PuntoVerdeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PuntoVerde
-        fields = '__all__'
 
 class CalendarioAmbientalSerializer(serializers.ModelSerializer):
     class Meta:
@@ -98,6 +94,7 @@ class EventoUsuarioSerializer(serializers.ModelSerializer):
         fields = ['id', 'fecha', 'titulo', 'descripcion']
     
 class PuntoVerdeSerializer(serializers.ModelSerializer):
+    # Campos calculados ("mágicos") que no están en la tabla PuntoVerde directamente
     valid_count = serializers.SerializerMethodField()
     invalid_count = serializers.SerializerMethodField()
     user_vote = serializers.SerializerMethodField()
@@ -105,8 +102,8 @@ class PuntoVerdeSerializer(serializers.ModelSerializer):
     class Meta:
         model = PuntoVerde
         fields = '__all__'
-        # Solo lectura (el usuario no envía esto en el JSON al crear)
-        read_only_fields = ('id', 'is_user_generated', 'creator', 'valid_count', 'invalid_count', 'user_vote')
+        # Aseguramos que estos campos extra se envíen al frontend
+        extra_fields = ['valid_count', 'invalid_count', 'user_vote']
 
     def get_valid_count(self, obj):
         return obj.votes.filter(vote_type='valid').count()
@@ -115,10 +112,12 @@ class PuntoVerdeSerializer(serializers.ModelSerializer):
         return obj.votes.filter(vote_type='invalid').count()
 
     def get_user_vote(self, obj):
-        request = self.context.get('request')
-        if request and request.user.is_authenticated:
+        # Averigua si el usuario que hace la petición ya votó este punto
+        user = self.context.get('request').user
+        if user.is_authenticated:
             try:
-                return PuntoVote.objects.get(user=request.user, punto=obj).vote_type
+                vote = obj.votes.get(user=user)
+                return vote.vote_type # Devuelve 'valid' o 'invalid'
             except PuntoVote.DoesNotExist:
                 return None
         return None

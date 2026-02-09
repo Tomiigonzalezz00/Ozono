@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import './Home.css'; 
+import './Home.css';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'font-awesome/css/font-awesome.min.css';
@@ -17,8 +17,8 @@ const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
   const dLat = deg2rad(lat2 - lat1);
   const dLon = deg2rad(lon2 - lon1);
   const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 };
@@ -38,11 +38,31 @@ const isOpenAtTime = (scheduleString, hourToCheck) => {
   return false;
 };
 
+// Función de Geocodificación
+const fetchAddressFromCoords = async (lat, lng) => {
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+    const data = await response.json();
+    if (data && data.address) {
+      return {
+        calle: data.address.road || '',
+        altura: data.address.house_number || '',
+        barrio: data.address.neighbourhood || data.address.suburb || '',
+        comuna: data.address.city_district || '',
+        direccion_completa: data.display_name
+      };
+    }
+  } catch (error) {
+    console.error("Error geocoding:", error);
+  }
+  return null;
+};
+
 const Home = () => {
   // --- ESTADOS ---
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [materialDropdownOpen, setMaterialDropdownOpen] = useState(false);
-  
+
   // Usuario
   const [username, setUsername] = useState('Usuario');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -55,20 +75,19 @@ const Home = () => {
   const [userLocation, setUserLocation] = useState(null);
   const [favorites, setFavorites] = useState(new Set());
 
-  // --- ESTADOS DE AGREGAR PUNTO (ACTUALIZADO) ---
+  // --- ESTADOS DE AGREGAR PUNTO ---
   const [isAddingMode, setIsAddingMode] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newPointData, setNewPointData] = useState({ 
-      lat: 0, 
-      lng: 0, 
-      nombre: '', 
-      materiales: '', 
-      dia_hora: '',
-      // Nuevos campos
-      calle: '',
-      barrio: '',
-      comuna: '',
-      tipos: { organico: false, inorganico: false }
+  const [newPointData, setNewPointData] = useState({
+    lat: 0,
+    lng: 0,
+    nombre: '',
+    materiales: '',
+    dia_hora: '',
+    calle: '',
+    barrio: '',
+    comuna: '',
+    tipos: { organico: false, inorganico: false }
   });
 
   // Filtros
@@ -80,7 +99,7 @@ const Home = () => {
   const [showBarrioDropdown, setShowBarrioDropdown] = useState(false);
 
   const [barriosDisponibles, setBarriosDisponibles] = useState([]);
-  
+
   const materialOptions = ['Orgánicos', 'Inorgánicos'];
 
   // Refs
@@ -88,13 +107,76 @@ const Home = () => {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const markersLayer = useRef(null);
-  
+
   // Refs para Bridges
   const toggleFavoriteRef = useRef();
   const handleVoteRef = useRef();
 
   const toggleProfileMenu = () => setIsProfileOpen(prev => !prev);
+
+  // --- HANDLERS (Definidos aquí para evitar duplicados y errores) ---
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    window.location.href = '/login';
+  };
+
+  const handleLogin = () => {
+    window.location.href = '/login';
+  };
+
   const toggleMaterialDropdown = () => setMaterialDropdownOpen(!materialDropdownOpen);
+
+  const handleMaterialChange = (material) => {
+    setSelectedMaterials(prev => prev.includes(material) ? prev.filter(m => m !== material) : [...prev, material]);
+  };
+
+  const handleSelectPunto = (punto) => {
+    setSelectedPunto(punto); setSearchTerm(punto.nombre); setFilteredPuntos([]);
+    if (mapInstance.current && punto.markerRef) {
+      mapInstance.current.setView([punto.latitud, punto.longitud], 16);
+      punto.markerRef.openPopup();
+    }
+  };
+
+  const clearFilters = () => {
+    setSearchTerm(''); setBarrioFilter(''); setHorarioFilter(''); setSelectedMaterials([]); setSelectedPunto(null); setShowFavoritesOnly(false);
+    if (mapInstance.current) {
+      if (userLocation) mapInstance.current.setView([userLocation.lat, userLocation.lng], 14);
+      else mapInstance.current.setView([-34.61, -58.38], 13);
+      mapInstance.current.closePopup();
+    }
+  };
+
+  // --- EFECTOS ---
+
+  // Body overflow y menú perfil
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const adjustMenuPosition = () => {
+      if (menuRef.current) {
+        const menuRect = menuRef.current.getBoundingClientRect();
+        if (menuRect.right > window.innerWidth) {
+          menuRef.current.style.left = 'auto';
+          menuRef.current.style.right = '0';
+        } else {
+          menuRef.current.style.left = '0';
+          menuRef.current.style.right = 'auto';
+        }
+      }
+    };
+
+    if (isProfileOpen) {
+      adjustMenuPosition();
+      window.addEventListener('resize', adjustMenuPosition);
+    }
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('resize', adjustMenuPosition);
+    };
+  }, [isProfileOpen]);
 
   // --- API CALLS ---
 
@@ -104,10 +186,9 @@ const Home = () => {
       const response = await fetch('http://localhost:8000/api/puntos-verdes/', { headers });
       if (!response.ok) throw new Error('Error');
       const data = await response.json();
-      
+
       const procesados = data.map(p => ({
         ...p,
-        // Detectamos si es orgánico mirando el campo 'tipo' o 'materiales' como fallback
         isOrganic: (p.tipo && normalizeText(p.tipo).includes('organico')) || normalizeText(p.materiales).includes('organico')
       }));
 
@@ -132,7 +213,7 @@ const Home = () => {
 
   const toggleFavorite = async (puntoId) => {
     if (!isLoggedIn) { window.location.href = '/login'; return; }
-    
+
     setFavorites(prev => {
       const newFavs = new Set(prev);
       if (newFavs.has(puntoId)) newFavs.delete(puntoId);
@@ -148,67 +229,64 @@ const Home = () => {
     } catch (error) { fetchFavorites(token); }
   };
 
-  // --- FUNCIÓN: Agregar Punto (ACTUALIZADA) ---
+  // --- FUNCIÓN: Agregar Punto ---
   const submitNewPoint = async () => {
-      if(!newPointData.nombre || !newPointData.materiales) return alert("Completa nombre y materiales");
-      
-      // Procesar checkboxes de tipo
-      let tiposSeleccionados = [];
-      if (newPointData.tipos.organico) tiposSeleccionados.push("Orgánico");
-      if (newPointData.tipos.inorganico) tiposSeleccionados.push("Inorgánico");
-      const tipoString = tiposSeleccionados.join(", ");
+    if (!newPointData.nombre || !newPointData.materiales) return alert("Completa nombre y materiales");
 
-      try {
-          const response = await fetch('http://localhost:8000/api/puntos-verdes/', {
-              method: 'POST',
-              headers: { 'Authorization': `Token ${token}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                  nombre: newPointData.nombre,
-                  latitud: newPointData.lat,
-                  longitud: newPointData.lng,
-                  materiales: newPointData.materiales,
-                  dia_hora: newPointData.dia_hora,
-                  // Campos nuevos
-                  calle: newPointData.calle,
-                  barrio: newPointData.barrio,
-                  comuna: newPointData.comuna,
-                  tipo: tipoString,
-                  direccion: newPointData.calle ? `${newPointData.calle}, ${newPointData.barrio}` : "Ubicación en mapa"
-              })
-          });
+    let tiposSeleccionados = [];
+    if (newPointData.tipos.organico) tiposSeleccionados.push("Orgánico");
+    if (newPointData.tipos.inorganico) tiposSeleccionados.push("Inorgánico");
+    const tipoString = tiposSeleccionados.join(", ");
 
-          if (response.ok) {
-              alert("Punto agregado. La comunidad deberá validarlo.");
-              setShowAddModal(false);
-              // Reset
-              setNewPointData({ 
-                  lat: 0, lng: 0, nombre: '', materiales: '', dia_hora: '', 
-                  calle: '', barrio: '', comuna: '', tipos: { organico: false, inorganico: false } 
-              });
-              fetchPuntosVerdes(); 
-          } else {
-              const errData = await response.json();
-              alert("Error al crear el punto: " + JSON.stringify(errData));
-          }
-      } catch (error) { console.error(error); }
+    try {
+      const response = await fetch('http://localhost:8000/api/puntos-verdes/', {
+        method: 'POST',
+        headers: { 'Authorization': `Token ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: newPointData.nombre,
+          latitud: newPointData.lat,
+          longitud: newPointData.lng,
+          materiales: newPointData.materiales,
+          dia_hora: newPointData.dia_hora,
+          calle: newPointData.calle,
+          barrio: newPointData.barrio,
+          comuna: newPointData.comuna,
+          tipo: tipoString,
+          direccion: newPointData.calle ? `${newPointData.calle}, ${newPointData.barrio}` : "Ubicación en mapa"
+        })
+      });
+
+      if (response.ok) {
+        alert("Punto agregado. La comunidad deberá validarlo.");
+        setShowAddModal(false);
+        setNewPointData({
+          lat: 0, lng: 0, nombre: '', materiales: '', dia_hora: '',
+          calle: '', barrio: '', comuna: '', tipos: { organico: false, inorganico: false }
+        });
+        fetchPuntosVerdes();
+      } else {
+        const errData = await response.json();
+        alert("Error al crear el punto: " + JSON.stringify(errData));
+      }
+    } catch (error) { console.error(error); }
   };
 
   // --- FUNCIÓN: Votar Punto ---
   const handleVote = async (puntoId, voteType) => {
-      if (!isLoggedIn) return alert("Inicia sesión para votar");
-      try {
-          const response = await fetch(`http://localhost:8000/api/puntos-verdes/${puntoId}/vote/`, {
-              method: 'POST',
-              headers: { 'Authorization': `Token ${token}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ vote_type: voteType })
-          });
-          
-          if (response.ok) {
-              const data = await response.json();
-              if (data.status === 'deleted') alert("Punto eliminado por la comunidad.");
-              fetchPuntosVerdes(); 
-          }
-      } catch (error) { console.error(error); }
+    if (!isLoggedIn) return alert("Inicia sesión para votar");
+    try {
+      const response = await fetch(`http://localhost:8000/api/puntos-verdes/${puntoId}/vote/`, {
+        method: 'POST',
+        headers: { 'Authorization': `Token ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vote_type: voteType })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === 'deleted') alert("Punto eliminado por la comunidad.");
+        fetchPuntosVerdes();
+      }
+    } catch (error) { console.error(error); }
   };
 
   // --- BRIDGES ---
@@ -220,9 +298,9 @@ const Home = () => {
   useEffect(() => {
     window.handleFavoriteClick = (id) => { if (toggleFavoriteRef.current) toggleFavoriteRef.current(id); };
     window.handleVoteClick = (id, type) => { if (handleVoteRef.current) handleVoteRef.current(id, type); };
-    return () => { 
-        delete window.handleFavoriteClick; 
-        delete window.handleVoteClick;
+    return () => {
+      delete window.handleFavoriteClick;
+      delete window.handleVoteClick;
     };
   }, []);
 
@@ -236,13 +314,9 @@ const Home = () => {
       setIsLoggedIn(false); setUsername('Invitado');
     }
     fetchPuntosVerdes();
-
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = originalOverflow; };
   }, []);
 
-  useEffect(() => { if(token) fetchPuntosVerdes(); }, [token]);
+  useEffect(() => { if (token) fetchPuntosVerdes(); }, [token]);
 
   // --- MAPA ---
   useEffect(() => {
@@ -267,42 +341,64 @@ const Home = () => {
       legend.addTo(mapInstance.current);
     }
 
-    // CLICK EN EL MAPA (Para agregar punto)
-    const onMapClick = (e) => {
-        if (isAddingMode && isLoggedIn) {
-            setNewPointData(prev => ({ ...prev, lat: e.latlng.lat, lng: e.latlng.lng }));
-            setShowAddModal(true);
-            setIsAddingMode(false);
+    // EVENTO CLICK DEL MAPA
+    const onMapClick = async (e) => {
+      if (isAddingMode && isLoggedIn) {
+        const { lat, lng } = e.latlng;
+
+        setNewPointData(prev => ({
+          ...prev,
+          lat: lat,
+          lng: lng,
+          direccion: "Buscando dirección..."
+        }));
+
+        setShowAddModal(true);
+        setIsAddingMode(false);
+
+        const addressData = await fetchAddressFromCoords(lat, lng);
+
+        if (addressData) {
+          setNewPointData(prev => ({
+            ...prev,
+            lat: lat,
+            lng: lng,
+            calle: addressData.calle + (addressData.altura ? ` ${addressData.altura}` : ''),
+            barrio: addressData.barrio,
+            comuna: addressData.comuna,
+            direccion: addressData.calle ? `${addressData.calle}, ${addressData.barrio}` : "Ubicación seleccionada"
+          }));
         }
+      }
     };
 
     if (mapInstance.current) {
-        mapInstance.current.off('click');
-        mapInstance.current.on('click', onMapClick);
-        if (isAddingMode) L.DomUtil.addClass(mapInstance.current._container,'map-adding-mode');
-        else L.DomUtil.removeClass(mapInstance.current._container,'map-adding-mode');
+      mapInstance.current.off('click');
+      mapInstance.current.on('click', onMapClick);
+      if (isAddingMode) L.DomUtil.addClass(mapInstance.current._container, 'map-adding-mode');
+      else L.DomUtil.removeClass(mapInstance.current._container, 'map-adding-mode');
     }
 
     if ("geolocation" in navigator && !userLocation) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-            const { latitude: lat, longitude: lng } = pos.coords;
-            setUserLocation({ lat, lng });
-            if (mapInstance.current) {
-                mapInstance.current.setView([lat, lng], 14);
-                L.circleMarker([lat, lng], { radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8 }).addTo(mapInstance.current).bindPopup("Estás aquí");
-            }
-        }, (err) => console.log(err));
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        setUserLocation({ lat, lng });
+        if (mapInstance.current) {
+          mapInstance.current.setView([lat, lng], 14);
+          L.circleMarker([lat, lng], { radius: 8, fillColor: "#3388ff", color: "#fff", weight: 2, opacity: 1, fillOpacity: 0.8 }).addTo(mapInstance.current).bindPopup("Estás aquí");
+        }
+      }, (err) => console.log(err));
     }
   }, [isAddingMode, isLoggedIn, userLocation]);
 
-  // --- RENDERIZADO DE MARCADORES (ACTUALIZADO POPUP) ---
+  // --- RENDERIZADO DE MARCADORES ---
   useEffect(() => {
     if (!markersLayer.current) return;
     markersLayer.current.clearLayers();
 
     let baseList = puntosVerdes;
     const isManualSearch = searchTerm || barrioFilter || horarioFilter || selectedMaterials.length > 0 || showFavoritesOnly;
-    
+
     if (userLocation && !isManualSearch && !selectedPunto) {
       const conDistancia = puntosVerdes.map(p => ({
         ...p,
@@ -328,28 +424,27 @@ const Home = () => {
       filtered = filtered.filter(p => normalizeText(p.barrio).includes(bf));
     }
     if (horarioFilter) {
-        const hour = parseInt(horarioFilter);
-        if (!isNaN(hour)) filtered = filtered.filter(p => isOpenAtTime(p.dia_hora, hour));
-        else filtered = filtered.filter(p => normalizeText(p.dia_hora).includes(normalizeText(horarioFilter)));
+      const hour = parseInt(horarioFilter);
+      if (!isNaN(hour)) filtered = filtered.filter(p => isOpenAtTime(p.dia_hora, hour));
+      else filtered = filtered.filter(p => normalizeText(p.dia_hora).includes(normalizeText(horarioFilter)));
     }
-    
+
     if (selectedMaterials.length > 0) {
-        const buscaOrg = selectedMaterials.includes('Orgánicos');
-        const buscaInorg = selectedMaterials.includes('Inorgánicos');
-        
-        filtered = filtered.filter(p => {
-            if (!buscaOrg && !buscaInorg) return true; 
-            if (buscaOrg && buscaInorg) return true;
-            if (buscaOrg) return p.isOrganic;
-            if (buscaInorg) return !p.isOrganic;
-            return true; 
-        });
+      const buscaOrg = selectedMaterials.includes('Orgánicos');
+      const buscaInorg = selectedMaterials.includes('Inorgánicos');
+
+      filtered = filtered.filter(p => {
+        if (!buscaOrg && !buscaInorg) return true;
+        if (buscaOrg && buscaInorg) return true;
+        if (buscaOrg) return p.isOrganic;
+        if (buscaInorg) return !p.isOrganic;
+        return true;
+      });
     }
 
     setFilteredPuntos(selectedPunto ? [] : filtered);
 
     filtered.forEach(punto => {
-      // 1. Icono
       let color = 'green';
       let extraClass = '';
       if (punto.is_user_generated) { color = 'orange'; extraClass = 'custom-icon-user'; }
@@ -363,7 +458,7 @@ const Home = () => {
 
       const marker = L.marker([punto.latitud, punto.longitud], { icon });
       const isFav = favorites.has(punto.id);
-      
+
       const favBtnHtml = `
             <button onclick="window.handleFavoriteClick('${punto.id}')" 
                     style="border:none; background:none; cursor:pointer; float:right; font-size:18px;">
@@ -371,31 +466,45 @@ const Home = () => {
             </button>
       `;
 
-      // 2. HTML Votación
       let voteHtml = '';
-      if (punto.is_user_generated && isLoggedIn) {
-          const userVote = punto.user_vote;
-          voteHtml = `
+      if (punto.is_user_generated) {
+        // Obtenemos los contadores (si no existen, ponemos 0)
+        const validCount = punto.valid_count || 0;
+        const invalidCount = punto.invalid_count || 0;
+        const userVote = punto.user_vote;
+
+        // Si está logueado, calculamos si el botón debe estar "activo" (pintado)
+        const activeValid = (isLoggedIn && userVote === 'valid') ? 'active' : '';
+        const activeInvalid = (isLoggedIn && userVote === 'invalid') ? 'active' : '';
+
+        // Definimos qué hace el click: Votar (si hay login) o Alerta (si no hay login)
+        const onClickValid = isLoggedIn
+          ? `window.handleVoteClick('${punto.id}', 'valid')`
+          : "alert('Debes iniciar sesión para votar')";
+
+        const onClickInvalid = isLoggedIn
+          ? `window.handleVoteClick('${punto.id}', 'invalid')`
+          : "alert('Debes iniciar sesión para votar')";
+
+        voteHtml = `
             <div class="vote-section">
                 <small>Validación Comunitaria:</small>
                 <div class="vote-buttons">
-                    <button class="btn-vote valid ${userVote === 'valid' ? 'active' : ''}" 
-                            onclick="window.handleVoteClick('${punto.id}', 'valid')">
-                        <i class="fa fa-check"></i> (${punto.valid_count || 0})
+                    <button class="btn-vote valid ${activeValid}" 
+                            onclick="${onClickValid}"
+                            title="${isLoggedIn ? 'Confirmar punto' : 'Inicia sesión para votar'}">
+                        <i class="fa fa-check"></i> (${validCount})
                     </button>
-                    <button class="btn-vote invalid ${userVote === 'invalid' ? 'active' : ''}" 
-                            onclick="window.handleVoteClick('${punto.id}', 'invalid')">
-                        <i class="fa fa-times"></i> (${punto.invalid_count || 0})
+                    <button class="btn-vote invalid ${activeInvalid}" 
+                            onclick="${onClickInvalid}"
+                            title="${isLoggedIn ? 'Reportar punto' : 'Inicia sesión para votar'}">
+                        <i class="fa fa-times"></i> (${invalidCount})
                     </button>
                 </div>
             </div>
           `;
-      } else if (punto.is_user_generated) {
-          voteHtml = `<div class="vote-section"><small>Inicia sesión para validar.</small></div>`;
       }
 
-      // 3. Popup Completo CON NUEVOS CAMPOS
-      // Construimos HTML condicional para los nuevos datos
       let infoExtraHtml = '';
       if (punto.calle) infoExtraHtml += `<div><b>Calle:</b> ${punto.calle} ${punto.altura || ''}</div>`;
       if (punto.barrio) infoExtraHtml += `<div><b>Barrio:</b> ${punto.barrio}</div>`;
@@ -427,31 +536,6 @@ const Home = () => {
     });
 
   }, [searchTerm, barrioFilter, horarioFilter, selectedMaterials, puntosVerdes, selectedPunto, userLocation, favorites, showFavoritesOnly, isLoggedIn]);
-
-  // --- HANDLERS UI ---
-  const handleSelectPunto = (punto) => {
-    setSelectedPunto(punto); setSearchTerm(punto.nombre); setFilteredPuntos([]);
-    if (mapInstance.current && punto.markerRef) {
-      mapInstance.current.setView([punto.latitud, punto.longitud], 16);
-      punto.markerRef.openPopup();
-    }
-  };
-
-  const clearFilters = () => {
-    setSearchTerm(''); setBarrioFilter(''); setHorarioFilter(''); setSelectedMaterials([]); setSelectedPunto(null); setShowFavoritesOnly(false);
-    if (mapInstance.current) {
-      if (userLocation) mapInstance.current.setView([userLocation.lat, userLocation.lng], 14);
-      else mapInstance.current.setView([-34.61, -58.38], 13);
-      mapInstance.current.closePopup();
-    }
-  };
-
-  const handleMaterialChange = (material) => {
-    setSelectedMaterials(prev => prev.includes(material) ? prev.filter(m => m !== material) : [...prev, material]);
-  };
-
-  const handleLogout = () => { localStorage.removeItem('token'); localStorage.removeItem('username'); window.location.href = '/login'; };
-  const handleLogin = () => { window.location.href = '/login'; };
 
   return (
     <div className="home-container">
@@ -501,7 +585,7 @@ const Home = () => {
               {showBarrioDropdown && barrioFilter && (
                 <ul className="barrio-dropdown">
                   {barriosDisponibles.filter(b => normalizeText(b).includes(normalizeText(barrioFilter))).slice(0, 8).map(barrio => (
-                      <li key={barrio} onClick={() => { setBarrioFilter(barrio); setShowBarrioDropdown(false); }}>{barrio}</li>
+                    <li key={barrio} onClick={() => { setBarrioFilter(barrio); setShowBarrioDropdown(false); }}>{barrio}</li>
                   ))}
                 </ul>
               )}
@@ -535,19 +619,19 @@ const Home = () => {
             </button>
 
             {/* BOTÓN AGREGAR PUNTO */}
-            <button 
-                onClick={() => {
-                    if(!isLoggedIn) { window.location.href = '/login'; return; }
-                    setIsAddingMode(!isAddingMode);
-                }}
-                style={{
-                    backgroundColor: isAddingMode ? '#ff9800' : '#2e7d32',
-                    color: 'white', border: 'none', borderRadius: '4px', padding: '0 15px', height:'35px', cursor: 'pointer', fontWeight:'bold'
-                }}
-                title="Agregar nuevo punto"
-             >
-                 {isAddingMode ? 'Cancelar' : '+'}
-             </button>
+            <button
+              onClick={() => {
+                if (!isLoggedIn) { window.location.href = '/login'; return; }
+                setIsAddingMode(!isAddingMode);
+              }}
+              style={{
+                backgroundColor: isAddingMode ? '#ff9800' : '#2e7d32',
+                color: 'white', border: 'none', borderRadius: '4px', padding: '0 15px', height: '35px', cursor: 'pointer', fontWeight: 'bold'
+              }}
+              title="Agregar nuevo punto"
+            >
+              {isAddingMode ? 'Cancelar' : '+'}
+            </button>
 
             <button onClick={clearFilters} title="Limpiar filtros" style={{ backgroundColor: '#d32f2f', color: 'white', border: 'none', borderRadius: '4px', width: '40px', height: '35px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <i className="fa fa-eraser"></i>
@@ -555,71 +639,71 @@ const Home = () => {
           </div>
 
           {isAddingMode && (
-              <div style={{position:'absolute', top:'70px', left:'50%', transform:'translateX(-50%)', zIndex:1000, background:'rgba(0,0,0,0.7)', color:'white', padding:'5px 15px', borderRadius:'20px'}}>
-                  <i className="fa fa-info-circle"></i> Toca en el mapa para ubicar el punto
-              </div>
+            <div style={{ position: 'absolute', top: '70px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, background: 'rgba(0,0,0,0.7)', color: 'white', padding: '5px 15px', borderRadius: '20px' }}>
+              <i className="fa fa-info-circle"></i> Toca en el mapa para ubicar el punto
+            </div>
           )}
 
           <div ref={mapRef} className="map" style={{ width: '100%', height: '100%', minHeight: '400px', borderRadius: '8px' }}></div>
         </section>
       </div>
 
-      {/* MODAL AGREGAR PUNTO (ACTUALIZADO) */}
+      {/* MODAL AGREGAR PUNTO */}
       {showAddModal && (
-          <div className="modal-overlay">
-              <div className="modal-content" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
-                  <h3>Nuevo Punto Verde</h3>
-                  
-                  {/* Nombre */}
-                  <input type="text" placeholder="Nombre del lugar (ej: Punto Plaza X)" 
-                         value={newPointData.nombre} 
-                         onChange={e => setNewPointData({...newPointData, nombre: e.target.value})} />
-                  
-                  {/* Materiales */}
-                  <input type="text" placeholder="Materiales (ej: Vidrio, Papel)" 
-                         value={newPointData.materiales} 
-                         onChange={e => setNewPointData({...newPointData, materiales: e.target.value})} />
-                  
-                  {/* Checkbox Tipo */}
-                  <div style={{display:'flex', gap:'15px', margin:'10px 0', fontSize:'14px'}}>
-                      <label style={{cursor:'pointer', display:'flex', alignItems:'center'}}>
-                          <input type="checkbox" style={{marginRight:'5px'}}
-                                 checked={newPointData.tipos.organico} 
-                                 onChange={e => setNewPointData({...newPointData, tipos: {...newPointData.tipos, organico: e.target.checked}})} /> 
-                          Orgánico
-                      </label>
-                      <label style={{cursor:'pointer', display:'flex', alignItems:'center'}}>
-                          <input type="checkbox" style={{marginRight:'5px'}}
-                                 checked={newPointData.tipos.inorganico} 
-                                 onChange={e => setNewPointData({...newPointData, tipos: {...newPointData.tipos, inorganico: e.target.checked}})} /> 
-                          Inorgánico
-                      </label>
-                  </div>
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3>Nuevo Punto Verde</h3>
 
-                  {/* Nuevos Campos Dirección */}
-                  <div style={{display:'flex', gap:'10px'}}>
-                      <input type="text" placeholder="Calle" style={{flex:2}}
-                             value={newPointData.calle} 
-                             onChange={e => setNewPointData({...newPointData, calle: e.target.value})} />
-                      <input type="text" placeholder="Barrio" style={{flex:2}}
-                             value={newPointData.barrio} 
-                             onChange={e => setNewPointData({...newPointData, barrio: e.target.value})} />
-                  </div>
-                  <input type="text" placeholder="Comuna (Opcional)" 
-                         value={newPointData.comuna} 
-                         onChange={e => setNewPointData({...newPointData, comuna: e.target.value})} />
+            {/* Nombre */}
+            <input type="text" placeholder="Nombre del lugar (ej: Punto Plaza X)"
+              value={newPointData.nombre}
+              onChange={e => setNewPointData({ ...newPointData, nombre: e.target.value })} />
 
-                  {/* Horario */}
-                  <input type="text" placeholder="Horario (Opcional)" 
-                         value={newPointData.dia_hora} 
-                         onChange={e => setNewPointData({...newPointData, dia_hora: e.target.value})} />
-                  
-                  <div className="modal-buttons">
-                      <button className="modal-btn cancel" onClick={() => setShowAddModal(false)}>Cancelar</button>
-                      <button className="modal-btn save" onClick={submitNewPoint}>Agregar Punto</button>
-                  </div>
-              </div>
+            {/* Materiales */}
+            <input type="text" placeholder="Materiales (ej: Vidrio, Papel)"
+              value={newPointData.materiales}
+              onChange={e => setNewPointData({ ...newPointData, materiales: e.target.value })} />
+
+            {/* Checkbox Tipo */}
+            <div style={{ display: 'flex', gap: '15px', margin: '10px 0', fontSize: '14px' }}>
+              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <input type="checkbox" style={{ marginRight: '5px' }}
+                  checked={newPointData.tipos.organico}
+                  onChange={e => setNewPointData({ ...newPointData, tipos: { ...newPointData.tipos, organico: e.target.checked } })} />
+                Orgánico
+              </label>
+              <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <input type="checkbox" style={{ marginRight: '5px' }}
+                  checked={newPointData.tipos.inorganico}
+                  onChange={e => setNewPointData({ ...newPointData, tipos: { ...newPointData.tipos, inorganico: e.target.checked } })} />
+                Inorgánico
+              </label>
+            </div>
+
+            {/* Nuevos Campos Dirección */}
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <input type="text" placeholder="Calle" style={{ flex: 2 }}
+                value={newPointData.calle}
+                onChange={e => setNewPointData({ ...newPointData, calle: e.target.value })} />
+              <input type="text" placeholder="Barrio" style={{ flex: 2 }}
+                value={newPointData.barrio}
+                onChange={e => setNewPointData({ ...newPointData, barrio: e.target.value })} />
+            </div>
+            <input type="text" placeholder="Comuna (Opcional)"
+              value={newPointData.comuna}
+              onChange={e => setNewPointData({ ...newPointData, comuna: e.target.value })} />
+
+            {/* Horario */}
+            <input type="text" placeholder="Horario (Opcional)"
+              value={newPointData.dia_hora}
+              onChange={e => setNewPointData({ ...newPointData, dia_hora: e.target.value })} />
+
+            <div className="modal-buttons">
+              <button className="modal-btn cancel" onClick={() => setShowAddModal(false)}>Cancelar</button>
+              <button className="modal-btn save" onClick={submitNewPoint}>Agregar Punto</button>
+            </div>
           </div>
+        </div>
       )}
     </div>
   );
