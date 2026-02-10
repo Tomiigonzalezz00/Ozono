@@ -4,6 +4,7 @@ import './Home.css';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'font-awesome/css/font-awesome.min.css';
+import { useNotification } from '../context/NotificationContext';
 
 // --- HELPERS ---
 const normalizeText = (text) => {
@@ -111,6 +112,10 @@ const Home = () => {
   // Refs para Bridges
   const toggleFavoriteRef = useRef();
   const handleVoteRef = useRef();
+  const showNotificationRef = useRef(); // Bridge ref for notifications
+
+  // Hook de notificaciones
+  const { showNotification } = useNotification();
 
   const toggleProfileMenu = () => setIsProfileOpen(prev => !prev);
 
@@ -231,7 +236,10 @@ const Home = () => {
 
   // --- FUNCIÓN: Agregar Punto ---
   const submitNewPoint = async () => {
-    if (!newPointData.nombre || !newPointData.materiales) return alert("Completa nombre y materiales");
+    if (!newPointData.nombre || !newPointData.materiales) {
+      showNotification("Completa nombre y materiales", "error");
+      return;
+    }
 
     let tiposSeleccionados = [];
     if (newPointData.tipos.organico) tiposSeleccionados.push("Orgánico");
@@ -257,7 +265,7 @@ const Home = () => {
       });
 
       if (response.ok) {
-        alert("Punto agregado. La comunidad deberá validarlo.");
+        showNotification("Punto agregado. La comunidad deberá validarlo.", "success");
         setShowAddModal(false);
         setNewPointData({
           lat: 0, lng: 0, nombre: '', materiales: '', dia_hora: '',
@@ -266,14 +274,17 @@ const Home = () => {
         fetchPuntosVerdes();
       } else {
         const errData = await response.json();
-        alert("Error al crear el punto: " + JSON.stringify(errData));
+        showNotification("Error al crear el punto: " + JSON.stringify(errData), "error");
       }
     } catch (error) { console.error(error); }
   };
 
   // --- FUNCIÓN: Votar Punto ---
   const handleVote = async (puntoId, voteType) => {
-    if (!isLoggedIn) return alert("Inicia sesión para votar");
+    if (!isLoggedIn) {
+      showNotification("Inicia sesión para votar", "error");
+      return;
+    }
     try {
       const response = await fetch(`http://localhost:8000/api/puntos-verdes/${puntoId}/vote/`, {
         method: 'POST',
@@ -283,7 +294,7 @@ const Home = () => {
 
       if (response.ok) {
         const data = await response.json();
-        if (data.status === 'deleted') alert("Punto eliminado por la comunidad.");
+        if (data.status === 'deleted') showNotification("Punto eliminado por la comunidad.", "info");
         fetchPuntosVerdes();
       }
     } catch (error) { console.error(error); }
@@ -293,14 +304,22 @@ const Home = () => {
   useEffect(() => {
     toggleFavoriteRef.current = toggleFavorite;
     handleVoteRef.current = handleVote;
-  }, [favorites, isLoggedIn, token]);
+    showNotificationRef.current = showNotification; // Update ref
+  }, [favorites, isLoggedIn, token, showNotification]);
 
   useEffect(() => {
     window.handleFavoriteClick = (id) => { if (toggleFavoriteRef.current) toggleFavoriteRef.current(id); };
     window.handleVoteClick = (id, type) => { if (handleVoteRef.current) handleVoteRef.current(id, type); };
+
+    // Bridge for Leaflet popups to call showNotification
+    window.showGlobalNotification = (msg, type) => {
+      if (showNotificationRef.current) showNotificationRef.current(msg, type);
+    };
+
     return () => {
       delete window.handleFavoriteClick;
       delete window.handleVoteClick;
+      delete window.showGlobalNotification;
     };
   }, []);
 
@@ -478,13 +497,14 @@ const Home = () => {
         const activeInvalid = (isLoggedIn && userVote === 'invalid') ? 'active' : '';
 
         // Definimos qué hace el click: Votar (si hay login) o Alerta (si no hay login)
+
         const onClickValid = isLoggedIn
           ? `window.handleVoteClick('${punto.id}', 'valid')`
-          : "alert('Debes iniciar sesión para votar')";
+          : "window.showGlobalNotification('Debes iniciar sesión para votar', 'error')";
 
         const onClickInvalid = isLoggedIn
           ? `window.handleVoteClick('${punto.id}', 'invalid')`
-          : "alert('Debes iniciar sesión para votar')";
+          : "window.showGlobalNotification('Debes iniciar sesión para votar', 'error')";
 
         voteHtml = `
             <div class="vote-section">

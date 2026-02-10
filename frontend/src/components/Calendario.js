@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Calendario.css';
 import 'font-awesome/css/font-awesome.min.css';
+import { useNotification } from '../context/NotificationContext';
 
 const Calendario = () => {
   // --- ESTADOS DE UI Y SESIÓN (NUEVO) ---
@@ -16,6 +17,9 @@ const Calendario = () => {
   const [newEventData, setNewEventData] = useState({ titulo: '', descripcion: '' });
   const [selectedEvents, setSelectedEvents] = useState([]); // Changed to array
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Hook global de notificaciones
+  const { showNotification, showConfirm } = useNotification();
 
   const menuRef = useRef(null);
 
@@ -134,7 +138,7 @@ const Calendario = () => {
   ];
 
   const getStartDayOfMonth = (monthIndex) => {
-    const year = 2025; // Año fijo para los datos de la API
+    const year = 2025;
     const date = new Date(year, monthIndex, 1);
     return date.getDay();
   };
@@ -181,45 +185,41 @@ const Calendario = () => {
   const handleDeleteEvent = async (eventToDelete) => {
     if (!eventToDelete) return;
 
-    // Confirmación
-    if (!window.confirm("¿Estás seguro de que quieres eliminar este evento?")) return;
+    // Confirmación personalizada
+    showConfirm("¿Estás seguro de que quieres eliminar este evento?", async () => {
+      const token = localStorage.getItem('token');
+      try {
+        const response = await fetch(`http://localhost:8000/api/eventos-usuario/${eventToDelete.id}/`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Token ${token}`
+          }
+        });
 
-    const token = localStorage.getItem('token');
-    try {
-      const response = await fetch(`http://localhost:8000/api/eventos-usuario/${eventToDelete.id}/`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Token ${token}`
+        if (response.ok) {
+          const updatedUserEvents = userEvents.filter(e => e.id !== eventToDelete.id);
+          setUserEvents(updatedUserEvents);
+          setSelectedEvents(selectedEvents.filter(e => e.id !== eventToDelete.id));
+          showNotification("Evento eliminado correctamente", "success");
+        } else {
+          showNotification("Error al eliminar el evento", "error");
         }
-      });
-
-      if (response.ok) {
-        // Actualizar estado eliminando el evento
-        const updatedUserEvents = userEvents.filter(e => e.id !== eventToDelete.id);
-        setUserEvents(updatedUserEvents);
-
-        // Actualizar la lista de eventos seleccionados en el modal
-        setSelectedEvents(selectedEvents.filter(e => e.id !== eventToDelete.id));
-
-        alert("Evento eliminado correctamente");
-      } else {
-        alert("Error al eliminar el evento");
+      } catch (error) {
+        console.error("Error deleting event:", error);
+        showNotification("Error de conexión", "error");
       }
-    } catch (error) {
-      console.error("Error deleting event:", error);
-      alert("Error de conexión");
-    }
+    });
   };
 
   const handleSaveEvent = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
-      alert("Debes iniciar sesión para guardar eventos.");
+      showNotification("Debes iniciar sesión para guardar eventos.", "error");
       return;
     }
 
     if (!newEventData.titulo.trim()) {
-      alert("Por favor, ingresa un título para el evento.");
+      showNotification("Por favor, ingresa un título para el evento.", "error");
       return;
     }
 
@@ -239,19 +239,16 @@ const Calendario = () => {
         const savedEvent = await response.json();
         setUserEvents([...userEvents, savedEvent]);
         setIsAddingEvent(false);
-
-        // Add to currently selected events so it shows up immediately
         setSelectedEvents([...selectedEvents, savedEvent]);
-
-        alert("Evento guardado correctamente");
+        showNotification("Evento guardado correctamente", "success");
       } else {
         const errorData = await response.json();
         console.error("Error del servidor:", errorData);
-        alert(`Error al guardar: ${JSON.stringify(errorData)}`);
+        showNotification(`Error al guardar: ${JSON.stringify(errorData)}`, "error");
       }
     } catch (error) {
       console.error("Error saving event:", error);
-      alert("Error de conexión");
+      showNotification("Error de conexión", "error");
     }
   };
 

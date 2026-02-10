@@ -1,0 +1,158 @@
+/* Custom Popup Styles (Alert/Confirm Replacements) - Global */
+
+.custom-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease;
+}
+
+.custom-popup-content {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Tipos de alerta */
+.custom-popup-content.error {
+    border-top: 5px solid #d32f2f;
+}
+
+.custom-popup-content.success {
+    border-top: 5px solid #4caf50;
+}
+
+.custom-popup-content.info {
+    border-top: 5px solid #2196f3;
+}
+
+.custom-popup-content.confirmation {
+    border-top: 5px solid #ff9800;
+}
+
+/* Iconos */
+.popup-icon i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.custom-popup-content.error .popup-icon i {
+    color: #d32f2f;
+}
+
+.custom-popup-content.success .popup-icon i {
+    color: #4caf50;
+}
+
+.custom-popup-content.info .popup-icon i {
+    color: #2196f3;
+}
+
+.custom-popup-content.confirmation .popup-icon i {
+    color: #ff9800;
+}
+
+/* Texto */
+.custom-popup-content p {
+    font-size: 1.1em;
+    color: #333;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+/* Botones */
+.custom-popup-content button {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1em;
+    transition: transform 0.2s, background 0.2s;
+    margin: 5px;
+}
+
+.custom-popup-content button:hover {
+    transform: scale(1.05);
+}
+
+.custom-popup-content.error button {
+    background: #d32f2f;
+    color: white;
+}
+
+.custom-popup-content.success button,
+.custom-popup-content.info button {
+    background: #4caf50;
+    color: white;
+}
+
+/* Acciones de confirmación */
+.popup-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    width: 100%;
+}
+
+.popup-actions button {
+    flex: 1;
+}
+
+.popup-actions .cancel-btn {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.popup-actions .confirm-btn {
+    background: #d32f2f;
+    /* Rojo por defecto (acción destructiva) */
+    color: white;
+}
+
+.popup-actions .cancel-btn:hover {
+    background: #d5d5d5;
+}
+
+.popup-actions .confirm-btn:hover {
+    background: #b71c1c;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    0% {
+        opacity: 0;
+        transform: translateY(50px) scale(0.8);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
