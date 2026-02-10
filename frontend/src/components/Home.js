@@ -561,14 +561,29 @@ const Home = () => {
     <div className="home-container">
       <header className="top-bar">
         <img src="/images/logoOzono.png" alt="Ozono" className="brand-image" />
-        <div className="user-info" onClick={toggleProfileMenu}>
+        <div className="user-info" onClick={toggleProfileMenu} ref={menuRef}>
           <i className="fa fa-user"></i><span className="user-name">{username}</span>
-          {isProfileOpen && (
-            <div className="profile-menu" ref={menuRef}>
-              {isLoggedIn ? <button onClick={handleLogout} style={{ color: '#d32f2f' }}>Cerrar sesión</button> : <button onClick={handleLogin} style={{ color: '#006400' }}>Iniciar sesión</button>}
-            </div>
-          )}
         </div>
+        {isProfileOpen && (
+          <>
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 2999 }} onClick={() => setIsProfileOpen(false)} />
+            <div className="profile-menu" style={{ position: 'fixed', top: '68px', right: '20px' }}>
+              <div style={{ padding: '14px 14px 12px', borderBottom: '1px solid #f0f0f0', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: '#2e7d32', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '18px', flexShrink: 0 }}>
+                  {username ? username.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <div style={{ textAlign: 'center', flex: 1 }}>
+                  <span style={{ fontSize: '11px', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sesión activa</span>
+                  <div style={{ fontWeight: '600', fontSize: '15px', color: '#222', marginTop: '2px' }}>{username}</div>
+                </div>
+              </div>
+              {isLoggedIn
+                ? <button onClick={handleLogout} style={{ color: '#d32f2f' }}><i className="fa fa-sign-out"></i> Cerrar sesión</button>
+                : <button onClick={handleLogin} style={{ color: '#2e7d32' }}><i className="fa fa-sign-in"></i> Iniciar sesión</button>
+              }
+            </div>
+          </>
+        )}
       </header>
       <div className="main-content">
         <aside className="sidebar">
@@ -579,10 +594,10 @@ const Home = () => {
           </ul>
         </aside>
         <section className="map-section">
-          <div className="search-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center', padding: '10px', backgroundColor: 'none', borderRadius: '8px', marginBottom: '10px' }}>
+          <div className="search-bar" style={{ display: 'flex', flexWrap: 'nowrap', gap: '10px', alignItems: 'stretch', padding: '0', borderRadius: '8px', marginBottom: '10px', width: '100%', boxSizing: 'border-box' }}>
 
-            <div style={{ flex: '2', minWidth: '200px', position: 'relative' }}>
-              <input type="text" placeholder="Buscar punto verde..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setSelectedPunto(null); }} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
+            <div style={{ flex: '3', position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input type="text" placeholder="Buscar punto verde..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setSelectedPunto(null); }} style={{ width: '100%', height: '38px', padding: '0 10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
               {searchTerm && filteredPuntos.length > 0 && !selectedPunto && (
                 <ul className="dropdown" style={{ width: '100%', position: 'absolute', top: '100%', left: 0, zIndex: 1000 }}>
                   {filteredPuntos.slice(0, 5).map(punto => {
@@ -600,8 +615,8 @@ const Home = () => {
               )}
             </div>
 
-            <div className="barrio-wrapper">
-              <input type="text" placeholder="Barrio..." value={barrioFilter} onChange={(e) => { setBarrioFilter(e.target.value); setShowBarrioDropdown(true); }} className="barrio-input" />
+            <div className="barrio-wrapper" style={{ flex: '1.5' }}>
+              <input type="text" placeholder="Barrio..." value={barrioFilter} onChange={(e) => { setBarrioFilter(e.target.value); setShowBarrioDropdown(true); }} className="barrio-input" style={{ height: '38px', padding: '0 10px', boxSizing: 'border-box' }} />
               {showBarrioDropdown && barrioFilter && (
                 <ul className="barrio-dropdown">
                   {barriosDisponibles.filter(b => normalizeText(b).includes(normalizeText(barrioFilter))).slice(0, 8).map(barrio => (
@@ -611,19 +626,27 @@ const Home = () => {
               )}
             </div>
 
-            <div style={{ position: 'relative' }}>
-              <button onClick={toggleMaterialDropdown} style={{ padding: '8px 15px', borderRadius: '4px', backgroundColor: '#07753c4a', border: '1px solid #ccc', cursor: 'pointer', minWidth: '120px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>Materiales <i className="fa fa-caret-down"></i></button>
+            <div style={{ position: 'relative', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+              <button onClick={toggleMaterialDropdown} style={{ padding: '8px 15px', borderRadius: '4px', backgroundColor: '#07753c4a', border: '1px solid #ccc', cursor: 'pointer', minWidth: '120px', height: '38px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxSizing: 'border-box' }}>Materiales <i className="fa fa-caret-down" style={{ marginLeft: '8px' }}></i></button>
               {materialDropdownOpen && (
-                <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 1001, backgroundColor: 'green', border: '1px solid #07753c4a', borderRadius: '4px', padding: '10px', width: '150px', marginTop: '5px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-                  {materialOptions.map((material) => (
-                    <label key={material} style={{ display: 'block', marginBottom: '8px', cursor: 'pointer' }}><input type="checkbox" checked={selectedMaterials.includes(material)} onChange={() => handleMaterialChange(material)} style={{ marginRight: '8px' }} /> {material}</label>
+                <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 1001, backgroundColor: 'white', border: '1px solid #e0e0e0', borderRadius: '8px', padding: '6px 0', marginTop: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.12)', whiteSpace: 'nowrap' }}>
+                  {materialOptions.map((material, index) => (
+                    <label key={material} style={{
+                      display: 'flex', alignItems: 'center', gap: '10px',
+                      padding: '8px 14px', cursor: 'pointer', fontSize: '14px', color: '#333',
+                      borderBottom: index < materialOptions.length - 1 ? '1px solid #f0f0f0' : 'none'
+                    }}>
+                      <input type="checkbox" checked={selectedMaterials.includes(material)} onChange={() => handleMaterialChange(material)}
+                        style={{ width: '16px', height: '16px', accentColor: '#2e7d32', cursor: 'pointer', margin: 0 }} />
+                      {material}
+                    </label>
                   ))}
                 </div>
               )}
             </div>
 
-            <div style={{ flex: '1', minWidth: '150px' }}>
-              <input type="text" placeholder="Hora" value={horarioFilter} onChange={(e) => setHorarioFilter(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
+            <div style={{ flex: '1', display: 'flex', alignItems: 'center' }}>
+              <input type="text" placeholder="Hora" value={horarioFilter} onChange={(e) => setHorarioFilter(e.target.value)} style={{ width: '100%', height: '38px', padding: '0 10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }} />
             </div>
 
             <button
@@ -631,7 +654,7 @@ const Home = () => {
               title="Mis Favoritos"
               style={{
                 backgroundColor: showFavoritesOnly ? '#068637ff' : '#fff', color: showFavoritesOnly ? '#333' : '#666',
-                border: '1px solid #ccc', borderRadius: '4px', width: '40px', height: '35px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '1px solid #ccc', borderRadius: '4px', width: '38px', height: '38px', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 boxShadow: showFavoritesOnly ? 'inset 0 0 5px rgba(0,0,0,0.2)' : 'none'
               }}
             >
@@ -646,14 +669,14 @@ const Home = () => {
               }}
               style={{
                 backgroundColor: isAddingMode ? '#ff9800' : '#2e7d32',
-                color: 'white', border: 'none', borderRadius: '4px', padding: '0 15px', height: '35px', cursor: 'pointer', fontWeight: 'bold'
+                color: 'white', border: 'none', borderRadius: '4px', padding: '0 15px', height: '38px', flexShrink: 0, cursor: 'pointer', fontWeight: 'bold'
               }}
               title="Agregar nuevo punto"
             >
               {isAddingMode ? 'Cancelar' : '+'}
             </button>
 
-            <button onClick={clearFilters} title="Limpiar filtros" style={{ backgroundColor: '#d32f2f', color: 'white', border: 'none', borderRadius: '4px', width: '40px', height: '35px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button onClick={clearFilters} title="Limpiar filtros" style={{ backgroundColor: '#d32f2f', color: 'white', border: 'none', borderRadius: '4px', width: '38px', height: '38px', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <i className="fa fa-eraser"></i>
             </button>
           </div>

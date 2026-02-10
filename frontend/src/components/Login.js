@@ -100,6 +100,9 @@ const Login = () => {
             <p style={{ fontSize: '14px' }}>
                 ¿No tienes cuenta? <Link to="/register" style={{ color: '#4CAF50', fontWeight: 'bold', textDecoration: 'none' }}>Regístrate aquí</Link>
             </p>
+            <p style={{ fontSize: '14px', marginTop: '10px' }}>
+                <Link to="/home" style={{ color: '#4CAF50', textDecoration: 'underline', fontWeight: '600' }}>Ingresar como invitado</Link>
+            </p>
         </div>
 
       </div>

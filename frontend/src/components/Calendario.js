@@ -276,19 +276,64 @@ const Calendario = () => {
       <div className="main-content">
         <aside className="sidebar">
           <ul className="sidebar-menu">
-            <li>
-              <Link to="/home" style={{ color: 'inherit' }}>
-                <i className="fa fa-arrow-circle-up"></i>
+            <li style={{ position: 'relative', width: '100%', height: '70px' }}>
+              <Link 
+                to="/home" 
+                style={{ 
+                  color: 'inherit', 
+                  width: '100%', 
+                  height: '100%', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  textDecoration: 'none',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  zIndex: 999
+                }}
+              >
+                <i className="fa fa-map" style={{ pointerEvents: 'none', color: 'inherit', fontSize: '28px' }}></i>
               </Link>
             </li>
-            <li>
-              <Link to="/chatbot_ozono" style={{ color: 'inherit' }}>
-                <i className="fa fa-lightbulb-o"></i>
+            <li style={{ position: 'relative', width: '100%', height: '70px' }}>
+              <Link 
+                to="/chatbot_ozono" 
+                style={{ 
+                  color: 'inherit', 
+                  width: '100%', 
+                  height: '100%', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  textDecoration: 'none',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  zIndex: 999
+                }}
+              >
+                <i className="fa fa-lightbulb-o" style={{ pointerEvents: 'none', color: 'inherit', fontSize: '28px' }}></i>
               </Link>
             </li>
-            <li>
-              <Link to="/Calendario" style={{ color: 'inherit' }}>
-                <i className="fa fa-calendar-alt"></i>
+            <li className="active" style={{ position: 'relative', width: '100%', height: '70px' }}>
+              <Link 
+                to="/Calendario" 
+                style={{ 
+                  color: 'inherit', 
+                  width: '100%', 
+                  height: '100%', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  textDecoration: 'none',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  zIndex: 999
+                }}
+              >
+                <i className="fa fa-calendar-alt" style={{ pointerEvents: 'none', color: 'inherit', fontSize: '28px' }}></i>
               </Link>
             </li>
           </ul>
