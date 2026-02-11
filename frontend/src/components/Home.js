@@ -1,12 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'font-awesome/css/font-awesome.min.css';
 import { useNotification } from '../context/NotificationContext';
+import UserMenu from './UserMenu';
 
-// --- HELPERS ---
 const normalizeText = (text) => {
   return text
     ? text.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim()
@@ -61,11 +61,9 @@ const fetchAddressFromCoords = async (lat, lng) => {
 
 const Home = () => {
   // --- ESTADOS ---
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [materialDropdownOpen, setMaterialDropdownOpen] = useState(false);
 
   // Usuario
-  const [username, setUsername] = useState('Usuario');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [token, setToken] = useState(null);
 
@@ -104,10 +102,10 @@ const Home = () => {
   const materialOptions = ['Orgánicos', 'Inorgánicos'];
 
   // Refs
-  const menuRef = useRef(null);
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const markersLayer = useRef(null);
+  const openPopupPuntoId = useRef(null);
 
   // Refs para Bridges
   const toggleFavoriteRef = useRef();
@@ -116,19 +114,6 @@ const Home = () => {
 
   // Hook de notificaciones
   const { showNotification } = useNotification();
-
-  const toggleProfileMenu = () => setIsProfileOpen(prev => !prev);
-
-  // --- HANDLERS (Definidos aquí para evitar duplicados y errores) ---
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('username');
-    window.location.href = '/login';
-  };
-
-  const handleLogin = () => {
-    window.location.href = '/login';
-  };
 
   const toggleMaterialDropdown = () => setMaterialDropdownOpen(!materialDropdownOpen);
 
@@ -155,37 +140,18 @@ const Home = () => {
 
   // --- EFECTOS ---
 
-  // Body overflow y menú perfil
+  // Body overflow
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-
-    const adjustMenuPosition = () => {
-      if (menuRef.current) {
-        const menuRect = menuRef.current.getBoundingClientRect();
-        if (menuRect.right > window.innerWidth) {
-          menuRef.current.style.left = 'auto';
-          menuRef.current.style.right = '0';
-        } else {
-          menuRef.current.style.left = '0';
-          menuRef.current.style.right = 'auto';
-        }
-      }
-    };
-
-    if (isProfileOpen) {
-      adjustMenuPosition();
-      window.addEventListener('resize', adjustMenuPosition);
-    }
     return () => {
       document.body.style.overflow = originalOverflow;
-      window.removeEventListener('resize', adjustMenuPosition);
     };
-  }, [isProfileOpen]);
+  }, []);
 
   // --- API CALLS ---
 
-  const fetchPuntosVerdes = async () => {
+  const fetchPuntosVerdes = useCallback(async () => {
     const headers = token ? { 'Authorization': `Token ${token}` } : {};
     try {
       const response = await fetch('http://localhost:8000/api/puntos-verdes/', { headers });
@@ -201,7 +167,7 @@ const Home = () => {
       const barrios = [...new Set(data.map(p => p.barrio).filter(Boolean))].sort();
       setBarriosDisponibles(barrios);
     } catch (error) { console.error("Error fetching puntos:", error); }
-  };
+  }, [token]);
 
   const fetchFavorites = async (authToken) => {
     try {
@@ -216,7 +182,7 @@ const Home = () => {
     } catch (error) { console.error("Error favoritos:", error); }
   };
 
-  const toggleFavorite = async (puntoId) => {
+  const toggleFavorite = useCallback(async (puntoId) => {
     if (!isLoggedIn) { window.location.href = '/login'; return; }
 
     setFavorites(prev => {
@@ -232,7 +198,7 @@ const Home = () => {
         headers: { 'Authorization': `Token ${token}`, 'Content-Type': 'application/json' }
       });
     } catch (error) { fetchFavorites(token); }
-  };
+  }, [isLoggedIn, token]);
 
   // --- FUNCIÓN: Agregar Punto ---
   const submitNewPoint = async () => {
@@ -280,7 +246,7 @@ const Home = () => {
   };
 
   // --- FUNCIÓN: Votar Punto ---
-  const handleVote = async (puntoId, voteType) => {
+  const handleVote = useCallback(async (puntoId, voteType) => {
     if (!isLoggedIn) {
       showNotification("Inicia sesión para votar", "error");
       return;
@@ -298,14 +264,14 @@ const Home = () => {
         fetchPuntosVerdes();
       }
     } catch (error) { console.error(error); }
-  };
+  }, [isLoggedIn, token, fetchPuntosVerdes, showNotification]);
 
   // --- BRIDGES ---
   useEffect(() => {
     toggleFavoriteRef.current = toggleFavorite;
     handleVoteRef.current = handleVote;
-    showNotificationRef.current = showNotification; // Update ref
-  }, [favorites, isLoggedIn, token, showNotification]);
+    showNotificationRef.current = showNotification; 
+  }, [toggleFavorite, handleVote, showNotification]);
 
   useEffect(() => {
     window.handleFavoriteClick = (id) => { if (toggleFavoriteRef.current) toggleFavoriteRef.current(id); };
@@ -326,16 +292,15 @@ const Home = () => {
   // --- INICIALIZACIÓN ---
   useEffect(() => {
     const t = localStorage.getItem('token');
-    const u = localStorage.getItem('username');
     if (t) {
-      setIsLoggedIn(true); setToken(t); setUsername(u); fetchFavorites(t);
+      setIsLoggedIn(true); setToken(t); fetchFavorites(t);
     } else {
-      setIsLoggedIn(false); setUsername('Invitado');
+      setIsLoggedIn(false);
     }
     fetchPuntosVerdes();
-  }, []);
+  }, [fetchPuntosVerdes]);
 
-  useEffect(() => { if (token) fetchPuntosVerdes(); }, [token]);
+  useEffect(() => { if (token) fetchPuntosVerdes(); }, [token, fetchPuntosVerdes]);
 
   // --- MAPA ---
   useEffect(() => {
@@ -348,11 +313,11 @@ const Home = () => {
       legend.onAdd = function () {
         const div = L.DomUtil.create('div', 'legend');
         div.innerHTML = `
-            <div style="background: white; padding: 10px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-              <h4 style="margin: 0 0 5px; font-size: 14px;">Referencia</h4>
-              <div style="margin-bottom: 3px;"><i class="fa fa-recycle" style="color: blue;"></i> Orgánicos</div>
-              <div style="margin-bottom: 3px;"><i class="fa fa-recycle" style="color: green;"></i> Inorgánicos</div>
-              <div><i class="fa fa-recycle" style="color: #ff9800; text-shadow:0 0 2px red;"></i> Usuario</div>
+            <div style="background: white; padding: 10px 14px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: inline-block;">
+              <h4 style="margin: 0 0 6px; font-size: 14px; text-align: left;">Referencia</h4>
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;"><i class="fa fa-recycle" style="color: blue; width: 16px; text-align: center;"></i><span>Orgánicos</span></div>
+              <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;"><i class="fa fa-recycle" style="color: green; width: 16px; text-align: center;"></i><span>Inorgánicos</span></div>
+              <div style="display: flex; align-items: center; gap: 6px;"><i class="fa fa-recycle" style="color: #ff9800; text-shadow:0 0 2px red; width: 16px; text-align: center;"></i><span>Usuario</span></div>
             </div>
           `;
         return div;
@@ -413,6 +378,8 @@ const Home = () => {
   // --- RENDERIZADO DE MARCADORES ---
   useEffect(() => {
     if (!markersLayer.current) return;
+
+    const savedPopupId = openPopupPuntoId.current;
     markersLayer.current.clearLayers();
 
     let baseList = puntosVerdes;
@@ -479,8 +446,7 @@ const Home = () => {
       const isFav = favorites.has(punto.id);
 
       const favBtnHtml = `
-            <button onclick="window.handleFavoriteClick('${punto.id}')" 
-                    style="border:none; background:none; cursor:pointer; float:right; font-size:18px;">
+            <button class="popup-fav-btn" onclick="window.handleFavoriteClick('${punto.id}')">
                 <i class="fa ${isFav ? 'fa-heart' : 'fa-heart-o'}" style="color: ${isFav ? 'red' : 'gray'};"></i>
             </button>
       `;
@@ -534,12 +500,12 @@ const Home = () => {
       const popupClass = punto.isOrganic ? 'popup-content popup-organico' : 'popup-content popup-noorganico';
       const popupContent = `
             <div class="${popupClass}">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid #ccc; padding-bottom:5px; margin-bottom:5px;">
-                    <div>
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid #e0e0e0;">
+                    ${favBtnHtml}
+                    <div style="flex:1;">
                         <strong class="popup-title" style="margin:0;">${punto.nombre}</strong>
                         ${punto.is_user_generated ? '<small style="color:#ff9800; font-weight:bold;"> (Usuario)</small>' : ''}
                     </div>
-                    ${favBtnHtml}
                 </div>
                 <div style="font-size: 13px; color: #444;">
                     ${infoExtraHtml} 
@@ -550,10 +516,20 @@ const Home = () => {
             </div>
       `;
 
+      marker.on('popupopen', () => { openPopupPuntoId.current = punto.id; });
+      marker.on('popupclose', () => { if (openPopupPuntoId.current === punto.id) openPopupPuntoId.current = null; });
       marker.bindPopup(popupContent);
       punto.markerRef = marker;
       markersLayer.current.addLayer(marker);
     });
+
+  
+    if (savedPopupId) {
+      const puntoAbierto = filtered.find(p => p.id === savedPopupId);
+      if (puntoAbierto && puntoAbierto.markerRef) {
+        puntoAbierto.markerRef.openPopup();
+      }
+    }
 
   }, [searchTerm, barrioFilter, horarioFilter, selectedMaterials, puntosVerdes, selectedPunto, userLocation, favorites, showFavoritesOnly, isLoggedIn]);
 
@@ -561,36 +537,74 @@ const Home = () => {
     <div className="home-container">
       <header className="top-bar">
         <img src="/images/logoOzono.png" alt="Ozono" className="brand-image" />
-        <div className="user-info" onClick={toggleProfileMenu} ref={menuRef}>
-          <i className="fa fa-user"></i><span className="user-name">{username}</span>
-        </div>
-        {isProfileOpen && (
-          <>
-            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 2999 }} onClick={() => setIsProfileOpen(false)} />
-            <div className="profile-menu" style={{ position: 'fixed', top: '68px', right: '20px' }}>
-              <div style={{ padding: '14px 14px 12px', borderBottom: '1px solid #f0f0f0', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '42px', height: '42px', borderRadius: '50%', backgroundColor: '#2e7d32', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '18px', flexShrink: 0 }}>
-                  {username ? username.charAt(0).toUpperCase() : 'U'}
-                </div>
-                <div style={{ textAlign: 'center', flex: 1 }}>
-                  <span style={{ fontSize: '11px', color: '#999', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Sesión activa</span>
-                  <div style={{ fontWeight: '600', fontSize: '15px', color: '#222', marginTop: '2px' }}>{username}</div>
-                </div>
-              </div>
-              {isLoggedIn
-                ? <button onClick={handleLogout} style={{ color: '#d32f2f' }}><i className="fa fa-sign-out"></i> Cerrar sesión</button>
-                : <button onClick={handleLogin} style={{ color: '#2e7d32' }}><i className="fa fa-sign-in"></i> Iniciar sesión</button>
-              }
-            </div>
-          </>
-        )}
+        <UserMenu />
       </header>
       <div className="main-content">
         <aside className="sidebar">
           <ul className="sidebar-menu">
-            <li><Link to="/home" title="Mapa"><i className="fa fa-arrow-circle-up"></i></Link></li>
-            <li><Link to="/chatbot_ozono" title="Asistente"><i className="fa fa-lightbulb-o"></i></Link></li>
-            <li><Link to="/Calendario" title="Calendario"><i className="fa fa-calendar-alt"></i></Link></li>
+            <li className="active" style={{ position: 'relative', width: '100%', height: '70px' }}>
+              <Link 
+                to="/home" 
+                title="Mapa" 
+                style={{ 
+                  color: 'inherit', 
+                  width: '100%', 
+                  height: '100%', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  textDecoration: 'none',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  zIndex: 999
+                }}
+              >
+                <i className="fa fa-map" style={{ pointerEvents: 'none', color: 'inherit', fontSize: '28px' }}></i>
+              </Link>
+            </li>
+            <li style={{ position: 'relative', width: '100%', height: '70px' }}>
+              <Link 
+                to="/chatbot_ozono" 
+                title="Asistente" 
+                style={{ 
+                  color: 'inherit', 
+                  width: '100%', 
+                  height: '100%', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  textDecoration: 'none',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  zIndex: 999
+                }}
+              >
+                <i className="fa fa-lightbulb-o" style={{ pointerEvents: 'none', color: 'inherit', fontSize: '28px' }}></i>
+              </Link>
+            </li>
+            <li style={{ position: 'relative', width: '100%', height: '70px' }}>
+              <Link 
+                to="/Calendario" 
+                title="Calendario" 
+                style={{ 
+                  color: 'inherit', 
+                  width: '100%', 
+                  height: '100%', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  textDecoration: 'none',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  zIndex: 999
+                }}
+              >
+                <i className="fa fa-calendar-alt" style={{ pointerEvents: 'none', color: 'inherit', fontSize: '28px' }}></i>
+              </Link>
+            </li>
           </ul>
         </aside>
         <section className="map-section">
@@ -653,12 +667,29 @@ const Home = () => {
               onClick={() => { if (!isLoggedIn) { window.location.href = '/login'; return; } setShowFavoritesOnly(!showFavoritesOnly); }}
               title="Mis Favoritos"
               style={{
-                backgroundColor: showFavoritesOnly ? '#068637ff' : '#fff', color: showFavoritesOnly ? '#333' : '#666',
-                border: '1px solid #ccc', borderRadius: '4px', width: '38px', height: '38px', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: showFavoritesOnly ? 'inset 0 0 5px rgba(0,0,0,0.2)' : 'none'
+                backgroundColor: showFavoritesOnly ? '#ffeef0' : '#ffffff',
+                border: '1px solid #e0e0e0',
+                borderRadius: '4px',
+                width: '38px',
+                height: '38px',
+                flexShrink: 0,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = showFavoritesOnly ? '#ffd6db' : '#f5f5f5';
+                e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = showFavoritesOnly ? '#ffeef0' : '#ffffff';
+                e.currentTarget.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
               }}
             >
-              <i className={`fa ${showFavoritesOnly ? 'fa-heart' : 'fa-heart-o'}`} style={{ color: showFavoritesOnly ? 'red' : 'gray' }}></i>
+              <i className={`fa ${showFavoritesOnly ? 'fa-heart' : 'fa-heart-o'}`} style={{ color: showFavoritesOnly ? '#ea4335' : '#5f6368', fontSize: '17px' }}></i>
             </button>
 
             {/* BOTÓN AGREGAR PUNTO */}
@@ -668,16 +699,61 @@ const Home = () => {
                 setIsAddingMode(!isAddingMode);
               }}
               style={{
-                backgroundColor: isAddingMode ? '#ff9800' : '#2e7d32',
-                color: 'white', border: 'none', borderRadius: '4px', padding: '0 15px', height: '38px', flexShrink: 0, cursor: 'pointer', fontWeight: 'bold'
+                backgroundColor: isAddingMode ? '#fbbc04' : '#006400',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                width: '38px',
+                height: '38px',
+                flexShrink: 0,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)'
               }}
-              title="Agregar nuevo punto"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23)';
+                e.currentTarget.style.backgroundColor = isAddingMode ? '#f9ab00' : '#004d00';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)';
+                e.currentTarget.style.backgroundColor = isAddingMode ? '#fbbc04' : '#006400';
+              }}
+              title={isAddingMode ? 'Cancelar' : 'Agregar nuevo punto'}
             >
-              {isAddingMode ? 'Cancelar' : '+'}
+              <i className={`fa ${isAddingMode ? 'fa-times' : 'fa-plus'}`} style={{ fontSize: '16px' }}></i>
             </button>
 
-            <button onClick={clearFilters} title="Limpiar filtros" style={{ backgroundColor: '#d32f2f', color: 'white', border: 'none', borderRadius: '4px', width: '38px', height: '38px', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <i className="fa fa-eraser"></i>
+            <button 
+              onClick={clearFilters} 
+              title="Limpiar filtros" 
+              style={{ 
+                backgroundColor: '#ea4335',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                width: '38px',
+                height: '38px',
+                flexShrink: 0,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23)';
+                e.currentTarget.style.backgroundColor = '#d33b2c';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)';
+                e.currentTarget.style.backgroundColor = '#ea4335';
+              }}
+            >
+              <i className="fa fa-eraser" style={{ fontSize: '15px' }}></i>
             </button>
           </div>
 

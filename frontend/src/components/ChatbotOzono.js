@@ -3,11 +3,10 @@ import { Link } from 'react-router-dom';
 import 'font-awesome/css/font-awesome.min.css';
 
 import './ChatbotOzono.css';
+import UserMenu from './UserMenu';
 
 const ChatbotOzono = () => {
   // --- ESTADOS DE UI Y SESIÓN ---
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [username, setUsername] = useState('Usuario');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [token, setToken] = useState(null);
 
@@ -18,24 +17,18 @@ const ChatbotOzono = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const menuRef = useRef(null);
   const chatContainerRef = useRef(null);
-
-  const toggleProfileMenu = () => setIsProfileOpen(prev => !prev);
 
   // 1. INICIALIZACIÓN
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
-    const storedName = localStorage.getItem('username');
 
     if (storedToken) {
       setIsLoggedIn(true);
       setToken(storedToken);
-      if (storedName) setUsername(storedName);
       loadChatHistory(storedToken);
     } else {
       setIsLoggedIn(false);
-      setUsername('Invitado');
     }
   }, []);
 
@@ -207,25 +200,11 @@ const ChatbotOzono = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('username');
-    window.location.href = '/login';
-  };
-  const handleLogin = () => window.location.href = '/login';
-
   return (
     <div className="home-container">
       <header className="top-bar">
         <img src="/images/logoOzono.png" alt="Ozono" className="brand-image" />
-        <div className="user-info" onClick={toggleProfileMenu}>
-          <i className="fa fa-user"></i><span className="user-name">{username}</span>
-          {isProfileOpen && (
-            <div className="profile-menu" ref={menuRef}>
-              {isLoggedIn ? <button onClick={handleLogout} style={{ color: '#d32f2f' }}>Cerrar sesión</button> : <button onClick={handleLogin} style={{ color: '#006400' }}>Iniciar sesión</button>}
-            </div>
-          )}
-        </div>
+        <UserMenu />
       </header>
 
       <div className="main-content">

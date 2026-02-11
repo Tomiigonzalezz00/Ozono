@@ -314,22 +314,35 @@
 }
 
 .popup-title {
-  display: block;
+  display: inline;
   font-size: 16px;
   font-weight: bold;
-  margin-bottom: 8px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #eee;
 }
 
-.popup-organico .popup-title { color: #0047AB; border-color: #0047AB; }
-.popup-noorganico .popup-title { color: #006400; border-color: #006400; }
+.popup-organico .popup-title { color: #0047AB; }
+.popup-noorganico .popup-title { color: #006400; }
 
 .leaflet-popup-close-button {
-  top: 10px !important;
-  right: 10px !important;
+  top: 12px !important;
+  right: 12px !important;
   color: #555 !important;
   font-size: 18px !important;
+  width: 20px !important;
+  height: 20px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup-fav-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 /* --- ESTILOS NUEVOS: Agregar Punto y Votar --- */

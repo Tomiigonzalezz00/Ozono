@@ -1,13 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Calendario.css';
 import 'font-awesome/css/font-awesome.min.css';
 import { useNotification } from '../context/NotificationContext';
+import UserMenu from './UserMenu';
 
 const Calendario = () => {
-  // --- ESTADOS DE UI Y SESIÓN (NUEVO) ---
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [username, setUsername] = useState('Usuario');
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Estados del Calendario
@@ -21,34 +20,15 @@ const Calendario = () => {
   // Hook global de notificaciones
   const { showNotification, showConfirm } = useNotification();
 
-  const menuRef = useRef(null);
-
-  const toggleProfileMenu = () => setIsProfileOpen(prevState => !prevState);
-
-  // 1. VERIFICAR SESIÓN AL CARGAR (NUEVO)
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const storedName = localStorage.getItem('username');
 
     if (token) {
       setIsLoggedIn(true);
-      if (storedName) setUsername(storedName);
     } else {
       setIsLoggedIn(false);
-      setUsername('Invitado');
     }
   }, []);
-
-  // 2. HANDLERS DE SESIÓN (ACTUALIZADO)
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('username');
-    window.location.href = '/login';
-  };
-
-  const handleLogin = () => {
-    window.location.href = '/login';
-  };
 
   // Helpers de fecha
   const formatDate = (fecha) => {
@@ -59,30 +39,6 @@ const Calendario = () => {
     ];
     return `${day} de ${months[parseInt(month, 10) - 1]} ${year}`;
   };
-
-  // Ajuste de menú
-  useEffect(() => {
-    const adjustMenuPosition = () => {
-      if (menuRef.current) {
-        const menuRect = menuRef.current.getBoundingClientRect();
-        const windowWidth = window.innerWidth;
-
-        if (menuRect.right > windowWidth) {
-          menuRef.current.style.left = 'auto';
-          menuRef.current.style.right = '0';
-        } else {
-          menuRef.current.style.left = '0';
-          menuRef.current.style.right = 'auto';
-        }
-      }
-    };
-
-    if (isProfileOpen) {
-      adjustMenuPosition();
-      window.addEventListener('resize', adjustMenuPosition);
-    }
-    return () => window.removeEventListener('resize', adjustMenuPosition);
-  }, [isProfileOpen]);
 
   // Carga de datos
   useEffect(() => {
@@ -254,23 +210,9 @@ const Calendario = () => {
 
   return (
     <div className="home-container">
-      {/* HEADER ACTUALIZADO CON LÓGICA DE SESIÓN */}
       <header className="top-bar">
         <img src="/images/logoOzono.png" alt="Ozono" className="brand-image" />
-        <div className="user-info" onClick={toggleProfileMenu}>
-          <i className="fa fa-user"></i>
-          <span className="user-name">{username}</span>
-
-          {isProfileOpen && (
-            <div className="profile-menu" ref={menuRef}>
-              {isLoggedIn ? (
-                <button onClick={handleLogout} style={{ color: '#d32f2f' }}>Cerrar sesión</button>
-              ) : (
-                <button onClick={handleLogin} style={{ color: '#006400' }}>Iniciar sesión</button>
-              )}
-            </div>
-          )}
-        </div>
+        <UserMenu />
       </header>
 
       <div className="main-content">
