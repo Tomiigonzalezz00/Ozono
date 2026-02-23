@@ -8,7 +8,7 @@ services:
     volumes:
       - ./backend:/app
     env_file:
-      - .env
+    - ./\.env
     # Comando para Django
     command: python manage.py runserver 0.0.0.0:8000
     restart: unless-stopped
