@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-s(17rci)gn_u)rd43s*j^e8v&w#1)&n543qt-bqcv&n@!(_!0-'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DJANGO_DEBUG") == "True"
 
 ALLOWED_HOSTS = ['*']
 
@@ -157,8 +159,8 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 # CREDENCIALES DE MAIL
-EMAIL_HOST_USER = 'appozono@gmail.com'    
-EMAIL_HOST_PASSWORD = 'buyl wozl injd pvgd'    
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")   
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")   
 
 # NOMBRE PERSONALIZADO DEL REMITENTE
 # Esto hace que en la bandeja de entrada diga "Equipo Ozono" en vez del mail
@@ -166,4 +168,4 @@ DEFAULT_FROM_EMAIL = 'Equipo Ozono <appozono@gmail.com>'
 
 
 # Api KEY de GEMINI (Google Generative AI)
-GEMINI_API_KEY = "TAIzaSyAvlkOTCsum9PRt7qjGhBnfw_Ux_ujUUWY" # Lo ideal es usar os.environ.get('GEMINI_API_KEY')
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")

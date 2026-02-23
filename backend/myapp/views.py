@@ -88,9 +88,8 @@ class CustomLoginView(ObtainAuthToken):
             'email': user.email
         })
 
-  # ---REINICIO DE CONTRASEÑA---
 
-
+# ---REINICIO DE CONTRASEÑA---
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
 
@@ -150,9 +149,8 @@ def get_calendario_ambiental(request):
     serializer = CalendarioAmbientalSerializer(calendario, many=True)
     return Response(serializer.data)
 
+
 # --- Puntos verdes Favoritos ---
-
-
 class FavoriteToggleView(APIView):
     permission_classes = [IsAuthenticated]  # Solo usuarios logueados
 
@@ -196,9 +194,8 @@ class ChatSessionView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+
 # 2. Vista para ver detalles de una sesión o eliminarla (Solo logueados)
-
-
 class ChatSessionDetailView(generics.RetrieveDestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ChatSessionSerializer
@@ -211,11 +208,10 @@ class ChatSessionDetailView(generics.RetrieveDestroyAPIView):
 # Configuración global de Gemini (Toma la API key del settings.py)
 genai.configure(api_key=settings.GEMINI_API_KEY)
 
+
 # 3. Vista principal del motor de IA (Para Logueados e Invitados)
-
-
+# 3. Vista principal del motor de IA (Para Logueados e Invitados)
 @api_view(['POST'])
-# Permitimos acceso a cualquier usuario (logueado o no)
 @permission_classes([AllowAny])
 def chat_with_gemini(request):
     user_message_text = request.data.get('message')
@@ -227,49 +223,47 @@ def chat_with_gemini(request):
     # Instrucción de sistema (El "Alma" de Ozzy)
     system_instruction = "Eres Ozzy, un asistente experto en reciclaje y medio ambiente del proyecto Ozono. Ayudas a los usuarios a identificar residuos y usar la app. Responde de forma breve, amigable y usando un tono técnico adecuado para estudiantes de ingeniería cuando sea necesario."
 
-    # --- CAMINO A: USUARIO LOGUEADO (Usamos Base de Datos y Memoria) ---
+    # --- CAMINO A: USUARIO LOGUEADO ---
     if request.user.is_authenticated:
-        # 1. Obtener o Crear Sesión
         if session_id:
             try:
-                session = ChatSession.objects.get(
-                    id=session_id, user=request.user)
+                session = ChatSession.objects.get(id=session_id, user=request.user)
             except ChatSession.DoesNotExist:
                 return Response({"error": "Sesión no encontrada"}, status=404)
         else:
-            session = ChatSession.objects.create(
-                user=request.user, title="Nuevo Chat")
+            session = ChatSession.objects.create(user=request.user, title="Nuevo Chat")
 
-        # 2. Guardar el mensaje del usuario en la Base de Datos
-        ChatMessage.objects.create(
-            session=session, sender='user', text=user_message_text)
-
-        # 3. Construir el historial para enviárselo a Gemini
-        past_messages = session.messages.order_by(
-            'created_at')[:10]  # Últimos 10 mensajes
+        # 1. Cargar historial PREVIO (Aún no guardamos el mensaje nuevo)
+        past_messages = session.messages.order_by('created_at')[:10]
         history_for_gemini = []
 
         for msg in past_messages:
-            # Evitamos duplicar el mensaje actual en el historial previo
-            if msg.text == user_message_text and msg == past_messages.last():
-                continue
-
             role = "user" if msg.sender == 'user' else "model"
+            
+            # Filtro de seguridad: A Gemini no le gustan dos roles iguales seguidos. 
+            # Si por algún error pasado hay dos "user" juntos, saltamos uno.
+            if history_for_gemini and history_for_gemini[-1]['role'] == role:
+                continue
+                
             history_for_gemini.append({"role": role, "parts": [msg.text]})
 
-        # 4. Llamar a la API de Gemini
+        # Filtro extra: Si el historial termina en "user", lo sacamos porque 
+        # send_message() ya va a enviar un rol "user" y chocarían.
+        if history_for_gemini and history_for_gemini[-1]['role'] == 'user':
+            history_for_gemini.pop()
+
+        # 2. Llamar a la API de Gemini
         try:
-            model = genai.GenerativeModel(
-                'gemini-1.5-flash', system_instruction=system_instruction)
+            model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=system_instruction)
             chat = model.start_chat(history=history_for_gemini)
             response = chat.send_message(user_message_text)
             ai_response_text = response.text
 
-            # 5. Guardar la respuesta de la IA en la Base de Datos
-            ChatMessage.objects.create(
-                session=session, sender='bot', text=ai_response_text)
+            # 3. ¡MAGIA! Solo si Gemini responde bien, guardamos AMBOS mensajes.
+            ChatMessage.objects.create(session=session, sender='user', text=user_message_text)
+            ChatMessage.objects.create(session=session, sender='bot', text=ai_response_text)
 
-            # Actualizar título si es un chat nuevo (usamos los primeros 30 caracteres)
+            # Actualizar título del chat
             if session.messages.count() <= 2:
                 session.title = user_message_text[:30] + "..."
                 session.save()
@@ -282,31 +276,26 @@ def chat_with_gemini(request):
 
         except Exception as e:
             print(f"Error Gemini (Logueado): {e}")
-            return Response({"error": "Hubo un error al conectar con el motor de IA."}, status=500)
+            return Response({"error": str(e)}, status=500)
 
-    # --- CAMINO B: USUARIO INVITADO (Sin Base de Datos, respuesta al vuelo) ---
+    # --- CAMINO B: USUARIO INVITADO ---
     else:
         try:
-            model = genai.GenerativeModel(
-                'gemini-1.5-flash', system_instruction=system_instruction)
-
-            # Al no tener historial, usamos generate_content en lugar de start_chat
+            model = genai.GenerativeModel('gemini-2.5-flash', system_instruction=system_instruction)
             response = model.generate_content(user_message_text)
-            ai_response_text = response.text
-
+            
             return Response({
-                "response": ai_response_text,
+                "response": response.text,
                 "session_id": None,
                 "session_title": None
             })
 
         except Exception as e:
             print(f"Error Gemini (Invitado): {e}")
-            return Response({"error": "Hubo un error al conectar con el motor de IA."}, status=500)
+            return Response({"error": str(e)}, status=500)
+
 
 # --- Eventos del usuario ---
-
-
 class EventoUsuarioViewSet(viewsets.ModelViewSet):
     serializer_class = EventoUsuarioSerializer
     permission_classes = [IsAuthenticated]
@@ -345,9 +334,8 @@ class PuntoVerdeViewSet(viewsets.ModelViewSet):
             is_user_generated=True
         )
 
+
 # --- VISTA DE VOTACIÓN Y ELIMINACIÓN ---
-
-
 class VotePuntoView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
