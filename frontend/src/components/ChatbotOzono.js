@@ -193,7 +193,7 @@ const ChatbotOzono = () => {
 
     } catch (error) {
       console.error('Error chatbot Gemini:', error);
-      const errorMsg = "Lo siento, tuve un problema de conexión o necesitas iniciar sesión para hablar conmigo.";
+      const errorMsg = "Lo siento, tuve un problema de conexión o el servidor no respondió correctamente. Por favor, intenta de nuevo.";
       setMessages(prev => [...prev, { sender: 'bot', text: errorMsg }]);
     } finally {
       setIsLoading(false);
