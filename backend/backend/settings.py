@@ -163,3 +163,7 @@ EMAIL_HOST_PASSWORD = 'buyl wozl injd pvgd'
 # NOMBRE PERSONALIZADO DEL REMITENTE
 # Esto hace que en la bandeja de entrada diga "Equipo Ozono" en vez del mail
 DEFAULT_FROM_EMAIL = 'Equipo Ozono <appozono@gmail.com>'
+
+
+# Api KEY de GEMINI (Google Generative AI)
+GEMINI_API_KEY = "TAIzaSyAvlkOTCsum9PRt7qjGhBnfw_Ux_ujUUWY" # Lo ideal es usar os.environ.get('GEMINI_API_KEY')

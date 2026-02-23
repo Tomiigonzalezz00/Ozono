@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework import filters
 from rest_framework.authtoken.views import ObtainAuthToken
 from django.core.mail import send_mail
@@ -17,26 +17,28 @@ from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-
+import google.generativeai as genai
 
 
 def home(request):
     items = Item.objects.all()
     return render(request, 'myapp/home.html', {'items': items})
 
+
 class ItemViewSet(viewsets.ModelViewSet):
     queryset = Item.objects.all()
     serializer_class = ItemSerializer
 
+
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserRegistrationSerializer
-    permission_classes = [AllowAny] # Permite que cualquiera se registre
+    permission_classes = [AllowAny]  # Permite que cualquiera se registre
 
     def perform_create(self, serializer):
         # Guardamos el usuario
         user = serializer.save()
-        
+
         # Lógica de envío de email de bienvenida
         if user.email:
             try:
@@ -55,13 +57,13 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        
+
         # 2. Recuperamos el usuario creado
         user = User.objects.get(username=serializer.data['username'])
-        
+
         # 3. Creamos o recuperamos su token
         token, created = Token.objects.get_or_create(user=user)
-        
+
         # 4. Devolvemos el Token y los datos (¡Auto-Login!)
         return Response({
             'token': token.key,
@@ -75,7 +77,8 @@ class RegisterView(generics.CreateAPIView):
 class CustomLoginView(ObtainAuthToken):
     # Esta vista nativa de DRF recibe username/password y devuelve el token
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data, context={'request': request})
+        serializer = self.serializer_class(
+            data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
@@ -84,26 +87,28 @@ class CustomLoginView(ObtainAuthToken):
             'user_id': user.pk,
             'email': user.email
         })
-    
-  #---REINICIO DE CONTRASEÑA---
+
+  # ---REINICIO DE CONTRASEÑA---
+
+
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
-    
+
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.validated_data['email']
             try:
                 user = User.objects.get(email=email)
-                
+
                 # Generamos token y uid
                 token = default_token_generator.make_token(user)
                 uid = urlsafe_base64_encode(force_bytes(user.pk))
-                
+
                 # Construimos el link al FRONTEND (React)
                 # Ajusta localhost:3000 si tu frontend está en otro lado
                 reset_link = f"http://localhost:3000/reset-password/{uid}/{token}"
-                
+
                 # Enviamos el email
                 send_mail(
                     subject='Restablecer contraseña - Ozono',
@@ -115,9 +120,10 @@ class PasswordResetRequestView(APIView):
             except User.DoesNotExist:
                 # Por seguridad, no decimos si el usuario no existe
                 pass
-            
+
             return Response({"message": "Si el email existe, se ha enviado un enlace."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class PasswordResetConfirmView(generics.GenericAPIView):
     permission_classes = [AllowAny]
@@ -129,6 +135,7 @@ class PasswordResetConfirmView(generics.GenericAPIView):
             serializer.save()
             return Response({"message": "Contraseña restablecida con éxito."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 def get_puntos_verdes(request):
@@ -143,9 +150,11 @@ def get_calendario_ambiental(request):
     serializer = CalendarioAmbientalSerializer(calendario, many=True)
     return Response(serializer.data)
 
-#--- Puntos verdes Favoritos ---
+# --- Puntos verdes Favoritos ---
+
+
 class FavoriteToggleView(APIView):
-    permission_classes = [IsAuthenticated] # Solo usuarios logueados
+    permission_classes = [IsAuthenticated]  # Solo usuarios logueados
 
     def post(self, request, punto_id):
         user = request.user
@@ -155,13 +164,15 @@ class FavoriteToggleView(APIView):
             return Response({"error": "Punto no encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
         # Lógica Toggle: Si existe lo borramos, si no, lo creamos
-        favorite_item, created = Favorite.objects.get_or_create(user=user, punto_verde=punto)
+        favorite_item, created = Favorite.objects.get_or_create(
+            user=user, punto_verde=punto)
 
         if not created:
             favorite_item.delete()
             return Response({"status": "removed"}, status=status.HTTP_200_OK)
-        
+
         return Response({"status": "added"}, status=status.HTTP_201_CREATED)
+
 
 class UserFavoritesView(generics.ListAPIView):
     serializer_class = FavoriteSerializer
@@ -170,7 +181,10 @@ class UserFavoritesView(generics.ListAPIView):
     def get_queryset(self):
         return Favorite.objects.filter(user=self.request.user)
 
-#--- Historial de chat ---
+
+# --- Chatbot ---
+
+# 1. Vista para listar y crear sesiones de chat (Solo logueados)
 class ChatSessionView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ChatSessionSerializer
@@ -182,6 +196,9 @@ class ChatSessionView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+# 2. Vista para ver detalles de una sesión o eliminarla (Solo logueados)
+
+
 class ChatSessionDetailView(generics.RetrieveDestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ChatSessionSerializer
@@ -190,23 +207,105 @@ class ChatSessionDetailView(generics.RetrieveDestroyAPIView):
     def get_queryset(self):
         return ChatSession.objects.filter(user=self.request.user)
 
-class ChatMessageCreateView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = ChatMessageSerializer
 
-    def perform_create(self, serializer):
-        session_id = self.kwargs.get('session_id')
-        session = ChatSession.objects.get(id=session_id, user=self.request.user)
-        
-        # Guardamos el mensaje vinculado a la sesión
-        serializer.save(session=session)
-        
-        # Opcional: Actualizar título del chat con el primer mensaje del usuario si es "Nueva conversación"
-        if session.messages.count() == 1 and serializer.validated_data['sender'] == 'user':
-             # Tomamos los primeros 30 caracteres como título
-             new_title = serializer.validated_data['text'][:30] + "..."
-             session.title = new_title
-             session.save()
+# Configuración global de Gemini (Toma la API key del settings.py)
+genai.configure(api_key=settings.GEMINI_API_KEY)
+
+# 3. Vista principal del motor de IA (Para Logueados e Invitados)
+
+
+@api_view(['POST'])
+# Permitimos acceso a cualquier usuario (logueado o no)
+@permission_classes([AllowAny])
+def chat_with_gemini(request):
+    user_message_text = request.data.get('message')
+    session_id = request.data.get('session_id')
+
+    if not user_message_text:
+        return Response({"error": "El mensaje es obligatorio"}, status=400)
+
+    # Instrucción de sistema (El "Alma" de Ozzy)
+    system_instruction = "Eres Ozzy, un asistente experto en reciclaje y medio ambiente del proyecto Ozono. Ayudas a los usuarios a identificar residuos y usar la app. Responde de forma breve, amigable y usando un tono técnico adecuado para estudiantes de ingeniería cuando sea necesario."
+
+    # --- CAMINO A: USUARIO LOGUEADO (Usamos Base de Datos y Memoria) ---
+    if request.user.is_authenticated:
+        # 1. Obtener o Crear Sesión
+        if session_id:
+            try:
+                session = ChatSession.objects.get(
+                    id=session_id, user=request.user)
+            except ChatSession.DoesNotExist:
+                return Response({"error": "Sesión no encontrada"}, status=404)
+        else:
+            session = ChatSession.objects.create(
+                user=request.user, title="Nuevo Chat")
+
+        # 2. Guardar el mensaje del usuario en la Base de Datos
+        ChatMessage.objects.create(
+            session=session, sender='user', text=user_message_text)
+
+        # 3. Construir el historial para enviárselo a Gemini
+        past_messages = session.messages.order_by(
+            'created_at')[:10]  # Últimos 10 mensajes
+        history_for_gemini = []
+
+        for msg in past_messages:
+            # Evitamos duplicar el mensaje actual en el historial previo
+            if msg.text == user_message_text and msg == past_messages.last():
+                continue
+
+            role = "user" if msg.sender == 'user' else "model"
+            history_for_gemini.append({"role": role, "parts": [msg.text]})
+
+        # 4. Llamar a la API de Gemini
+        try:
+            model = genai.GenerativeModel(
+                'gemini-1.5-flash', system_instruction=system_instruction)
+            chat = model.start_chat(history=history_for_gemini)
+            response = chat.send_message(user_message_text)
+            ai_response_text = response.text
+
+            # 5. Guardar la respuesta de la IA en la Base de Datos
+            ChatMessage.objects.create(
+                session=session, sender='bot', text=ai_response_text)
+
+            # Actualizar título si es un chat nuevo (usamos los primeros 30 caracteres)
+            if session.messages.count() <= 2:
+                session.title = user_message_text[:30] + "..."
+                session.save()
+
+            return Response({
+                "response": ai_response_text,
+                "session_id": session.id,
+                "session_title": session.title
+            })
+
+        except Exception as e:
+            print(f"Error Gemini (Logueado): {e}")
+            return Response({"error": "Hubo un error al conectar con el motor de IA."}, status=500)
+
+    # --- CAMINO B: USUARIO INVITADO (Sin Base de Datos, respuesta al vuelo) ---
+    else:
+        try:
+            model = genai.GenerativeModel(
+                'gemini-1.5-flash', system_instruction=system_instruction)
+
+            # Al no tener historial, usamos generate_content en lugar de start_chat
+            response = model.generate_content(user_message_text)
+            ai_response_text = response.text
+
+            return Response({
+                "response": ai_response_text,
+                "session_id": None,
+                "session_title": None
+            })
+
+        except Exception as e:
+            print(f"Error Gemini (Invitado): {e}")
+            return Response({"error": "Hubo un error al conectar con el motor de IA."}, status=500)
+
+# --- Eventos del usuario ---
+
 
 class EventoUsuarioViewSet(viewsets.ModelViewSet):
     serializer_class = EventoUsuarioSerializer
@@ -227,6 +326,7 @@ class EventoUsuarioViewSet(viewsets.ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+
 class PuntoVerdeViewSet(viewsets.ModelViewSet):
     queryset = PuntoVerde.objects.all()
     serializer_class = PuntoVerdeSerializer
@@ -238,20 +338,22 @@ class PuntoVerdeViewSet(viewsets.ModelViewSet):
         return [permissions.AllowAny()]
 
     def perform_create(self, serializer):
-        # AQUÍ OCURRE LA MAGIA: 
+        # AQUÍ OCURRE LA MAGIA:
         # Al guardar, asignamos automáticamente el usuario y marcamos el flag
         serializer.save(
-            creator=self.request.user, 
+            creator=self.request.user,
             is_user_generated=True
         )
 
 # --- VISTA DE VOTACIÓN Y ELIMINACIÓN ---
+
+
 class VotePuntoView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, punto_id):
-        vote_type = request.data.get('vote_type') # Espera 'valid' o 'invalid'
-        
+        vote_type = request.data.get('vote_type')  # Espera 'valid' o 'invalid'
+
         try:
             punto = PuntoVerde.objects.get(id=punto_id)
         except PuntoVerde.DoesNotExist:
@@ -275,26 +377,27 @@ class VotePuntoView(APIView):
                 vote.save()
         except PuntoVote.DoesNotExist:
             # Voto nuevo
-            PuntoVote.objects.create(user=user, punto=punto, vote_type=vote_type)
+            PuntoVote.objects.create(
+                user=user, punto=punto, vote_type=vote_type)
 
         # 2. Lógica de Eliminación Automática
         # Requisito: "Si la brecha no supera el 25% del total de números válidos, se elimina"
-        
+
         valid_count = punto.votes.filter(vote_type='valid').count()
         invalid_count = punto.votes.filter(vote_type='invalid').count()
-        
+
         # Ponemos un mínimo de votos (ej: 3) para no borrar un punto apenas se crea con 1 voto negativo
         if (valid_count + invalid_count) >= 3:
-            
+
             diferencia = valid_count - invalid_count
-            umbral = valid_count * 0.25 # El 25% de los válidos
-            
+            umbral = valid_count * 0.25  # El 25% de los válidos
+
             # Si hay más inválidos que válidos, la diferencia es negativa, así que se elimina seguro.
             # Si la diferencia es positiva pero muy pequeña (menor al 25%), también se elimina.
             if diferencia < umbral:
                 punto.delete()
                 return Response({
-                    "status": "deleted", 
+                    "status": "deleted",
                     "message": "Punto eliminado por la comunidad (exceso de votos inválidos)"
                 }, status=200)
 

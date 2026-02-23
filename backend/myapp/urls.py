@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
-from .views import ItemViewSet, RegisterView, CustomLoginView, PasswordResetRequestView, PasswordResetConfirmView, FavoriteToggleView, UserFavoritesView, ChatSessionView, ChatMessageCreateView, ChatSessionDetailView, EventoUsuarioViewSet, PuntoVerdeViewSet, VotePuntoView
+from .views import ItemViewSet, RegisterView, CustomLoginView, PasswordResetRequestView, PasswordResetConfirmView, FavoriteToggleView, UserFavoritesView, ChatSessionView, ChatSessionDetailView,chat_with_gemini, EventoUsuarioViewSet, PuntoVerdeViewSet, VotePuntoView
 
 
 router = DefaultRouter()
@@ -29,12 +29,10 @@ urlpatterns = [
          FavoriteToggleView.as_view(), name='favorite_toggle'),
     path('api/favorites/', UserFavoritesView.as_view(), name='user_favorites'),
 
-    # ---ENDPOINTS DE HISTORIAL DE CHAT---
+   # ---ENDPOINTS DE HISTORIAL DE CHAT Y GEMINI---
     path('api/chat/sessions/', ChatSessionView.as_view(), name='chat_sessions'),
-    path('api/chat/sessions/<int:id>/',
-         ChatSessionDetailView.as_view(), name='chat_session_detail'),
-    path('api/chat/sessions/<int:session_id>/messages/',
-         ChatMessageCreateView.as_view(), name='chat_message_create'),
+    path('api/chat/sessions/<int:id>/', ChatSessionDetailView.as_view(), name='chat_session_detail'),
+    path('api/chat/gemini/', chat_with_gemini, name='chat_gemini'),
 
     # --- ENDPOINTS DE CALENDARIO ---
     path('api/calendario-ambiental/', views.get_calendario_ambiental,

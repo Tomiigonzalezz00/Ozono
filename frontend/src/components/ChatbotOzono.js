@@ -59,8 +59,9 @@ const ChatbotOzono = () => {
     }
   };
 
+  // --- CREAR NUEVA SESIÓN (Corregido) ---
   const createNewSession = async () => {
-    if (!token) return;
+    if (!token) return null;
     try {
       const response = await fetch('http://localhost:8000/api/chat/sessions/', {
         method: 'POST',
@@ -70,14 +71,23 @@ const ChatbotOzono = () => {
         },
         body: JSON.stringify({ title: "Nueva conversación" })
       });
+      
+      const data = await response.json();
+      
       if (response.ok) {
-        const newSession = await response.json();
-        setSessions([newSession, ...sessions]);
-        setCurrentSessionId(newSession.id);
+        setSessions(prev => [data, ...prev]);
+        setCurrentSessionId(data.id);
         setMessages([{ sender: 'bot', text: 'Hola, soy Ozzy. ¿En qué puedo ayudarte?' }]);
+        return data.id; // Retornamos el ID para usarlo de inmediato
+      } else {
+        console.error("Error del backend al crear sesión:", data);
+        alert("El servidor rechazó crear el chat: " + JSON.stringify(data));
+        return null;
       }
     } catch (error) {
-      console.error("Error creando sesión:", error);
+      console.error("Error de conexión creando sesión:", error);
+      alert("Error de red al intentar crear el chat.");
+      return null;
     }
   };
 
@@ -103,7 +113,7 @@ const ChatbotOzono = () => {
     }
   };
 
-  // --- NUEVA FUNCIÓN: ELIMINAR SESIÓN ---
+  // --- ELIMINAR SESIÓN ---
   const deleteSession = async (e, sessionId) => {
     e.stopPropagation(); // Evita abrir el chat al hacer click en borrar
 
@@ -132,27 +142,16 @@ const ChatbotOzono = () => {
     }
   };
 
-  const saveMessageToBackend = async (text, sender) => {
-    if (!currentSessionId || !token) return;
-    try {
-      await fetch(`http://localhost:8000/api/chat/sessions/${currentSessionId}/messages/`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Token ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ text, sender })
-      });
-    } catch (error) {
-      console.error("Error guardando mensaje:", error);
-    }
-  };
-
+  // --- ENVIAR MENSAJE A GEMINI (Corregido) ---
   const handleSend = async () => {
     if (!input.trim()) return;
 
-    if (!currentSessionId && isLoggedIn) {
-      await createNewSession();
+    let sessionIdToUse = currentSessionId;
+
+    // Si estás logueado y no seleccionaste chat, creamos uno nuevo ANTES de hablar con Gemini
+    if (!sessionIdToUse && isLoggedIn) {
+      sessionIdToUse = await createNewSession();
+      if (!sessionIdToUse) return; // Si falló la creación, abortamos el envío
     }
 
     const userText = input;
@@ -162,32 +161,40 @@ const ChatbotOzono = () => {
     setInput('');
     setIsLoading(true);
 
-    if (isLoggedIn && currentSessionId) saveMessageToBackend(userText, 'user');
-
     try {
-      const response = await fetch('http://localhost:5678/webhook/chat-ozono', {
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Token ${token}`;
+
+      // Llamada directa al NUEVO endpoint de Gemini en Django
+      const response = await fetch('http://localhost:8000/api/chat/gemini/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mensaje: userText }),
+        headers: headers,
+        body: JSON.stringify({ 
+          message: userText,
+          session_id: sessionIdToUse // Usamos la variable directa
+        }),
       });
 
-      if (!response.ok) throw new Error(`Error ${response.status}`);
-
       const data = await response.json();
-      const botText = data.respuesta || 'No entendí eso.';
-      const botMessage = { sender: 'bot', text: botText };
 
-      setMessages(prev => [...prev, botMessage]);
+      if (response.ok) {
+        const botMessage = { sender: 'bot', text: data.response };
+        setMessages(prev => [...prev, botMessage]);
 
-      if (isLoggedIn && currentSessionId) {
-        saveMessageToBackend(botText, 'bot');
-        // Opcional: recargar historial para actualizar títulos si cambian
-        // loadChatHistory(token); 
+        if (isLoggedIn) {
+           loadChatHistory(token); 
+           if (!currentSessionId && data.session_id) {
+              setCurrentSessionId(data.session_id);
+           }
+        }
+      } else {
+        throw new Error(data.error || `Error ${response.status}`);
       }
 
     } catch (error) {
-      console.error('Error chatbot:', error);
-      setMessages(prev => [...prev, { sender: 'bot', text: 'Error de conexión con Ozzy.' }]);
+      console.error('Error chatbot Gemini:', error);
+      const errorMsg = "Lo siento, tuve un problema de conexión o necesitas iniciar sesión para hablar conmigo.";
+      setMessages(prev => [...prev, { sender: 'bot', text: errorMsg }]);
     } finally {
       setIsLoading(false);
     }
@@ -320,7 +327,7 @@ const ChatbotOzono = () => {
             <div className="chat-interface-container">
               <div className="chat-messages" ref={chatContainerRef}>
                 {!isLoggedIn && messages.length === 0 && (
-                  <div className="message bot">¡Hola! Soy Ozzy, el asistente de Ozono.¿En qué puedo ayudarte?. Reuerda que puedes iniciar sesión para guardar tu historial de chat.</div>
+                  <div className="message bot">¡Hola! Soy Ozzy, el asistente de Ozono. ¿En qué puedo ayudarte? Recuerda que debes iniciar sesión para usar el asistente y guardar tu historial.</div>
                 )}
                 {messages.map((msg, i) => (
                   <div key={i} className={`message ${msg.sender}`}>
@@ -337,9 +344,9 @@ const ChatbotOzono = () => {
                   onChange={e => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Escribí tu pregunta..."
-                  disabled={isLoggedIn && !currentSessionId}
+                  disabled={isLoggedIn && !currentSessionId && sessions.length === 0 && !input} 
                 />
-                <button onClick={handleSend} disabled={isLoggedIn && !currentSessionId}>Enviar</button>
+                <button onClick={handleSend} disabled={isLoggedIn && !currentSessionId && sessions.length === 0 && !input}>Enviar</button>
               </div>
               {isLoggedIn && !currentSessionId && (
                 <div style={{ textAlign: 'center', padding: '10px', color: '#eee', fontSize: '0.9em' }}>
