@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 from .views import ItemViewSet, RegisterView, CustomLoginView, PasswordResetRequestView, PasswordResetConfirmView, FavoriteToggleView, UserFavoritesView, ChatSessionView, ChatSessionDetailView,chat_with_gemini, EventoUsuarioViewSet, PuntoVerdeViewSet, VotePuntoView
-
+from .views import test_gemini
 
 router = DefaultRouter()
 router.register(r'items', ItemViewSet)
@@ -45,4 +45,7 @@ urlpatterns = [
 
     # Rutas del router (Puntos Verdes CRUD)
     path('', include(router.urls)),
+
+     #Prueba
+    path("test-gemini/", test_gemini),
 ]

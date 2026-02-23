@@ -18,7 +18,8 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 import google.generativeai as genai
-
+import os
+from django.http import JsonResponse
 
 def home(request):
     items = Item.objects.all()
@@ -293,6 +294,18 @@ def chat_with_gemini(request):
         except Exception as e:
             print(f"Error Gemini (Invitado): {e}")
             return Response({"error": str(e)}, status=500)
+        
+        #Prueba 
+def test_gemini(request):
+    api_key = os.getenv("GEMINI_API_KEY")
+
+    genai.configure(api_key=api_key)
+
+    model = genai.GenerativeModel("gemini-2.0-flash")
+
+    response = model.generate_content("Decime hola en español")
+
+    return JsonResponse({ "respuesta": response.text})
 
 
 # --- Eventos del usuario ---
@@ -390,3 +403,6 @@ class VotePuntoView(APIView):
                 }, status=200)
 
         return Response({"status": "ok"}, status=200)
+
+
+  
