@@ -20,6 +20,49 @@ from django.utils.encoding import force_bytes
 import google.generativeai as genai
 import os
 from django.http import JsonResponse
+import math
+
+
+ #Modelo de Gemini para el chatbot
+MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+
+# ===============================
+# CALCULO DE DISTANCIA 
+# ===============================
+def distancia_km(lat1, lon1, lat2, lon2):
+    R = 6371  # radio tierra km
+
+    lat1, lon1, lat2, lon2 = map(math.radians,
+        [lat1, lon1, lat2, lon2])
+
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    a = math.sin(dlat/2)**2 + \
+        math.cos(lat1) * math.cos(lat2) * \
+        math.sin(dlon/2)**2
+
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+    return R * c
+
+
+def obtener_puntos_cercanos(user_lat, user_lng, limite=5):
+    puntos = PuntoVerde.objects.exclude(latitud=None).exclude(longitud=None)
+
+    resultados = []
+
+    for p in puntos:
+        dist = distancia_km(
+            user_lat, user_lng,
+            float(p.latitud),
+            float(p.longitud)
+        )
+        resultados.append((dist, p))
+
+    resultados.sort(key=lambda x: x[0])
+
+    return [p[1] for p in resultados[:limite]]
+
 
 def home(request):
     items = Item.objects.all()
@@ -210,19 +253,78 @@ class ChatSessionDetailView(generics.RetrieveDestroyAPIView):
 genai.configure(api_key=settings.GEMINI_API_KEY)
 
 
-# 3. Vista principal del motor de IA (Para Logueados e Invitados)
+
 # 3. Vista principal del motor de IA (Para Logueados e Invitados)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def chat_with_gemini(request):
     user_message_text = request.data.get('message')
     session_id = request.data.get('session_id')
+    user_lat = request.data.get('lat')
+    user_lng = request.data.get('lng')
 
     if not user_message_text:
         return Response({"error": "El mensaje es obligatorio"}, status=400)
 
-    # Instrucción de sistema (El "Alma" de Ozzy)
-    system_instruction = "Eres Ozzy, un asistente experto en reciclaje y medio ambiente del proyecto Ozono. Ayudas a los usuarios a identificar residuos y usar la app. Responde de forma breve, amigable y usando un tono técnico adecuado para estudiantes de ingeniería cuando sea necesario."
+    # --- 1. RECOPILAR DATOS DE LA BASE DE DATOS ---
+    puntos = PuntoVerde.objects.all()
+    puntos_texto = "\n\n--- BASE DE DATOS DE PUNTOS VERDES EN OZONO ---\n"
+
+    if puntos.exists():
+        for p in puntos:
+            nombre = getattr(p, 'nombre', 'Sin nombre')
+            direccion = getattr(p, 'direccion', 'Sin dirección')
+            puntos_texto += f"- Punto: {nombre} | Dirección: {direccion}\n"
+    else:
+        puntos_texto += "Actualmente NO hay puntos verdes registrados en el sistema.\n"
+
+# ===============================
+# UBICACION + CONTEXTO CERCANO
+# ===============================
+    ubicacion_texto = ""
+    contexto_puntos = ""
+
+    if user_lat and user_lng:
+        try:
+            user_lat = float(user_lat)
+            user_lng = float(user_lng)
+
+            ubicacion_texto = (
+                f"\n\n--- UBICACIÓN DEL USUARIO ---\n"
+                f"Latitud: {user_lat}\nLongitud: {user_lng}\n"
+            )
+
+            puntos_cercanos = obtener_puntos_cercanos(user_lat, user_lng)
+
+            if puntos_cercanos:
+                contexto_puntos = (
+                    "\n\n--- PUNTOS DE RECICLAJE CERCANOS ---\n"
+                    "El usuario YA compartió su ubicación. "
+                    "NO debes pedir ubicación nuevamente.\n"
+                )
+
+                for p in puntos_cercanos:
+                    nombre = getattr(p, 'nombre', 'Sin nombre')
+                    direccion = getattr(p, 'direccion', 'Sin dirección')
+                    contexto_puntos += f"- {nombre} | {direccion}\n"
+
+        except Exception as e:
+            print("Error buscando puntos cercanos:", e)
+
+    else:
+        ubicacion_texto = (
+            "\n\n--- UBICACIÓN DEL USUARIO ---\n"
+            "El usuario NO compartió ubicación.\n"
+        )
+    
+    # --- 3. INSTRUCCIÓN ESTRICTA (EL NUEVO CEREBRO DE OZZY) ---
+    system_instruction = (
+    "Eres Ozzy, el asistente experto en reciclaje del proyecto Ozono. "
+    "REGLA DE ORO: NUNCA le digas al usuario que vaya a buscar al mapa o a la sección de puntos de la app. "
+    "TÚ tienes la información del mapa y TÚ debes darle la respuesta directamente. "
+    "Si existen puntos cercanos, recomienda esos primero y NO vuelvas a pedir ubicación. "
+    f"{puntos_texto}{ubicacion_texto}{contexto_puntos}"
+)
 
     # --- CAMINO A: USUARIO LOGUEADO ---
     if request.user.is_authenticated:
@@ -240,12 +342,9 @@ def chat_with_gemini(request):
 
         for msg in past_messages:
             role = "user" if msg.sender == 'user' else "model"
-            
-            # Filtro de seguridad: A Gemini no le gustan dos roles iguales seguidos. 
-            # Si por algún error pasado hay dos "user" juntos, saltamos uno.
-            if history_for_gemini and history_for_gemini[-1]['role'] == role:
+        # Si por algún error pasado hay dos "user" juntos, saltamos uno.
+            if history_for_gemini and history_for_gemini[-1]['role'] == role: 
                 continue
-                
             history_for_gemini.append({"role": role, "parts": [msg.text]})
 
         # Filtro extra: Si el historial termina en "user", lo sacamos porque 
@@ -255,12 +354,13 @@ def chat_with_gemini(request):
 
         # 2. Llamar a la API de Gemini
         try:
-            model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=system_instruction)
+            # Usamos el modelo más actualizado
+            model = genai.GenerativeModel('gemini-2.5-flash', system_instruction=system_instruction)
             chat = model.start_chat(history=history_for_gemini)
             response = chat.send_message(user_message_text)
             ai_response_text = response.text
 
-            # 3. ¡MAGIA! Solo si Gemini responde bien, guardamos AMBOS mensajes.
+        #Solo si Gemini responde bien, guardamos AMBOS mensajes.
             ChatMessage.objects.create(session=session, sender='user', text=user_message_text)
             ChatMessage.objects.create(session=session, sender='bot', text=ai_response_text)
 
@@ -295,13 +395,13 @@ def chat_with_gemini(request):
             print(f"Error Gemini (Invitado): {e}")
             return Response({"error": str(e)}, status=500)
         
-        #Prueba 
+#Prueba Gemini
 def test_gemini(request):
     api_key = os.getenv("GEMINI_API_KEY")
 
     genai.configure(api_key=api_key)
 
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash")
 
     response = model.generate_content("Decime hola en español")
 

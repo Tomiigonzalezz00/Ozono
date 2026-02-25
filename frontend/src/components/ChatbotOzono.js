@@ -17,6 +17,9 @@ const ChatbotOzono = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // NUEVO: Estado para la ubicación
+  const [userLocation, setUserLocation] = useState({ lat: null, lng: null });
+
   const chatContainerRef = useRef(null);
 
   // 1. INICIALIZACIÓN
@@ -29,6 +32,22 @@ const ChatbotOzono = () => {
       loadChatHistory(storedToken);
     } else {
       setIsLoggedIn(false);
+    }
+
+    // NUEVO: Pedir ubicación al cargar el componente
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.warn("Error GPS:", error.message);
+        },
+        { enableHighAccuracy: true, timeout: 5000 } // Fuerzo a que busque rápido y preciso
+      );
     }
   }, []);
 
@@ -171,7 +190,10 @@ const ChatbotOzono = () => {
         headers: headers,
         body: JSON.stringify({ 
           message: userText,
-          session_id: sessionIdToUse // Usamos la variable directa
+          session_id: sessionIdToUse,
+          // NUEVO: Enviamos las variables exactas que espera el backend
+          lat: userLocation.lat,
+          lng: userLocation.lng
         }),
       });
 
