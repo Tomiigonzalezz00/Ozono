@@ -1,2 +1,23 @@
-load-plugins=pylint-django
-disable=C0111,C0411,C0412,W0611,W0612,W0613,W0702,W0703,W0404
+[MASTER]
+load-plugins=pylint_django
+django-settings-module=backend.settings
+
+[MESSAGES CONTROL]
+# Habilitamos explícitamente las 5 reglas personalizadas:
+# C0114 (missing-module-docstring) - Los módulos deben tener docstring
+# C0116 (missing-function-docstring) - Las funciones deben tener docstring
+# W0612 (unused-variable) - No permitir variables no utilizadas
+# E1101 (no-member) - Verificar que los atributos accedidos existan
+# C0301 (line-too-long) - Las líneas no deben exceder 120 caracteres
+enable=C0114,C0116,W0612,E1101,C0301
+
+# Deshabilitamos reglas que no son parte de nuestro análisis personalizado
+disable=C0111,C0115,C0411,C0412,W0611,W0613,W0702,W0703,W0404,C0103,C0303,C0304,C0305,R0903,R0901,R0902,W0107,W0223,W0231,R0801,C0209,W0401,C0413,C0415,R0401,W0614,C0200,C0201,R0101,C0410,R0201,W0104,C0112
+
+[FORMAT]
+# Línea máxima de 120 caracteres (regla C0301)
+max-line-length=120
+
+[BASIC]
+# Nombres válidos de variables/funciones
+good-names=i,j,k,v,e,f,x,y,pk,qs,db

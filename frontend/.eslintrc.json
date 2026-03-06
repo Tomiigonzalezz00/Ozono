@@ -1,0 +1,22 @@
+{
+  "extends": [
+    "react-app",
+    "react-app/jest"
+  ],
+  "plugins": [
+    "react",
+    "react-hooks"
+  ],
+  "rules": {
+    "no-unused-vars": ["warn", { "args": "after-used", "ignoreRestSiblings": true }],
+    "react/prop-types": "warn",
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "eqeqeq": ["error", "always"],
+    "react-hooks/rules-of-hooks": "error"
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}
