@@ -229,6 +229,58 @@ const ChatbotOzono = () => {
     }
   };
 
+  // --- FUNCIÓN PARA DETECTAR LINKS, YOUTUBE Y FORMATO ---
+  const formatMessage = (text) => {
+    if (!text) return null;
+    
+    // Separamos el texto buscando cualquier URL que empiece con http o https
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+
+    return parts.map((part, index) => {
+      if (part.match(urlRegex)) {
+        // Limpiamos la URL por si Gemini le puso un punto final a la oración
+        const cleanUrl = part.replace(/[.,;:]$/, '');
+        
+        // Detectamos si es un link de YouTube
+        const ytMatch = cleanUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+        
+        if (ytMatch && ytMatch[1]) {
+          const videoId = ytMatch[1]; // El código alfanumérico del video
+          return (
+            <div key={index} style={{ margin: '15px 0' }}>
+              <a href={cleanUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'block', maxWidth: '300px' }}>
+                {/* Cargamos la miniatura oficial de alta calidad desde los servidores de YouTube */}
+                <img 
+                  src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`} 
+                  alt="Miniatura de YouTube" 
+                  style={{ width: '100%', borderRadius: '12px', border: '2px solid #4CAF50', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }} 
+                />
+                <span style={{ display: 'block', marginTop: '5px', fontSize: '0.85em', color: '#4CAF50', textDecoration: 'underline' }}>
+                  <i className="fa fa-youtube-play"></i> Ver video de reciclaje
+                </span>
+              </a>
+            </div>
+          );
+        } else {
+          // Si es una página web normal, la hacemos clickeable
+          return (
+            <a key={index} href={cleanUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#4CAF50', textDecoration: 'underline', wordBreak: 'break-all' }}>
+              {cleanUrl}
+            </a>
+          );
+        }
+      }
+
+      // Procesamos las negritas (**) y los saltos de línea para el texto normal
+      return (
+        <span key={index} style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+          {part.split('**').map((chunk, i) => i % 2 === 1 ? <strong key={i}>{chunk}</strong> : chunk)}
+        </span>
+      );
+    });
+  };
+
   return (
     <div className="home-container">
       <header className="top-bar">
@@ -353,12 +405,8 @@ const ChatbotOzono = () => {
                 )}
                 {messages.map((msg, i) => (
                   <div key={i} className={`message ${msg.sender}`}>
-                    {/* MAGIA DE FORMATO: Respetar saltos de línea y procesar negritas */}
-                    <span style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5', display: 'block' }}>
-                      {msg.text.split('**').map((chunk, index) => 
-                        index % 2 === 1 ? <strong key={index}>{chunk}</strong> : chunk
-                      )}
-                    </span>
+                    {/* MAGIA DE FORMATO: Respetar saltos de línea, links y miniaturas de YouTube */}
+                    {formatMessage(msg.text)}
                   </div>
                 ))}
                 {isLoading && <div className="message bot typing-indicator">...<span className="dot">.</span><span className="dot">.</span></div>}

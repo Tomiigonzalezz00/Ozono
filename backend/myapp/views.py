@@ -267,7 +267,7 @@ def chat_with_gemini(request):
         return Response({"error": "El mensaje es obligatorio"}, status=400)
 
     # ===============================
-    # UBICACION, CONTEXTO CERCANO Y MATERIALES
+    # CALCULAR DISTANCIAS Y ARMAR CONTEXTO
     # ===============================
     contexto_puntos = ""
 
@@ -276,48 +276,79 @@ def chat_with_gemini(request):
             user_lat = float(user_lat)
             user_lng = float(user_lng)
 
-            # Aumentamos el límite a 15 para darle a Ozzy más opciones de materiales a tu alrededor
-            puntos_cercanos = obtener_puntos_cercanos(user_lat, user_lng, limite=15)
+            # 1. Traemos TODOS los puntos que tengan coordenadas
+            puntos = PuntoVerde.objects.exclude(latitud=None).exclude(longitud=None)
+            puntos_con_dist = []
+            
+            # 2. Calculamos la distancia de cada uno
+            for p in puntos:
+                dist = distancia_km(user_lat, user_lng, float(p.latitud), float(p.longitud))
+                puntos_con_dist.append((dist, p))
+            
+            # 3. Ordenamos la lista de menor a mayor distancia
+            puntos_con_dist.sort(key=lambda x: x[0])
 
-            if puntos_cercanos:
-                contexto_puntos = (
-                    "\n\n--- PUNTOS DE RECICLAJE CERCANOS AL USUARIO ---\n"
-                    "El usuario YA compartió su ubicación. NO debes pedir ubicación nuevamente.\n"
-                )
-
-                for p in puntos_cercanos:
-                    nombre = getattr(p, 'nombre', 'Sin nombre')
-                    direccion = getattr(p, 'direccion', 'Sin dirección')
-                    # Le pasamos a Ozzy los materiales y el tipo exacto que tiene la base de datos
-                    materiales = getattr(p, 'materiales', 'No especificado')
-                    tipo = getattr(p, 'tipo', 'No especificado')
-                    
-                    contexto_puntos += f"- {nombre} | Dirección: {direccion} | Materiales que acepta: {materiales} (Tipo: {tipo})\n"
+            # 4. Le pasamos a Ozzy los 40 más cercanos con Materiales, Tipo y HORARIO
+            contexto_puntos = (
+                "\n\n--- PUNTOS DE RECICLAJE (ORDENADOS POR CERCANÍA AL USUARIO) ---\n"
+            )
+            for dist, p in puntos_con_dist[:40]:
+                nombre = getattr(p, 'nombre', 'Sin nombre')
+                direccion = getattr(p, 'direccion', 'Sin dirección')
+                materiales = getattr(p, 'materiales', 'No especificado')
+                tipo = getattr(p, 'tipo', 'No especificado')
+                horario = getattr(p, 'dia_hora', 'No especificado') # Capturamos el horario
+                
+                contexto_puntos += f"- {nombre} (a {dist:.2f} km) | Dirección: {direccion} | Acepta: {materiales} | Tipo: {tipo} | Horario: {horario}\n"
 
         except Exception as e:
             print("Error buscando puntos cercanos:", e)
-
+            contexto_puntos = "\n\n(Error calculando ubicaciones)\n"
     else:
-        # Si no tiene el GPS prendido, le pasamos una lista general
+        # Si no tiene GPS, le mandamos info general
         puntos = PuntoVerde.objects.all()[:20] 
-        contexto_puntos = "\n\n--- PUNTOS DE RECICLAJE (EL USUARIO NO COMPARTIÓ UBICACIÓN) ---\n"
+        contexto_puntos = "\n\n--- PUNTOS DE RECICLAJE (SIN UBICACIÓN) ---\n"
         for p in puntos:
             nombre = getattr(p, 'nombre', 'Sin nombre')
             direccion = getattr(p, 'direccion', 'Sin dirección')
             materiales = getattr(p, 'materiales', 'No especificado')
             tipo = getattr(p, 'tipo', 'No especificado')
-            contexto_puntos += f"- {nombre} | Dirección: {direccion} | Materiales que acepta: {materiales} (Tipo: {tipo})\n"
+            horario = getattr(p, 'dia_hora', 'No especificado')
+            
+            contexto_puntos += f"- {nombre} | Dirección: {direccion} | Acepta: {materiales} | Tipo: {tipo} | Horario: {horario}\n"
     
-    # --- INSTRUCCIÓN ESTRICTA (EL NUEVO CEREBRO FILTRADOR DE OZZY) ---
+    # --- INSTRUCCIONES PARA EL MODELO GEMINI ---
+
     system_instruction = (
-        "Eres Ozzy, el asistente experto en reciclaje del proyecto Ozono. "
-        "REGLA DE ORO: NUNCA le digas al usuario que vaya a buscar al mapa o a la sección de puntos de la app. "
-        "TÚ tienes la información y TÚ debes darle la respuesta directamente. "
-        "NUEVA REGLA DE FILTRADO: Si el usuario te menciona un material específico que quiere reciclar (ej. cartón, plástico, pilas, orgánico, aceite), "
-        "DEBES revisar los 'Materiales que acepta' de los puntos listados abajo y recomendarle ÚNICAMENTE los puntos que acepten ese material. "
-        "Si tiene ubicación, recomiéndale el punto más cercano que sirva para SU material específico. "
-        f"{contexto_puntos}"
-    )
+    "Eres Ozzy, el asistente experto en reciclaje del proyecto Ozono. "
+    "1. Identifica qué material quiere reciclar el usuario.\n"
+    "2. Clasifica mentalmente si ese material es 'Orgánico', 'Inorgánico', 'Electrónico', etc.\n"
+    "3. Busca PRIMERO puntos que acepten EXACTAMENTE el material. Si NO hay, busca por 'Tipo' deducido.\n"
+    "4. Selecciona EXACTAMENTE LAS 5 OPCIONES MÁS CERCANAS que sirvan.\n"
+    "REGLAS DE EDUCACIÓN AMBIENTAL:\n"
+    "1. Piensa en 1 o 2 consejos creativos sobre cómo REUTILIZAR o darle una segunda vida al material.\n"
+    "REGLA DE FORMATO VISUAL ESTRICTA:\n"
+    "1. Saluda amigablemente y confirma el material.\n"
+    "2. Enumera los 5 puntos usando esta estructura exacta:\n"
+    "   ♻️ **[Nombre del Punto]** (a [X.XX] km)\n"
+    "   📍 [Dirección]\n"
+    "   🕒 Horario: [Horario] (Omite esta línea si dice 'No especificado' o 'None')\n\n"
+    "REGLAS DE BÚSQUEDA Y FILTRADO DEDUCTIVO:\n"
+    "1. Identifica el material.\n"
+    "2. Selecciona las 5 opciones más cercanas de la lista proporcionada.\n"
+    "REGLAS DE EDUCACIÓN AMBIENTAL (IDEAS CREATIVAS):\n"
+    "1. Propón 2 ideas concretas y creativas para reutilizar el material (ej. 'hacer una cama para mascotas' o 'marco de fotos digital').\n"
+    "REGLA DE FORMATO VISUAL ESTRICTA:\n"
+    "1. Crea la sección '💡 **Consejos para reutilizar [Material]**'.\n"
+    "   Para cada idea propuesta, agrega inmediatamente abajo un link de búsqueda de YouTube que combine el material con la idea.\n"
+    "   FORMATO DEL LINK: https://www.youtube.com/results?search_query=como+[IDEA]+con+[MATERIAL]\n"
+    "   (Ejemplo si la idea es una cama: https://www.youtube.com/results?search_query=como+hacer+cama+mascotas+con+monitor)\n"
+    "   *Importante: En el link, reemplaza los espacios por el signo '+'.*\n\n"
+    "2. Finalmente, la sección '🔗 **Links de interés**' con la búsqueda general en Google:\n"
+    "   https://www.google.com/search?q=importancia+de+reciclar+[Material]+argentina\n\n"
+    "REGLA DE ORO: No inventes links a videos específicos. Construye links de BÚSQUEDA que lleven al usuario a encontrar tutoriales sobre las ideas exactas que tú le diste."
+    f"{contexto_puntos}"
+)
 
     # --- CAMINO A: USUARIO LOGUEADO ---
     if request.user.is_authenticated:
@@ -380,18 +411,6 @@ def chat_with_gemini(request):
             print(f"Error Gemini (Invitado): {e}")
             return Response({"error": str(e)}, status=500)
         
-#Prueba Gemini
-def test_gemini(request):
-    api_key = os.getenv("GEMINI_API_KEY")
-
-    genai.configure(api_key=api_key)
-
-    model = genai.GenerativeModel("gemini-2.5-flash")
-
-    response = model.generate_content("Decime hola en español")
-
-    return JsonResponse({ "respuesta": response.text})
-
 
 # --- Eventos del usuario ---
 class EventoUsuarioViewSet(viewsets.ModelViewSet):
