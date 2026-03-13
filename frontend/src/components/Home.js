@@ -13,6 +13,8 @@ const normalizeText = (text) => {
     : "";
 };
 
+// Mantenemos esta función por si a futuro la necesitas para mostrar la distancia en el popup,
+// aunque ya no la usamos para borrar puntos del mapa.
 const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
   const dLat = deg2rad(lat2 - lat1);
@@ -382,18 +384,8 @@ const Home = () => {
     const savedPopupId = openPopupPuntoId.current;
     markersLayer.current.clearLayers();
 
+    // AQUÍ ESTABA EL FILTRO INVISIBLE. ¡Ya fue removido! 🎉
     let baseList = puntosVerdes;
-    const isManualSearch = searchTerm || barrioFilter || horarioFilter || selectedMaterials.length > 0 || showFavoritesOnly;
-
-    if (userLocation && !isManualSearch && !selectedPunto) {
-      const conDistancia = puntosVerdes.map(p => ({
-        ...p,
-        distanciaKm: getDistanceFromLatLonInKm(userLocation.lat, userLocation.lng, p.latitud, p.longitud)
-      }));
-      let cercanos = conDistancia.filter(p => p.distanciaKm <= 1);
-      if (cercanos.length === 0) cercanos = conDistancia.filter(p => p.distanciaKm <= 10);
-      if (cercanos.length > 0) baseList = cercanos;
-    }
 
     let filtered = baseList;
 
