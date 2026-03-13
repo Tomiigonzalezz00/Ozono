@@ -353,7 +353,12 @@ const ChatbotOzono = () => {
                 )}
                 {messages.map((msg, i) => (
                   <div key={i} className={`message ${msg.sender}`}>
-                    {msg.text}
+                    {/* MAGIA DE FORMATO: Respetar saltos de línea y procesar negritas */}
+                    <span style={{ whiteSpace: 'pre-wrap', lineHeight: '1.5', display: 'block' }}>
+                      {msg.text.split('**').map((chunk, index) => 
+                        index % 2 === 1 ? <strong key={index}>{chunk}</strong> : chunk
+                      )}
+                    </span>
                   </div>
                 ))}
                 {isLoading && <div className="message bot typing-indicator">...<span className="dot">.</span><span className="dot">.</span></div>}

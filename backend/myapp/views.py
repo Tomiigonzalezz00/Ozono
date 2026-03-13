@@ -266,22 +266,9 @@ def chat_with_gemini(request):
     if not user_message_text:
         return Response({"error": "El mensaje es obligatorio"}, status=400)
 
-    # --- 1. RECOPILAR DATOS DE LA BASE DE DATOS ---
-    puntos = PuntoVerde.objects.all()
-    puntos_texto = "\n\n--- BASE DE DATOS DE PUNTOS VERDES EN OZONO ---\n"
-
-    if puntos.exists():
-        for p in puntos:
-            nombre = getattr(p, 'nombre', 'Sin nombre')
-            direccion = getattr(p, 'direccion', 'Sin dirección')
-            puntos_texto += f"- Punto: {nombre} | Dirección: {direccion}\n"
-    else:
-        puntos_texto += "Actualmente NO hay puntos verdes registrados en el sistema.\n"
-
-# ===============================
-# UBICACION + CONTEXTO CERCANO
-# ===============================
-    ubicacion_texto = ""
+    # ===============================
+    # UBICACION, CONTEXTO CERCANO Y MATERIALES
+    # ===============================
     contexto_puntos = ""
 
     if user_lat and user_lng:
@@ -289,42 +276,48 @@ def chat_with_gemini(request):
             user_lat = float(user_lat)
             user_lng = float(user_lng)
 
-            ubicacion_texto = (
-                f"\n\n--- UBICACIÓN DEL USUARIO ---\n"
-                f"Latitud: {user_lat}\nLongitud: {user_lng}\n"
-            )
-
-            puntos_cercanos = obtener_puntos_cercanos(user_lat, user_lng)
+            # Aumentamos el límite a 15 para darle a Ozzy más opciones de materiales a tu alrededor
+            puntos_cercanos = obtener_puntos_cercanos(user_lat, user_lng, limite=15)
 
             if puntos_cercanos:
                 contexto_puntos = (
-                    "\n\n--- PUNTOS DE RECICLAJE CERCANOS ---\n"
-                    "El usuario YA compartió su ubicación. "
-                    "NO debes pedir ubicación nuevamente.\n"
+                    "\n\n--- PUNTOS DE RECICLAJE CERCANOS AL USUARIO ---\n"
+                    "El usuario YA compartió su ubicación. NO debes pedir ubicación nuevamente.\n"
                 )
 
                 for p in puntos_cercanos:
                     nombre = getattr(p, 'nombre', 'Sin nombre')
                     direccion = getattr(p, 'direccion', 'Sin dirección')
-                    contexto_puntos += f"- {nombre} | {direccion}\n"
+                    # Le pasamos a Ozzy los materiales y el tipo exacto que tiene la base de datos
+                    materiales = getattr(p, 'materiales', 'No especificado')
+                    tipo = getattr(p, 'tipo', 'No especificado')
+                    
+                    contexto_puntos += f"- {nombre} | Dirección: {direccion} | Materiales que acepta: {materiales} (Tipo: {tipo})\n"
 
         except Exception as e:
             print("Error buscando puntos cercanos:", e)
 
     else:
-        ubicacion_texto = (
-            "\n\n--- UBICACIÓN DEL USUARIO ---\n"
-            "El usuario NO compartió ubicación.\n"
-        )
+        # Si no tiene el GPS prendido, le pasamos una lista general
+        puntos = PuntoVerde.objects.all()[:20] 
+        contexto_puntos = "\n\n--- PUNTOS DE RECICLAJE (EL USUARIO NO COMPARTIÓ UBICACIÓN) ---\n"
+        for p in puntos:
+            nombre = getattr(p, 'nombre', 'Sin nombre')
+            direccion = getattr(p, 'direccion', 'Sin dirección')
+            materiales = getattr(p, 'materiales', 'No especificado')
+            tipo = getattr(p, 'tipo', 'No especificado')
+            contexto_puntos += f"- {nombre} | Dirección: {direccion} | Materiales que acepta: {materiales} (Tipo: {tipo})\n"
     
-    # --- 3. INSTRUCCIÓN ESTRICTA (EL NUEVO CEREBRO DE OZZY) ---
+    # --- INSTRUCCIÓN ESTRICTA (EL NUEVO CEREBRO FILTRADOR DE OZZY) ---
     system_instruction = (
-    "Eres Ozzy, el asistente experto en reciclaje del proyecto Ozono. "
-    "REGLA DE ORO: NUNCA le digas al usuario que vaya a buscar al mapa o a la sección de puntos de la app. "
-    "TÚ tienes la información del mapa y TÚ debes darle la respuesta directamente. "
-    "Si existen puntos cercanos, recomienda esos primero y NO vuelvas a pedir ubicación. "
-    f"{puntos_texto}{ubicacion_texto}{contexto_puntos}"
-)
+        "Eres Ozzy, el asistente experto en reciclaje del proyecto Ozono. "
+        "REGLA DE ORO: NUNCA le digas al usuario que vaya a buscar al mapa o a la sección de puntos de la app. "
+        "TÚ tienes la información y TÚ debes darle la respuesta directamente. "
+        "NUEVA REGLA DE FILTRADO: Si el usuario te menciona un material específico que quiere reciclar (ej. cartón, plástico, pilas, orgánico, aceite), "
+        "DEBES revisar los 'Materiales que acepta' de los puntos listados abajo y recomendarle ÚNICAMENTE los puntos que acepten ese material. "
+        "Si tiene ubicación, recomiéndale el punto más cercano que sirva para SU material específico. "
+        f"{contexto_puntos}"
+    )
 
     # --- CAMINO A: USUARIO LOGUEADO ---
     if request.user.is_authenticated:
@@ -336,35 +329,27 @@ def chat_with_gemini(request):
         else:
             session = ChatSession.objects.create(user=request.user, title="Nuevo Chat")
 
-        # 1. Cargar historial PREVIO (Aún no guardamos el mensaje nuevo)
         past_messages = session.messages.order_by('created_at')[:10]
         history_for_gemini = []
 
         for msg in past_messages:
             role = "user" if msg.sender == 'user' else "model"
-        # Si por algún error pasado hay dos "user" juntos, saltamos uno.
             if history_for_gemini and history_for_gemini[-1]['role'] == role: 
                 continue
             history_for_gemini.append({"role": role, "parts": [msg.text]})
 
-        # Filtro extra: Si el historial termina en "user", lo sacamos porque 
-        # send_message() ya va a enviar un rol "user" y chocarían.
         if history_for_gemini and history_for_gemini[-1]['role'] == 'user':
             history_for_gemini.pop()
 
-        # 2. Llamar a la API de Gemini
         try:
-            # Usamos el modelo más actualizado
             model = genai.GenerativeModel('gemini-2.5-flash', system_instruction=system_instruction)
             chat = model.start_chat(history=history_for_gemini)
             response = chat.send_message(user_message_text)
             ai_response_text = response.text
 
-        #Solo si Gemini responde bien, guardamos AMBOS mensajes.
             ChatMessage.objects.create(session=session, sender='user', text=user_message_text)
             ChatMessage.objects.create(session=session, sender='bot', text=ai_response_text)
 
-            # Actualizar título del chat
             if session.messages.count() <= 2:
                 session.title = user_message_text[:30] + "..."
                 session.save()
