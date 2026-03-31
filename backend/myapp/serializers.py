@@ -4,6 +4,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
+from rest_framework.validators import UniqueValidator 
+
 
 class ItemSerializer(serializers.ModelSerializer):
     class Meta:
@@ -18,18 +20,27 @@ class CalendarioAmbientalSerializer(serializers.ModelSerializer):
         fields = ['id', 'evento', 'fecha', 'descripcion']
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
+    # Definimos el email explícitamente para agregarle las validaciones
+    email = serializers.EmailField(
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all(), message="Este correo electrónico ya está registrado.")]
+    )
+
     class Meta:
         model = User
         fields = ['username', 'email', 'password']
         extra_kwargs = {
-            'password': {'write_only': True}  # La contraseña no se devuelve en el JSON
+            'password': {'write_only': True},
+            'username': {
+                'validators': [UniqueValidator(queryset=User.objects.all(), message="Este nombre de usuario ya existe.")]
+            }
         }
 
     def create(self, validated_data):
-        # Usamos create_user para hashear la contraseña automáticamente
+        # Usamos create_user para que Django maneje el hashing de la password
         user = User.objects.create_user(
             username=validated_data['username'],
-            email=validated_data.get('email', ''),
+            email=validated_data['email'], # Ahora el email es obligatorio
             password=validated_data['password']
         )
         return user
