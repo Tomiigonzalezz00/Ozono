@@ -25,16 +25,25 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         required=True,
         validators=[UniqueValidator(queryset=User.objects.all(), message="Este correo electrónico ya está registrado.")]
     )
+    password = serializers.CharField(
+        write_only=True, 
+        min_length=8,
+        error_messages={'min_length': 'La contraseña debe tener al menos 8 caracteres alfanumericos.'}
+    )
 
     class Meta:
         model = User
         fields = ['username', 'email', 'password']
         extra_kwargs = {
-            'password': {'write_only': True},
             'username': {
                 'validators': [UniqueValidator(queryset=User.objects.all(), message="Este nombre de usuario ya existe.")]
             }
         }
+
+    def validate_password(self, value):
+        if not any(char.isalpha() for char in value) or not any(char.isdigit() for char in value):
+            raise serializers.ValidationError("La contraseña debe contener al menos una letra y un número.")
+        return value
 
     def create(self, validated_data):
         # Usamos create_user para que Django maneje el hashing de la password
@@ -55,9 +64,18 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
 # Serializer para confirmar el cambio (recibe token, uid y password)
 class PasswordResetConfirmSerializer(serializers.Serializer):
-    new_password = serializers.CharField(write_only=True, min_length=1)
+    new_password = serializers.CharField(
+        write_only=True, 
+        min_length=8,
+        error_messages={'min_length': 'La contraseña debe tener al menos 8 caracteres.'}
+    )
     uid = serializers.CharField()
     token = serializers.CharField()
+
+    def validate_new_password(self, value):
+        if not any(char.isalpha() for char in value) or not any(char.isdigit() for char in value):
+            raise serializers.ValidationError("La contraseña debe contener al menos una letra y un número.")
+        return value
 
     def validate(self, data):
         # 1. Decodificar el ID del usuario
