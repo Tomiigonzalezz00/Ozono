@@ -4,8 +4,11 @@ import 'font-awesome/css/font-awesome.min.css';
 
 import './ChatbotOzono.css';
 import UserMenu from './UserMenu';
+import { useNotification } from '../context/NotificationContext';
 
 const ChatbotOzono = () => {
+  const { showConfirm, showNotification } = useNotification();
+
   // --- ESTADOS DE UI Y SESIÓN ---
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [token, setToken] = useState(null);
@@ -90,9 +93,9 @@ const ChatbotOzono = () => {
         },
         body: JSON.stringify({ title: "Nueva conversación" })
       });
-      
+
       const data = await response.json();
-      
+
       if (response.ok) {
         setSessions(prev => [data, ...prev]);
         setCurrentSessionId(data.id);
@@ -100,12 +103,12 @@ const ChatbotOzono = () => {
         return data.id; // Retornamos el ID para usarlo de inmediato
       } else {
         console.error("Error del backend al crear sesión:", data);
-        alert("El servidor rechazó crear el chat: " + JSON.stringify(data));
+        showNotification("El servidor rechazó crear el chat: " + JSON.stringify(data), 'error');
         return null;
       }
     } catch (error) {
       console.error("Error de conexión creando sesión:", error);
-      alert("Error de red al intentar crear el chat.");
+      showNotification("Error de red al intentar crear el chat.", 'error');
       return null;
     }
   };
@@ -133,32 +136,32 @@ const ChatbotOzono = () => {
   };
 
   // --- ELIMINAR SESIÓN ---
-  const deleteSession = async (e, sessionId) => {
+  const deleteSession = (e, sessionId) => {
     e.stopPropagation(); // Evita abrir el chat al hacer click en borrar
 
-    if (!window.confirm("¿Estás seguro de que deseas eliminar este chat?")) return;
+    showConfirm("¿Estás seguro de que deseas eliminar este chat?", async () => {
+      try {
+        const response = await fetch(`http://localhost:8000/api/chat/sessions/${sessionId}/`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Token ${token}`
+          }
+        });
 
-    try {
-      const response = await fetch(`http://localhost:8000/api/chat/sessions/${sessionId}/`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Token ${token}`
+        if (response.ok) {
+          // Filtrar la sesión eliminada de la lista visual
+          setSessions(prevSessions => prevSessions.filter(session => session.id !== sessionId));
+
+          // Si la sesión eliminada era la que estaba abierta, limpiar pantalla
+          if (currentSessionId === sessionId) {
+            setCurrentSessionId(null);
+            setMessages([]);
+          }
         }
-      });
-
-      if (response.ok) {
-        // Filtrar la sesión eliminada de la lista visual
-        setSessions(prevSessions => prevSessions.filter(session => session.id !== sessionId));
-
-        // Si la sesión eliminada era la que estaba abierta, limpiar pantalla
-        if (currentSessionId === sessionId) {
-          setCurrentSessionId(null);
-          setMessages([]);
-        }
+      } catch (error) {
+        console.error("Error eliminando sesión:", error);
       }
-    } catch (error) {
-      console.error("Error eliminando sesión:", error);
-    }
+    });
   };
 
   // --- ENVIAR MENSAJE A GEMINI (Corregido) ---
@@ -188,7 +191,7 @@ const ChatbotOzono = () => {
       const response = await fetch('http://localhost:8000/api/chat/gemini/', {
         method: 'POST',
         headers: headers,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           message: userText,
           session_id: sessionIdToUse,
           // NUEVO: Enviamos las variables exactas que espera el backend
@@ -204,10 +207,10 @@ const ChatbotOzono = () => {
         setMessages(prev => [...prev, botMessage]);
 
         if (isLoggedIn) {
-           loadChatHistory(token); 
-           if (!currentSessionId && data.session_id) {
-              setCurrentSessionId(data.session_id);
-           }
+          loadChatHistory(token);
+          if (!currentSessionId && data.session_id) {
+            setCurrentSessionId(data.session_id);
+          }
         }
       } else {
         throw new Error(data.error || `Error ${response.status}`);
@@ -232,7 +235,7 @@ const ChatbotOzono = () => {
   // --- FUNCIÓN PARA DETECTAR LINKS, YOUTUBE Y FORMATO ---
   const formatMessage = (text) => {
     if (!text) return null;
-    
+
     // Separamos el texto buscando cualquier URL que empiece con http o https
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = text.split(urlRegex);
@@ -241,20 +244,20 @@ const ChatbotOzono = () => {
       if (part.match(urlRegex)) {
         // Limpiamos la URL por si Gemini le puso un punto final a la oración
         const cleanUrl = part.replace(/[.,;:]$/, '');
-        
+
         // Detectamos si es un link de YouTube
         const ytMatch = cleanUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
-        
+
         if (ytMatch && ytMatch[1]) {
           const videoId = ytMatch[1]; // El código alfanumérico del video
           return (
             <div key={index} style={{ margin: '15px 0' }}>
               <a href={cleanUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'block', maxWidth: '300px' }}>
                 {/* Cargamos la miniatura oficial de alta calidad desde los servidores de YouTube */}
-                <img 
-                  src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`} 
-                  alt="Miniatura de YouTube" 
-                  style={{ width: '100%', borderRadius: '12px', border: '2px solid #4CAF50', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }} 
+                <img
+                  src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+                  alt="Miniatura de YouTube"
+                  style={{ width: '100%', borderRadius: '12px', border: '2px solid #4CAF50', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}
                 />
                 <span style={{ display: 'block', marginTop: '5px', fontSize: '0.85em', color: '#4CAF50', textDecoration: 'underline' }}>
                   <i className="fa fa-youtube-play"></i> Ver video de reciclaje
@@ -292,15 +295,15 @@ const ChatbotOzono = () => {
         <aside className="sidebar">
           <ul className="sidebar-menu">
             <li style={{ position: 'relative', width: '100%', height: '70px' }}>
-              <Link 
-                to="/home" 
-                title="Mapa" 
-                style={{ 
-                  color: 'inherit', 
-                  width: '100%', 
-                  height: '100%', 
-                  display: 'flex', 
-                  alignItems: 'center', 
+              <Link
+                to="/home"
+                title="Mapa"
+                style={{
+                  color: 'inherit',
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
                   justifyContent: 'center',
                   textDecoration: 'none',
                   position: 'absolute',
@@ -313,15 +316,15 @@ const ChatbotOzono = () => {
               </Link>
             </li>
             <li className="active" style={{ position: 'relative', width: '100%', height: '70px' }}>
-              <Link 
-                to="/chatbot_ozono" 
-                title="Asistente" 
-                style={{ 
-                  color: 'inherit', 
-                  width: '100%', 
-                  height: '100%', 
-                  display: 'flex', 
-                  alignItems: 'center', 
+              <Link
+                to="/chatbot_ozono"
+                title="Asistente"
+                style={{
+                  color: 'inherit',
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
                   justifyContent: 'center',
                   textDecoration: 'none',
                   position: 'absolute',
@@ -334,15 +337,15 @@ const ChatbotOzono = () => {
               </Link>
             </li>
             <li style={{ position: 'relative', width: '100%', height: '70px' }}>
-              <Link 
-                to="/Calendario" 
-                title="Calendario" 
-                style={{ 
-                  color: 'inherit', 
-                  width: '100%', 
-                  height: '100%', 
-                  display: 'flex', 
-                  alignItems: 'center', 
+              <Link
+                to="/Calendario"
+                title="Calendario"
+                style={{
+                  color: 'inherit',
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
                   justifyContent: 'center',
                   textDecoration: 'none',
                   position: 'absolute',
@@ -419,7 +422,7 @@ const ChatbotOzono = () => {
                   onChange={e => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Escribí tu pregunta..."
-                  disabled={isLoggedIn && !currentSessionId && sessions.length === 0 && !input} 
+                  disabled={isLoggedIn && !currentSessionId && sessions.length === 0 && !input}
                 />
                 <button onClick={handleSend} disabled={isLoggedIn && !currentSessionId && sessions.length === 0 && !input}>Enviar</button>
               </div>

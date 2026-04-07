@@ -13,6 +13,17 @@ const ForgotPassword = () => {
     setMessage('');
     setError('');
 
+    if (!email.trim()) {
+      setError('Por favor, ingresa tu correo electrónico.');
+      return;
+    }
+
+    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+    if (!emailRegex.test(email)) {
+      setError('Por favor, utiliza un formato de correo electrónico válido.');
+      return;
+    }
+
     try {
       await axios.post('http://localhost:8000/api/password_reset/', { email });
       setMessage('Si el correo existe, te hemos enviado un enlace.');
@@ -26,17 +37,17 @@ const ForgotPassword = () => {
       <div className="top-bar">
         <img src="/images/logoOzono.png" alt="OZONO" className="brand-image" />
       </div>
-      
+
       <div className="login-form">
         <h1 className="ozono-title">
-            <img src="/images/logoOzonoajustado.png" alt="OZONO" className="ozono-title-image" />
+          <img src="/images/logoOzonoajustado.png" alt="OZONO" className="ozono-title-image" />
         </h1>
         <h2>RECUPERAR CONTRASEÑA</h2>
-        <p style={{fontSize: '14px', color: '#666', marginBottom: '20px'}}>
-            Ingresa tu email y te enviaremos las instrucciones.
+        <p style={{ fontSize: '14px', color: '#666', marginBottom: '20px' }}>
+          Ingresa tu email y te enviaremos las instrucciones.
         </p>
-        
-        <form onSubmit={handleSubmit}>
+
+        <form onSubmit={handleSubmit} noValidate>
           <input
             type="email"
             value={email}
@@ -45,18 +56,18 @@ const ForgotPassword = () => {
             required
             style={{ marginBottom: '15px' }}
           />
-          
+
           {/* Mensajes de feedback */}
           {message && <div style={{ color: '#155724', backgroundColor: '#d4edda', padding: '10px', borderRadius: '5px', fontSize: '14px', marginBottom: '10px', border: '1px solid #c3e6cb' }}>{message}</div>}
           {error && <div style={{ color: '#721c24', backgroundColor: '#f8d7da', padding: '10px', borderRadius: '5px', fontSize: '14px', marginBottom: '10px', border: '1px solid #f5c6cb' }}>{error}</div>}
-          
+
           <button type="submit">Enviar Enlace</button>
         </form>
 
         <div style={{ marginTop: '20px' }}>
-            <Link to="/login" style={{ color: '#006400', fontWeight: 'bold', textDecoration: 'none', fontSize: '14px' }}>
-                <i className="fa fa-arrow-left"></i> Volver al Login
-            </Link>
+          <Link to="/login" style={{ color: '#006400', fontWeight: 'bold', textDecoration: 'none', fontSize: '14px' }}>
+            <i className="fa fa-arrow-left"></i> Volver al Login
+          </Link>
         </div>
       </div>
     </div>
