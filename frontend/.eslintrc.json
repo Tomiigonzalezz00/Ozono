@@ -5,18 +5,35 @@
   ],
   "plugins": [
     "react",
-    "react-hooks"
+    "react-hooks",
+    "security",
+    "import"
   ],
   "rules": {
     "no-unused-vars": ["warn", { "args": "after-used", "ignoreRestSiblings": true }],
     "react/prop-types": "warn",
     "no-console": ["warn", { "allow": ["warn", "error"] }],
     "eqeqeq": ["error", "always"],
-    "react-hooks/rules-of-hooks": "error"
+    "react-hooks/rules-of-hooks": "error",
+
+    "security/detect-object-injection": "warn",
+    "security/detect-eval-with-expression": "warn",
+    "security/detect-unsafe-regex": "warn",
+    "security/detect-non-literal-regexp": "warn",
+    "security/detect-no-csrf-before-method-override": "warn",
+
+    "import/no-relative-parent-imports": "warn",
+    "import/no-cycle": "warn",
+    "import/no-unresolved": "warn"
   },
   "settings": {
     "react": {
       "version": "detect"
+    },
+    "import/resolver": {
+      "node": {
+        "extensions": [".js", ".jsx"]
+      }
     }
   }
 }
