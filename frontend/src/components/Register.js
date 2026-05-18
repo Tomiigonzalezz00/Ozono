@@ -4,26 +4,51 @@ import { useNavigate, Link } from 'react-router-dom';
 import './Login.css'; 
 
 const Register = () => {
-  // 1. Agregamos 'email' al estado inicial
   const [formData, setFormData] = useState({
     username: '',
-    email: '', 
+    email: '',
     password: ''
   });
-  
+
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.id]: e.target.value
-    });
+    const { id, value } = e.target;
+    setFormData({ ...formData, [id]: value });
+    if (fieldErrors[id]) {
+      setFieldErrors({ ...fieldErrors, [id]: '' });
+    }
+  };
+
+  const validate = () => {
+    const errors = {};
+    if (!formData.username.trim()) {
+      errors.username = 'El nombre de usuario es obligatorio.';
+    }
+    if (!formData.email.trim()) {
+      errors.email = 'El correo electrónico es obligatorio.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Ingresá un correo electrónico válido.';
+    }
+    if (!formData.password) {
+      errors.password = 'La contraseña es obligatoria.';
+    } else if (formData.password.length < 8) {
+      errors.password = 'La contraseña debe tener al menos 8 caracteres.';
+    }
+    return errors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    const errors = validate();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
 
     try {
       // Enviamos username, email y password al backend
@@ -64,26 +89,26 @@ const Register = () => {
         </h1>
         <h2>CREAR CUENTA</h2>
         
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <input
             id="username"
             type="text"
             value={formData.username}
             onChange={handleChange}
             placeholder="Nombre de usuario"
-            required
+            className={fieldErrors.username ? 'input-error' : ''}
           />
+          {fieldErrors.username && <p className="field-error">{fieldErrors.username}</p>}
 
-          {/* --- NUEVO CAMPO DE EMAIL --- */}
           <input
             id="email"
             type="email"
             value={formData.email}
             onChange={handleChange}
             placeholder="Correo electrónico (para recuperar contraseña)"
-            required
+            className={fieldErrors.email ? 'input-error' : ''}
           />
-          {/* --------------------------- */}
+          {fieldErrors.email && <p className="field-error">{fieldErrors.email}</p>}
 
           <input
             id="password"
@@ -91,11 +116,12 @@ const Register = () => {
             value={formData.password}
             onChange={handleChange}
             placeholder="Contraseña"
-            required
+            className={fieldErrors.password ? 'input-error' : ''}
           />
+          {fieldErrors.password && <p className="field-error">{fieldErrors.password}</p>}
 
-          {error && <p style={{ color: 'red', fontSize: '14px', margin: '5px 0' }}>{error}</p>}
-          
+          {error && <p className="field-error">{error}</p>}
+
           <button type="submit">Registrarse</button>
         </form>
 

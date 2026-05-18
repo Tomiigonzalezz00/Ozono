@@ -414,7 +414,17 @@
 
 .ozono-title-image {
   height: 50px;
-  /* Ajusta según sea necesario */
   filter: contrast(1.5) brightness(1.2);
-  /* Ajusta el contraste y el brillo si es necesario */
+}
+
+.login-form input.input-error {
+  border: 2px solid #e53935;
+  margin-bottom: 2px;
+}
+
+.field-error {
+  color: #ff6b6b;
+  font-size: 12px;
+  margin: 0 0 8px 10px;
+  padding: 0;
 }
